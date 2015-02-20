@@ -1,9 +1,9 @@
 <?php
 /**
  * Plugin Name: WP Issues CRM
- * Plugin URI: 
+ * Plugin URI: http://wp-issues-crm.com 
  * Description: Constituent Relationship Management for organizations that respond to constituents.  Organizes constituent contacts ( calls, etc. ) around Wordpress posts and categories. 
- * Version: 0.81
+ * Version: 0.82
  * Author: Will Brownsberger
  * Author URI: http://willbrownsberger.com
  * Text Domain: wp-issues-crm
@@ -40,8 +40,8 @@
 // set database version globals;
 global $wp_issues_crm_dictionary_version;
 global $wp_issues_crm_db_version;
-$wp_issues_crm_dictionary_version = '0.81';
-$wp_issues_crm_db_version = '0.81';
+$wp_issues_crm_dictionary_version = '0.82';
+$wp_issues_crm_db_version = '0.82';
 
 
 // check for database install or updates -- note that the 'plugins_loaded' hook fires before is_admin is set, so too late if put in admin_setup

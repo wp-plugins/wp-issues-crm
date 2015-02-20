@@ -4,7 +4,7 @@ Donate link:
 Tags: contact, crm, constituent, customer, issues, list
 Requires at least: 4.0
 Tested up to: 4.1
-Stable tag: 0.81
+Stable tag: 0.82
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -34,8 +34,10 @@ easy downloading for outgoing mail or email communications.
 
 Where I can I get support?
 
-You may be able to get answers in the Wordpress forums.  If necessary contact the author at WillBrownsberger@gmail.com or by text at 617-771-8274.
-We appreciate and seek your feedback and want to know how we can continue to improve this product.
+For questions, the best route is the support forum at http://wordpress.org/support/plugin/wp-issues-crm.
+
+For additional documentation, please visit http://wp-issues-crm.com.  If necessary, please do contact the author at help@wp-issues-crm.com 
+-- we welcome feedback and do want to know how we can continue to improve this product.  
 
 == Screenshots ==
 
