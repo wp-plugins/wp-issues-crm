@@ -57,7 +57,6 @@ class WIC_Admin_Navigation {
 		self::admin_check_security( 'activate_plugins' );
 		echo '<div class="wrap"><h2>' . __( 'Upload Data', 'wp-issues-crm' ) . '</h2>';
 			$wic_admin_field = new WIC_Entity_Upload; 
-				// not to be confused with the data dictionary cache itself, this class is the editor of the dictionary
 		echo '<div>';
 	}
 	
