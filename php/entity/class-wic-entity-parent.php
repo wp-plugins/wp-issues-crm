@@ -503,63 +503,6 @@ abstract class WIC_Entity_Parent {
 	* REQUEST HANDLER FOR "LATEST" REQUESTS -- COMPUTE, SHOW FORM, INSTANTIATE FOR ACCESS TO VALUES
 	*
 	****************************************************************************************/
-	
-
-	// determine the latest of this entity which the user has saved, updated or selected from a list
-	/* protected function compute_latest ( $args ) { 
-		$user_id = 0;
-		if ( isset ( $args['id_requested']) ) {
-			$user_id = $args['id_requested'];
-		} 
-		// test for positive integer user ID
-		if ( 1 > $user_id || $user_id != absint( $user_id ) ) {
-			wic_generate_call_trace();
-			WIC_Function_Utilities::wic_error ( sprintf ( 'Bad User ID passed.' , $id ), __FILE__, __LINE__, __METHOD__, true );		
-		}
-		$wic_access_object = WIC_DB_Access_Factory::make_a_db_access_object( $this->entity );
-		// check last updated from database
-		$latest_update_array = $wic_access_object->updated_last ( $user_id );
-		// check last singleton found from search_log
-		$latest_search_array = $wic_access_object->search_log_last ( $user_id );
-		// determine which was later
-		$latest = WIC_Function_Utilities::choose_latest_non_blank ( 
-			$latest_update_array['latest_updated'], 
-			$latest_update_array['latest_updated_time'],
-			$latest_search_array['latest_searched'], 
-			$latest_search_array['latest_searched_time']
-			);
-		
-		$return_array = array();
-		// set latest if found
-		if ( $latest > '' ) {
-			$return_array['latest_entity'] = $latest;		
-		}		
-		// set latest search if source of latest
-		if ( $latest == $latest_search_array['latest_searched'] ) {
-			$return_array['latest_search_ID'] = $latest_search_array['latest_search_ID'];
-		}
-		
-		return ( $return_array );
-		
-	}	*/
-	
-/*	// display the latest of this entity for the user in an update form 
-	protected function get_latest ( $args ) { // as passed to function, args should contain user ID as 'id_requested'
-		$latest_array = $this->compute_latest ( $args  ); 
-		if ( isset ( $latest_array['latest_entity'] ) ) {	
-			$args2 = array ( 'id_requested' => $latest_array['latest_entity'] );
-			if ( isset ( $latest_array['latest_search_ID'] ) ) {
-				$args2['old_search_ID'] = $latest_array['latest_search_ID'];
-			}		
-			$this->id_search_no_log ( $args2 ); 
-				// id_search_no_log lives in the instantiated constituent or issue object
-				// and includes a form specific to the instantiated entity
-				// calls id_search_generic with the class for a constituent or issue
-		} else {
-			$this->new_blank_form(); 		
-		} 
-	} */
-	
 	// just load the latest entity -- used to give title to drop down when grabbing latest entity
 	protected function get_latest_no_form ( $args ) {
 		// $latest_array = $this->compute_latest ( $args ); 
@@ -567,10 +510,11 @@ abstract class WIC_Entity_Parent {
 		$user_id = $args['id_requested']; // assume this is good 
 		$wic_access_object = WIC_DB_Access_Factory::make_a_db_access_object( $this->entity ); // bypassing compute_latest
 		$latest_array = $wic_access_object->search_log_last ( $user_id ); // bypassing compute_latest
-
-		if ( $latest_array['latest_searched'] > '0' ) {								 	
-			$this->id_search_generic ( $latest_array['latest_searched'], '', '', false, false ); // just retrieves the record, if no class forms are passed, search is not logged 	
-		}	
+		if ( $latest_array ) { // false if no search_log entries
+			if ( $latest_array['latest_searched'] > '0' ) {	 // true if found search log entry actually retrieved a record							 	
+				$this->id_search_generic ( $latest_array['latest_searched'], '', '', false, false ); // just retrieves the record, if no class forms are passed, search is not logged 	
+			}	
+		}
 	}
 
 	// return the current ID and title for the object

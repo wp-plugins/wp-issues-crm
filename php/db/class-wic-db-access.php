@@ -107,6 +107,7 @@ abstract class WIC_DB_Access {
 	/*
 	*
 	* retrieve the latest search for an individual instance of this entity from the search log 
+	* return false if non-found
 	*
 	*/
 	public function search_log_last ( $user_id ) {
@@ -128,6 +129,10 @@ abstract class WIC_DB_Access {
 
 		// get ID of latest entity instance searched for by user
 		$latest_search = $wpdb->get_results ( $sql );
+		// handle condition of startup or purged search log		
+		if ( 0 == $wpdb->num_rows ) {
+			return ( false );	
+		}
 		$latest_searched_for = self::extract_id_search_from_array ( $latest_search[0]->serialized_search_array );
 
 		// if array was not an id search, $latest_searched_for will be empty
