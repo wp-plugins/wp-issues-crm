@@ -34,7 +34,8 @@
 *	WP_Issues_CRM classes are organized under subdirectories within the plugin directory like so: 
 *			<path to plugin>/php/class-category/class-identifier -- for example WIC_Entity_Issues is in /php/entity/class-wic-entity-issue.php
 *
-*  This module also includes hide private posts function (the only function created in the public name space by this plugin).
+*  This module also includes keep_private_posts_off_front_end_even_for_administrators
+*  (the only function created in the public name space by this plugin).
 */
 
 // set database version globals;
