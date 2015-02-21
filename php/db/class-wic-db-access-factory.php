@@ -27,6 +27,7 @@ class WIC_DB_Access_Factory {
 		'phone'			=> 'WIC_DB_Access_WIC',
 		'search_log'	=> 'WIC_DB_Access_WIC',	
 		'trend' 			=> 'WIC_DB_Access_Trend',
+		'upload'			=> 'WIC_DB_Access_Upload',
 		'user'			=> 'WIC_DB_Access_WP_User'
 	);
 

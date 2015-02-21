@@ -41,6 +41,7 @@ abstract class WIC_Control_Parent {
 	// initialize the default values of field RULES  
 		$this->field = $wic_db_dictionary->get_field_rules( $entity, $field_slug );
 		$this->default_control_args =  array_merge( $this->default_control_args, get_object_vars ( $this->field ) );
+		$this->default_control_args['type'] 					= 'text';	// field type is not directly a dictionary arg -- it comes from the control extension	
 		$this->default_control_args['input_class'] 			= 'wic-input';
 		$this->default_control_args['label_class'] 			= 'wic-label';
 		$this->default_control_args['field_slug_css'] 		= str_replace( '_', '-', $field_slug );
@@ -151,7 +152,9 @@ abstract class WIC_Control_Parent {
 		}
 
 		$readonly = $readonly ? 'readonly' : '';
-		$type = ( 1 == $hidden ) ? 'hidden' : 'text';
+
+		// allow extensions to set field type, but if hidden, is hidden		
+		$type = ( 1 == $hidden ) ? 'hidden' : $type;
 		 
 		$control = ( $field_label > '' && ! ( 1 == $hidden ) ) ? '<label class="' . esc_attr ( $label_class ) .
 				 ' ' . esc_attr( $field_slug_css ) . '" for="' . esc_attr( $field_slug ) . '">' . esc_html( $field_label ) . '</label>' : '' ;

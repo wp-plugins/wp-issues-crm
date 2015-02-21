@@ -7,11 +7,11 @@
 
 
 
-class WIC_Entity_Option_value extends WIC_Entity_Multivalue {
+class WIC_Entity_Upload extends WIC_Entity_Parent {
 
 	protected function set_entity_parms( $args ) {
 		extract ( $args );
-		$this->entity = 'option_value';
+		$this->entity = 'upload';
 		$this->entity_instance = $instance;
 	} 
 

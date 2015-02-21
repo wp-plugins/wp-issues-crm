@@ -998,6 +998,9 @@ li.pl-search_log-serialized_search_parameters{ display: none;}
 .pl-trend-category { width: 30%; }
 .pl-trend-category-count { width: 60%; }
 
+.pl-upload-upload_time { width: 15%; }
+.pl-upload-upload_by { width: 20%; }
+.pl-upload-upload_description { width: 65%; }
 .wic-list-legend {
 	margin: 10px 7.11111%;
 }

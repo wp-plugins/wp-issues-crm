@@ -196,3 +196,12 @@ CREATE TABLE wp_wic_search_log (
   KEY user_time (user_id,search_time)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
+CREATE TABLE wp_wic_upload (
+  ID bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  upload_time datetime NOT NULL,
+  upload_by bigint(20) NOT NULL,
+  upload_description varchar(255) NOT NULL,
+  upload_file varchar(255) NOT NULL,
+  PRIMARY KEY (ID),
+  KEY upload_time_upload_by (upload_time,upload_by)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;

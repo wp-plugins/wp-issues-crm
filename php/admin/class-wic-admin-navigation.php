@@ -29,7 +29,8 @@ class WIC_Admin_Navigation {
 		// add menu and submenu pages
 		add_menu_page( 'WP Issues CRM', 'WP Issues CRM', $main_security_setting, 'wp-issues-crm-main', array ( $this, 'do_dashboard' ), 'dashicons-smiley', $menu_position ); 		
 		add_submenu_page ( 'wp-issues-crm-main', 'WIC Preferences', 'User Preferences', $main_security_setting, 'wp-issues-crm-preferences', array ( $this, 'do_preferences') );
-		// show settings, fields and options pages only to administrators 
+		// show settings, fields and options and uploads pages only to administrators 
+		add_submenu_page( 'wp-issues-crm-main', 'Uploads', 'Uploads', 'activate_plugins', 'wp-issues-crm-uploads', array ( $this, 'do_uploads' ) );
 		add_submenu_page( 'wp-issues-crm-main', 'Options', 'Options', 'activate_plugins', 'wp-issues-crm-options', array ( $this, 'do_options' ) );
 		add_submenu_page( 'wp-issues-crm-main', 'Fields', 'Fields', 'activate_plugins', 'wp-issues-crm-fields', array ( $this, 'do_fields' ) );
 		// need to run add setting  before add page -- too late to register if try not to do the work until on the page 		
@@ -49,6 +50,14 @@ class WIC_Admin_Navigation {
 		self::admin_check_security( '' );
 		echo '<div class="wrap"><h2 id="wic-main-header">' . __( 'WP Issues CRM', 'wp-issues-crm' ) . '</h2>';	
 		$wic_admin_dashboard = new WIC_Admin_Dashboard;
+		echo '<div>';
+	}
+	
+	public function do_uploads () {
+		self::admin_check_security( 'activate_plugins' );
+		echo '<div class="wrap"><h2>' . __( 'Upload Data', 'wp-issues-crm' ) . '</h2>';
+			$wic_admin_field = new WIC_Entity_Upload; 
+				// not to be confused with the data dictionary cache itself, this class is the editor of the dictionary
 		echo '<div>';
 	}
 	
