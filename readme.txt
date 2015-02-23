@@ -63,6 +63,7 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 
 == Changelog ==
+Pending -- eliminate save search log entries for top entities other than constituents and issues.
 0.83 test for no search log condition -- new install or purged search log previously generated warnings.
 0.80 completion of all plugin functions except bulk upload
 

@@ -48,24 +48,53 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	
 	//handle a save (upload) request coming from a save form
 	protected function form_save () {
-		echo 'vvvvvvvvvvvvvvvvvvvvvv<br />';
-		// var_dump ($_POST);		
-		// var_dump ( $_FILES );
-		//var_dump ( is_uploaded_file ( $_FILES['upload_file']['tmp_name'] )) ;
-		$handle = fopen ( $_FILES['upload_file']['tmp_name'], 'r' );
-		var_dump ( $handle );
-    while (($data = fgetcsv($handle, 1000, ",")) !== FALSE) {
-        $num = count($data);
-        echo "<p> $num fields in line $row: <br /></p>\n";
-        $row++;
-        for ($c=0; $c < $num; $c++) {
-            echo $data[$c] . "<br />\n";
-        }
-    }
-		echo '<br />^^^^^^^^^^^^^^^';
-		//$this->form_save_update_generic ( true, 'WIC_Form_Search_Save', 'WIC_Form_Constituent_Update' );
+		$this->form_save_update_generic ( true, 'WIC_Form_Upload_Save', 'WIC_Form_Upload_Update' );
+	return;
+	}	
+	
+	//handle an update request coming from an update form
+	protected function form_update () {
+		$this->form_save_update_generic ( false, 'WIC_Form_Upload_Update', 'WIC_Form_Upload_Update' );
 		return;
 	}	
+	
+	// handle a search request for an ID coming from anywhere
+	protected function id_search ( $args ) {
+		$id = $args['id_requested']; 
+		$this->id_search_generic ( $id, 'WIC_Form_Upload_Update', '' , false, false ); // no sql, but do log search as individual, no old search
+		return;		
+	}	
+	
+	// function from parent needs to be overridden to set name value from $_FILES array
+	protected function populate_data_object_array_from_submitted_form() {
+
+		$this->initialize_data_object_array();
+
+		foreach ( $this->fields as $field ) {  	
+			if ( isset ( $_POST[$field->field_slug] ) ) {		
+				$this->data_object_array[$field->field_slug]->set_value( $_POST[$field->field_slug] );
+			} elseif ( isset ( $_FILES[$field->field_slug]['name'] ) ) {
+				$this->data_object_array[$field->field_slug]->set_value( $_FILES[$field->field_slug]['name'] );			
+			}	
+		} 
+	}	
+	
+	// no special sanitize function for file name -- go with default -- sanitize strip slashes -- see notes in WIC_control_file
+	
+	// primary validation function for an incoming file is in control file
+
+	// set values from initial save process to be visible on update form after save; on update, do nothing
+	protected function special_entity_value_hook ( &$wic_access_object ) {
+		if ( isset ( $wic_access_object->upload_time ) ) { // if one set, both set -- only set in access object on initial save		
+			$this->data_object_array['upload_time']->set_value( $wic_access_object->upload_time );
+			$this->data_object_array['upload_by']->set_value( $wic_access_object->upload_by );
+		}		
+	}	
+	
+	// function to sanitize value of upload_file (which will be saved file name)
+	protected function sanitize_upload_file () {
+		echo 'xxxxxxxxxxxxxxxxxxxx';	
+	}
 	
 }
 

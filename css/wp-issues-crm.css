@@ -952,6 +952,19 @@ button.wic-post-list-button {
 .wic-post-list-button.option-group-disabled:hover {
 	background: #eee;
 }
+/****************************************************************
+* upload screen styling 
+*
+******************************************************************/
+.wic-input.upload-description,
+.wic-input.upload-file {
+	width: 80%;
+}
+
+#wic-field-group-initial .wic-form-field-group-legend,
+#wic-inner-field-group-initial-toggle-button {
+	margin-left: 11.11111%;
+}
 
 /* list element widths */
 .pl-constituent-first_name{ width:14%;}

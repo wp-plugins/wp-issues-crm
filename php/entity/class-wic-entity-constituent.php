@@ -68,6 +68,11 @@ class WIC_Entity_Constituent extends WIC_Entity_Parent {
 		$this->form_save_update_generic ( true, 'WIC_Form_Constituent_Save', 'WIC_Form_Constituent_Update' );
 		return;
 	}
+	
+	// define saves of this entity as loggable in parent::form_save_update_generic
+	protected function log_saves() {
+		return true;	
+	}
 
 	//handle a search request coming search log (buttons with search ID go to search log first)
 	protected function redo_search_from_query ( $search ) {  

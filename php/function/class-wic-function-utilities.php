@@ -90,6 +90,22 @@ class WIC_Function_Utilities { // functions that serve multiple entities
 		return ( self::get_last_updated_by_array( 'wic_activity' ) );		
 	}
 
+	// for issue list: look up assigned user's display name
+	// but this is a generic function, also used in upload for example 
+	public static function issue_staff_formatter ( $user_id ) {
+		
+		$display_name = '';		
+		if ( isset ( $user_id ) ) { 
+			if ( $user_id > 0 ) {
+				$user =  get_users( array( 'fields' => array( 'display_name' ), 'include' => array ( $user_id ) ) );
+				$display_name = esc_attr( $user[0]->display_name ); // best to generate an error here if this is not set on non-zero user_id
+			}
+		}
+		return ( $display_name );
+	}
+
+
+
 	/*
 	* extract label from value/label array
 	*/

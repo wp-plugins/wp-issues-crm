@@ -109,10 +109,10 @@ INSERT INTO wp_wic_data_dictionary (ID, entity_slug, group_slug, field_slug, fie
 (149, 'trend', 'trend', 'trend_search_mode', 'select', 'Search Mode', 50, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', 'trend_search_modes', '', '', 0, 0, 1, '', 0, '0000-00-00 00:00:00'),
 (150, 'user', 'startup', 'first_form', 'select', 'Startup Form', 60, 0, 0, '', 0, 0, 0, 'search_history', 0, 0, '', '', 'first_form', '', '', 0, 0, 1, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'initial', 'ID', 'text', 'Internal Id for Upload', 0, 0, 0, '', 0, 0, 1, '', 0, 0, '', '', '', '', '', 0, 0, 1, '', 0, '0000-00-00 00:00:00'),
-(NULL, 'upload', 'initial', 'upload_time', 'date', 'Upload Time', 10, 10, 10, '', 0, 1, 0, '', 0, 0, '', '', '', '', '', 0, 0, 1, '', 0, '0000-00-00 00:00:00'),
-(NULL, 'upload', 'initial', 'upload_by', 'text', 'Upload User Id', 20, 20, 20, '', 0, 1, 0, '', 0, 0, '', '', '', '', '', 0, 0, 1, '', 0, '0000-00-00 00:00:00'),
-(NULL, 'upload', 'initial', 'upload_description', 'text', 'Upload Description', '30', '30', '30', '', '', '', '', '', '', '', '', '', '', '', '', '0', '0', '1', '', '', ''),
-(NULL, 'upload', 'initial', 'upload_file', 'file', 'File to Upload', '40', '0', '0', 'individual', '', '', '', '', '', '', '', '', '', '', '', '0', '0', '1', '', '', '');
+(NULL, 'upload', 'initial', 'upload_time', 'text', 'Upload Time', 10, 10, 10, '', 0, 1, 0, '', 0, 0, '', '', '', '', '', 0, 0, 1, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'upload', 'initial', 'upload_by', 'text', 'Upload User Id', 20, 20, 20, '', 0, 1, 0, '', 0, 0, '', '', 'get_administrator_array', '', 'issue_staff_formatter', 0, 0, 1, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'upload', 'initial', 'upload_description', 'textarea', 'Description', '30', '30', '30', '', '', '', '', '', '', '', '', '', '', '', '', '0', '0', '1', '', '', ''),
+(NULL, 'upload', 'initial', 'upload_file', 'file', 'File', '25', '0', '0', 'individual', '', '', '', '', '', '', '', '', '', '', '', '0', '0', '1', '', '', '');
 INSERT INTO wp_wic_form_field_groups (ID, entity_slug, group_slug, group_label, group_legend, group_order, initial_open, sidebar_location, last_updated_time, last_updated_by) VALUES
 (1, 'constituent', 'contact', 'Contact', '', 10, 1, 0, '0000-00-00 00:00:00', 0),
 (5, 'constituent', 'case', 'Case Management', '', 30, 1, 1, '0000-00-00 00:00:00', 0),
@@ -144,7 +144,7 @@ INSERT INTO wp_wic_form_field_groups (ID, entity_slug, group_slug, group_label, 
 (33, 'option_group', 'current_option_group_usage', 'Existing Database Values for this Option', 'Refer to the listing below of actually used option values for this option group when modifying the option value list.', 90, 1, 0, '0000-00-00 00:00:00', 0),
 (34, 'user', 'startup', 'Startup Screen', 'Select screen to start on.', 3, 1, 0, '0000-00-00 00:00:00', 0),
 (35, 'user', 'userid', '', '', 4, 1, 0, '0000-00-00 00:00:00', 0),
-(NULL, 'upload', 'initial', '', '', 4, 1, 0, '0000-00-00 00:00:00', 0);
+(NULL, 'upload', 'initial', 'Initial Upload', '', 4, 1, 0, '0000-00-00 00:00:00', 0);
 INSERT INTO wp_wic_option_group (ID, option_group_slug, option_group_desc, enabled, last_updated_time, last_updated_by, mark_deleted, is_system_reserved) VALUES
 (1, 'activity_type_options', 'Activity Types', 1, '2015-02-02 11:55:19', 15, '', 0),
 (2, 'address_type_options', 'Address Types', 1, '2015-01-26 00:00:00', 15, '', 0),

@@ -202,6 +202,8 @@ CREATE TABLE wp_wic_upload (
   upload_by bigint(20) NOT NULL,
   upload_description varchar(255) NOT NULL,
   upload_file varchar(255) NOT NULL,
+  last_updated_time datetime NOT NULL,
+  last_updated_by bigint(20) NOT NULL,
   PRIMARY KEY (ID),
   KEY upload_time_upload_by (upload_time,upload_by)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;

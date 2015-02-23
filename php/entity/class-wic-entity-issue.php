@@ -63,6 +63,11 @@ class WIC_Entity_Issue extends WIC_Entity_Parent {
 		return;
 	}
 
+	// define saves of this entity as loggable in parent::form_save_update_generic
+	protected function log_saves() {
+		return true;	
+	}
+
 	//handle a search request coming search log
 	protected function redo_search_from_query ( $search ) {  
 		$this->redo_search_from_meta_query ( $search, 'WIC_Form_Issue_Save', 'WIC_Form_Issue_Update' );
@@ -276,19 +281,6 @@ class WIC_Entity_Issue extends WIC_Entity_Parent {
 		return ( $return_list ) ;	
 	}	
 	
-	// for issue list: look up assigned user's display name 
-	public static function issue_staff_formatter ( $user_id ) {
-		
-		$display_name = '';		
-		if ( isset ( $user_id ) ) { 
-			if ( $user_id > 0 ) {
-				$user =  get_users( array( 'fields' => array( 'display_name' ), 'include' => array ( $user_id ) ) );
-				$display_name = esc_attr( $user[0]->display_name ); // best to generate an error here if this is not set on non-zero user_id
-			}
-		}
-		return ( $display_name );
-	}
-
 	// for author search, author drop down 
 	public static function get_post_author_options () {
 	

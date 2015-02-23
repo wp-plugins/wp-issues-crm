@@ -28,8 +28,7 @@ class WIC_Form_Upload_Update extends WIC_Form_Parent  {
 	
 	// define the form message (return a message)
 	protected function format_message ( &$data_array, $message ) {
-		$title = self::format_name_for_title ( $data_array );
-		$formatted_message = sprintf ( __('Update %1$s. ' , 'wp-issues-crm'), $title )  . $message;
+		$formatted_message =  __( 'Upload details update. ' , 'wp-issues-crm' )   . $message;
 		return ( $formatted_message );
 	}
 
@@ -41,27 +40,24 @@ class WIC_Form_Upload_Update extends WIC_Form_Parent  {
 	// legends
 	protected function get_the_legends( $sql = '' ) {
 		// report configuration settings related to upload capacity;
-		$legend = '<p>' . __( 'These system settings related to file uploads can be adjusted in your php.ini file:', 'wp-issues-crm' ) . '</p>' .
+		$legend = '<p>' . __( 'The system settings below can be adjusted in your php.ini file.  To upload 
+				successfully, file_uploads must be "on" and size and memory parameters must exceed your file size.
+				Input time relates to your connection speed.  Execution time relates to the work done in storing
+				the uploaded file to the database ( in preliminary form on upload or in final form after mapping ).
+				Your system settings are shown below:', 'wp-issues-crm' ) . '</p>' .
 			'<ul>' .
 				'<li>' . 'file_uploads: ' 				. ( 1 == ini_get ( 'file_uploads' ) ? 'on' : 'off' ) 	. '</li>' .	
 				'<li>' . 'upload_max_filesize: ' 	. ini_get ( 'upload_max_filesize' ) 			. '</li>' .			
 				'<li>' . 'post_max_size: ' 			. ini_get ( 'post_max_size' ) 					. '</li>' .
-				'<li>' . 'max_input_tim: ' 			. ini_get ( 'max_input_time' ) . ' seconds' 	. '</li>' .		
+				'<li>' . 'memory_limit: ' 				. ini_get ( 'memory_limit' ) 				. '</li>' .
+				'<li>' . 'max_input_time: ' 			. ini_get ( 'max_input_time' ) . ' seconds' 	. '</li>' .		
 				'<li>' . 'max_execution_time: ' 		. ini_get ( 'max_execution_time' ) . ' seconds' 		. '</li>' .
 				'<li>' . 'session.gc_maxlifetime: ' . ini_get ( 'session.gc_maxlifetime' ) . 'seconds' . '</li>' .
-				'<li>' . 'memory_limit: ' 				. ini_get ( 'memory_limit' ) 				. '</li>' .
+
 			'<ul>';
 		$legend = '<div class = "wic-form-legend">' . $legend . '</div>';					
 			
 		return ( $legend );
-	}
-	// support function for message
-	public static function format_name_for_title ( &$data_array ) {
-
-		// construct title starting with first name
-		$title = 	$data_array['upload_time']->get_value() . 'by' . $data_array['upload_time']->get_value();  
-		
-		return  ( $title );
 	}
 	
 	// group screen

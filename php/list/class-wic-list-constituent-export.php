@@ -147,7 +147,7 @@ class WIC_List_Constituent_Export {
 		header("Expires: 0");
 		header("Pragma: public");
 		
-		$fh = @fopen( 'php://output', 'w' );
+		$fh = @fopen( 'php://output', 'wb' ); // see notes on fopen -- open for write binary mode for portability
 		
 		 global $wpdb;
 		$headerDisplayed = false;

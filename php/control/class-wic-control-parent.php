@@ -186,6 +186,7 @@ abstract class WIC_Control_Parent {
 	/*********************************************************************************
 	*
 	* control validate -- will handle all including multiple values -- generic case is string
+	* here, rather than directly in entity to support multiple values
 	*
 	*********************************************************************************/
 
