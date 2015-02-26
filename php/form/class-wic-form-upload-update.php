@@ -56,7 +56,24 @@ class WIC_Form_Upload_Update extends WIC_Form_Parent  {
 
 			'<ul>';
 		$legend = '<div class = "wic-form-legend">' . $legend . '</div>';					
-			
+		/*** 
+		*	ini_system can only be set in php.ini or httpd.conf -- the others can be set in  php.ini, .htaccess, httpd.conf or .user.ini  	
+		*
+		* file_uploads 	  			"1" 		PHP_INI_SYSTEM 	
+		* max_file_uploads 			20 		PHP_INI_SYSTEM 	
+		* upload_max_filesize 		"2M" 		PHP_INI_PERDIR
+		* post_max_size 				"8M" 		PHP_INI_PERDIR ( must be greater than upload_max_filesize )
+		* memory_limit 				"128M" 	PHP_INI_ALL  	( must be greater than post_max_size -- for this script, s/b 2+ times upload file size attempted )
+		* max_input_time 				"-1" 		PHP_INI_PERDIR ( time from invocation of php at server to when execution begins -- parsing of input [and xmit?]  )
+		* max_execution_time 		"30" 		PHP_INI_ALL  	( can be altered by set_time_limit ))
+		* session.gc_maxlifetime 	"1440" 	PHP_INI_ALL  	( seconds to garbage clean up -- not likely the limiting factor )
+		* 
+		* Note that memory limit may also be set in Wordpress at 256 -- override wp_config: define( 'WP_MAX_MEMORY_LIMIT' , '999M' );
+		*
+		* http://www.ewhathow.com/2013/09/how-to-temporarily-set-memory-limit-to-unlimited-in-php/
+		*
+		* see short hand http://php.net/manual/en/faq.using.php#faq.using.shorthandbytes
+		***********/	
 		return ( $legend );
 	}
 	
