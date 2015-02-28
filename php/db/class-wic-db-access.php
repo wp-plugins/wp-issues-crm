@@ -173,35 +173,6 @@ abstract class WIC_DB_Access {
 	
 	/*
 	*
-	* retrieve last NON individual retrieval ( i.e., not containing 'ID' as search key)
-	* note that not looking at zero results -- these bounce to the user anyway
-	*
-	*
-	public function search_log_last_general ( $user_id ) { 
-		
-		global $wpdb;		
-		$search_log_table = $wpdb->prefix . 'wic_search_log';
-		$entity = $this->entity;
-		
-		$sql = 			
-			"
-			SELECT ID
-			FROM $search_log_table
-			WHERE user_id = $user_id
-				AND entity = '$entity'
-				AND result_count > 1
-			ORDER	BY search_time DESC
-			LIMIT 0, 1
-			";
-		
-		$latest_search = $wpdb->get_results ( $sql );
-
-		return ( $latest_search[0]->ID );
-
-	} 	 	*/
-	
-	/*
-	*
 	* retrieve last logged event
 	*
 	*/
@@ -434,6 +405,16 @@ abstract class WIC_DB_Access {
 	*/
 	public function updated_last ( $user_id ) {
 		return ( $this->db_updated_last ( $user_id ) );
+	}
+
+	public static function table_count ( $table_name ) {
+		global $wpdb;
+		// expects fully qualified table name with prefix
+		$result = $wpdb->get_results ( "
+			SELECT COUNT(*) as table_count from $table_name
+			"
+			);
+		return ( $result[0]->table_count );	
 	}
 
 	abstract protected function db_search ( $meta_query_array, $search_parameters );

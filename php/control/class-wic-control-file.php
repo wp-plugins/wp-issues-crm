@@ -24,12 +24,9 @@ class WIC_Control_File extends WIC_Control_Parent {
 		return ( $control );
 	}
 	
-	// note that in the absence of specific sanitization function for the control, parent does: sanitize_text_field ( stripslashes ( ) )
-	// this may be excessive for some file names, but no harm as file name is just a memo field, not even used for deduping or restart
-	// also is truncated to 255 as is varchar 255 field
-	
-	// put validation logic here -- format of parent validator is to pass a value to entity level validator while there is no value to pass
+
 	// the validation logic offered is about any file control, not about the upload file entity
+	// see entity_upload for additional validation
 
 	public function validate() { 
 	
@@ -59,56 +56,12 @@ class WIC_Control_File extends WIC_Control_Parent {
       	return ( $validation_error );		
 		}
 
-		// does this at least purport to be a csv file ?
-		if ( 'csv' != pathinfo( $this->value, PATHINFO_EXTENSION) ) {
-			$validation_error = __( 'This upload function only accepts .csv files.', 'wp-issues-crm' );
-			return ( $validation_error );
-		}
-
 		// check file size > 0 
 		if ( $upload_file_array["size"]  == 0) {
       	$validation_error = __( 'File uploaded shows as having size 0.', 'wp-issues-crm' );
       	return ( $validation_error );
 		} 
 
-		// take a closer look
-		$handle = fopen( $upload_file_array['tmp_name'], 'rb' );
-		
-		// abort if can't open the file
-		if ( ! $handle ) {
-			$validation_error .= __( 'Error opening uploaded file', 'wp-issues-crm' );		
-			return ( $validation_error );
-		}
-	
-		// does it really act like a csv file?
-  	   $data = fgetcsv( $handle, 10000, ',' ); // taking comma as delimiter can also specify enclosure and escape -- defaults are:  '"', "\" );
-  	   		// setting high maximum line length, mainly to catch condition where no recognized line breaks
-      if ( false === $data ) {
-			$validation_error = __( 'File uploaded and opened, but unable to read file as csv. ', 'wp-issues-crm' );		
-			return ( $validation_error );
-		} elseif (  count( $data ) < 2 ) {      	
-			$validation_error = __( 'File appears to have zero or one columns, possible error in delimiter definition.', 'wp-issues-crm' );		
-			return ( $validation_error );
-      }
-      
-      // check for consistent column count
-      $count = count ( $data );
-      $row_count = 1;
-      while ( ($data = fgetcsv($handle, 10000, ",")) !== FALSE) {	
-      	$row_count++;	
-			if ( count ( $data ) != $count ) {
-				$validation_error = sprintf ( __( 'File appears to have inconsistent column count.  
-								First row had %1$d columns, but row %2$d had %3$d columns.', 'wp-issues-crm' ), 
-								$count, $row_count, count ( $data ) );
-				return ( $validation_error );						
-			} 
-      }
-
-		// reject singleton row count
-		if ( 1 == $row_count ) {
-			$validation_error = __( 'File appears to have only one row, possible error in file creation.', 'wp-issues-crm' );					
-		}
-		
 		return ( $validation_error );
 	}
 	

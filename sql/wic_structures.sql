@@ -202,6 +202,7 @@ CREATE TABLE wp_wic_upload (
   upload_by bigint(20) NOT NULL,
   upload_description varchar(255) NOT NULL,
   upload_file varchar(255) NOT NULL,
+  serialized_upload_parameters varchar(255) NOT NULL,
   last_updated_time datetime NOT NULL,
   last_updated_by bigint(20) NOT NULL,
   PRIMARY KEY (ID),

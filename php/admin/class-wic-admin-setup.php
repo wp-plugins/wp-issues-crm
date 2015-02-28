@@ -88,7 +88,7 @@ class WIC_Admin_Setup {
 		}		
  	}
 
-	public function wic_set_up_roles_and_capabilities() {
+	public static function wic_set_up_roles_and_capabilities() {
 
 		// give administrators the manage constituents capacity	
 	   $role = get_role( 'administrator' );

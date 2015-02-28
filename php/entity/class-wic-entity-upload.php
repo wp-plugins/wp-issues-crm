@@ -18,7 +18,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 
 		$this->set_entity_parms( '' );
 		if ( ! isset ( $_POST['wic_form_button'] ) ) {
-			$this->list_uploads();
+			 $this->list_uploads();
 		} else {
 			$control_array = explode( ',', $_POST['wic_form_button'] ); 		
 			$args = array (
@@ -34,7 +34,10 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		// table entry in the access factory will make this a standard WIC DB object
 		$wic_query = 	WIC_DB_Access_Factory::make_a_db_access_object( $this->entity );
 		// pass a blank array to retrieve all uploads
-		$wic_query->search ( array(), array( 'retrieve_limit' => 9999, 'show_deleted' => true, 'log_search' => false ) );
+		$wic_query->search (  
+				array(),	
+				array( 'retrieve_limit' => 9999, 'show_deleted' => true, 'log_search' => false ) 
+			);
 		$lister_class = 'WIC_List_' . $this->entity ;
 		$lister = new $lister_class;
 		$list = $lister->format_entity_list( $wic_query, '' ); 
@@ -79,73 +82,142 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		} 
 	}	
 	
-	// no special sanitize function for file name -- go with default -- sanitize strip slashes -- see notes in WIC_control_file
+	/************************************************************************************************
+	*
+	* sanitizor functions invoked by the control sanitizor if present
+	*
+	************************************************************************************************/
+	// sanitize the file name	
+	public static function upload_file_sanitizor ( $upload_file ) {
+		return ( sanitize_file_name ( $upload_file ) );			
+	}
 	
-	// primary validation function for an incoming file is in control file
+	public static function delimiter_sanitizor ( $delimiter ) {
+	
+		// sanitize the delimiter by translating to valid delimiter and enforcing default
+		$decode_delimiter = array (
+			'comma' 	=> ',',
+			'semi'	=>	';',
+			'tab'		=>	'\t',
+			'space'	=>	' ',
+			'colon'	=>	':',
+			'hyphen'	=>	'-',		
+		);
+		$delimiter = isset ( $decode_delimiter[$delimiter] ) ? $decode_delimiter[$delimiter] : ',';
+
+		return ( $delimiter );
+	}	
+	
+	public static function enclosure_sanitizor ( $enclosure ) {
+	
+	// sanitize the enclosure by translating to valid enclosure and enforcing default
+		$decode_enclosure = array (
+			'1'		=>	'\'',
+			'2'		=>	'"',
+			'b'		=> '`',
+		); 		
+		$enclosure = isset ( $decode_enclosure[$enclosure] ) ? $decode_enclosure[$enclosure] : '"';
+
+		return ( $enclosure );
+		
+	}	
+	
+	// sanitize the escape value
+	public static function escape_sanitizor ( $escape ) {	
+		// override unset, empty, blank or over-escaped escape character
+		if ( ! isset ( $escape ) ) {
+			$escape = "\\";		
+		} elseif ( '' == $escape || ' ' == $escape || '\\\\' == $escape ) {
+			$escape = "\\";		
+		}
+		return ( $escape );
+	
+	}
+	
+	
+	// primary validation function for an incoming file is in control_file, but additional validation requires specifics of the upload request
+	// these are present in the data_object_array, not visible to the control file, so do this here.
+	public function validate_values() {
+		
+		$validation_errors = parent::validate_values();
+		$file_name = $this->data_object_array['upload_file']->get_value();
+		
+		// if no form errors and basic file tests are OK, test readability of upload file
+		if ( '' == $validation_errors && isset ( $_FILES[$file_name] ) ) { // do additional validation only if passed basic and have file
+
+			// does this at least purport to be a csv file ?
+			if ( 'csv' != pathinfo( $file_name, PATHINFO_EXTENSION) && 'txt' != pathinfo( $file_name, PATHINFO_EXTENSION)) {
+				$validation_errors .= __( 'This upload function only accepts .csv and .txt files.', 'wp-issues-crm' );
+			}			
+
+			if  ( '' == $validation_errors ) {	
+				// open the upload file
+				$handle = fopen( $_FILES['upload_file']['tmp_name'], 'rb' );
+				// error if can't open the file
+				if ( ! $handle ) {
+					$validation_errors .= __( 'Error opening uploaded file', 'wp-issues-crm' );		
+				}
+			}
+
+			if  ( '' == $validation_errors ) {		
+				// does it really act like a csv file?
+		  	   $data = fgetcsv( $handle, 
+		  	   			$this->data_object_array['max_line_length']->get_value(),
+		  	   			$this->data_object_array['delimiter']->get_value(),
+		  	   			$this->data_object_array['enclosure']->get_value(),
+		  	   			$this->data_object_array['escape']->get_value()
+		  	   			); 
+		      if ( false === $data ) {
+					$validation_errors .= __( 'File uploaded and opened, but unable to read file as csv.  Check upload parameters. ', 'wp-issues-crm' );		
+				} elseif (  count( $data ) < 2 ) {      	
+					$validation_errors .= __( 'File appears to have zero or one columns, possible error in delimiter definition.', 'wp-issues-crm' );		
+		      }
+	      }
+
+	      if  ( '' == $validation_errors ) {
+		      //start over 
+		      rewind( $handle );
+		      // check for consistent column count
+		      $count = count ( $data );
+		      $row_count = 1;
+		      while ( ( $data = fgetcsv($handle, 
+				  			$this->data_object_array['max_line_length']->get_value(),
+				  			$this->data_object_array['delimiter']->get_value(),
+				 			$this->data_object_array['enclosure']->get_value(),
+				 			$this->data_object_array['escape']->get_value()
+			         ) ) !== FALSE) {	
+		      	$row_count++;	
+					if ( count ( $data ) != $count ) {
+						$validation_errors .= sprintf ( __( 'File appears to have inconsistent column count.  
+										First row had %1$d columns, but row %2$d had %3$d columns.', 'wp-issues-crm' ), 
+										$count, $row_count, count ( $data ) );
+					} 
+		      }
+		
+				// reject singleton row count
+				if ( 1 == $row_count ) {
+					$validation_errors .= __( 'File appears to have only one row, possible error in file creation or upload parameters.', 'wp-issues-crm' );					
+				}
+			}
+		}	
+
+		if ( $validation_errors > '' ) {
+			$this->outcome = false;		
+			$this->explanation .= $validation_errors;
+			return ( $validation_errors );		
+		} else {
+			return ('');		
+		}
+	} 
 
 	// set values from initial save process to be visible on update form after save; on update, do nothing
 	protected function special_entity_value_hook ( &$wic_access_object ) {
 		if ( isset ( $wic_access_object->upload_time ) ) { // if one set, both set -- only set in access object on initial save		
 			$this->data_object_array['upload_time']->set_value( $wic_access_object->upload_time );
 			$this->data_object_array['upload_by']->set_value( $wic_access_object->upload_by );
+			$this->data_object_array['serialized_upload_parameters']->set_value( $wic_access_object->serialized_upload_parameters );
 		}		
 	}	
 	
-	// function to sanitize value of upload_file (which will be saved file name)
-	protected function sanitize_upload_file () {
-		echo 'xxxxxxxxxxxxxxxxxxxx';	
-	}
 	
 }
-
-// validation errors
-
-/* http://php.net/manual/en/features.file-upload.errors.php
-<?php
-
-class UploadException extends Exception
-{
-    public function __construct($code) {
-        $message = $this->codeToMessage($code);
-        parent::__construct($message, $code);
-    }
-
-    private function codeToMessage($code)
-    {
-        switch ($code) {
-            case UPLOAD_ERR_INI_SIZE:
-                $message = "The uploaded file exceeds the upload_max_filesize directive in php.ini";
-                break;
-            case UPLOAD_ERR_FORM_SIZE:
-                $message = "The uploaded file exceeds the MAX_FILE_SIZE directive that was specified in the HTML form";
-                break;
-            case UPLOAD_ERR_PARTIAL:
-                $message = "The uploaded file was only partially uploaded";
-                break;
-            case UPLOAD_ERR_NO_FILE:
-                $message = "No file was uploaded";
-                break;
-            case UPLOAD_ERR_NO_TMP_DIR:
-                $message = "Missing a temporary folder";
-                break;
-            case UPLOAD_ERR_CANT_WRITE:
-                $message = "Failed to write file to disk";
-                break;
-            case UPLOAD_ERR_EXTENSION:
-                $message = "File upload stopped by extension";
-                break;
-
-            default:
-                $message = "Unknown upload error";
-                break;
-        }
-        return $message;
-    }
-}
-
-// Use
-if ($_FILES['file']['error'] === UPLOAD_ERR_OK) {
-//uploading successfully done
-} else {
-throw new UploadException($_FILES['file']['error']);
-} */

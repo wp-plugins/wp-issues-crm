@@ -964,8 +964,26 @@ button.wic-post-list-button {
 #wic-field-group-initial .wic-form-field-group-legend,
 #wic-inner-field-group-initial-toggle-button {
 	margin-left: 11.11111%;
+	margin-right: 11.1111%;
 }
 
+#wic-field-group-upload_tips {
+	margin: 30px 11.1111%;
+}	
+
+#wic-field-group-upload_parameters {
+	margin-left: 11.11111%;
+}
+
+ul#upload-tips {
+	list-style-type: disc;
+	list-style-position: inside;
+}
+
+.wic-upload-legend {
+	margin: 10px 7.11111% 10px 7.11111%;
+	font-size: .8em;
+}
 /* list element widths */
 .pl-constituent-first_name{ width:14%;}
 .pl-constituent-middle_name{ width:14%;}

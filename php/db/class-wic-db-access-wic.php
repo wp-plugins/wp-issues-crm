@@ -174,8 +174,9 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 		}
 		$join = ( '' == $join ) ? $wpdb->prefix . 'wic_' . $this->entity : $join; 
 
-		// prepare SQL
-		$sql = $wpdb->prepare( "
+		// prepare SQL ( or skip prepare if no user input to where clause)
+		if ( $where > '' ) {
+			$sql = $wpdb->prepare( "
 					SELECT $found_rows	$select_list
 					FROM 	$join
 					WHERE 1=1 $deleted_clause $where 
@@ -183,7 +184,17 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 					$order_clause
 					LIMIT 0, $retrieve_limit
 					",
-				$values );	
+				$values );
+		} else {
+			$sql = "
+					SELECT $found_rows	$select_list
+					FROM 	$join
+					WHERE 1=1 $deleted_clause 
+					GROUP BY $top_entity.ID
+					$order_clause
+					LIMIT 0, $retrieve_limit
+					";
+		}	
 		// $sql group by always returns single row, even if multivalues for some records 
 
 		$sql_found = "SELECT FOUND_ROWS() as found_count";

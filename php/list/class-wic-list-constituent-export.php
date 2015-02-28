@@ -14,17 +14,23 @@ class WIC_List_Constituent_Export {
 				// convert the array objects from $wic_query into a string
 
   		$id_list = '(';
+
 		foreach ( $wic_query->result as $result ) {
 			$id_list .= $result->ID . ',';		
 		} 	
   		$id_list = trim($id_list, ',') . ')';
 
+		$current_user = wp_get_current_user();	
+		$file_name = 'wic-export-' . $current_user->user_firstname . '-' .  current_time( 'Y-m-d-H-i-s' )  .  '.csv' ; 
+		$temp_file = sys_get_temp_dir() . DIRECTORY_SEPARATOR  . $file_name; 
+		
+		global $wpdb;	
+
    	// go direct to database and do customized search
    	// create a new WIC access object and search for the id's
 
-		global $wpdb;	
 
-		$sql = 	"SELECT first_name, last_name,  
+		$sql = 	"SELECT  first_name, last_name,  
 						max( email_address ) as emails, 
 						max( city ) as city, 
 						max( phone_number ) as phones,
@@ -39,11 +45,14 @@ class WIC_List_Constituent_Export {
 					WHERE c.ID IN $id_list
 					AND ( address_type = '0' or address_type is null )
 					GROUP BY c.ID
+					INTO OUTFILE '$temp_file'
+					FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' ESCAPED BY '\\\\'
+  					LINES TERMINATED BY '\n'					
 					"; 
 
 		$results = $wpdb->get_results ( $sql, ARRAY_A ); 
 
-		return ( $results );
+		return ( $file_name );
 	}
 
 
@@ -68,7 +77,7 @@ class WIC_List_Constituent_Export {
 			$wic_query->search ( $search['meta_query_array'], $search_parameters );
 	
 			if ( 'constituent' == $search['entity'] ) { // done if constituents only
-				$results = self::assemble_list_for_export( $wic_query ); 
+				$file_name = self::assemble_list_for_export( $wic_query ); 
 			} elseif ( 'issue' ==  $search['entity'] ) { // need to run issues through 'Comment' logic to get constituents 
 				$issue_array = array();
 				foreach ( $wic_query->result as $issue ) {
@@ -79,10 +88,10 @@ class WIC_List_Constituent_Export {
 					'search_id' => $id,
 					);
 				$comment_query = new WIC_Entity_Comment ( 'get_constituents_by_issue_id', $args );
-				$results = self::assemble_list_for_export( $comment_query ); 
+				$file_name = self::assemble_list_for_export( $comment_query ); 
 			} 
 			
-			self::do_the_export( $results );
+			self::do_the_export( $file_name );
 	
 			WIC_DB_Access::mark_search_as_downloaded( $id );
 			
@@ -108,9 +117,9 @@ class WIC_List_Constituent_Export {
 			// initiate a query with those activity search parameters and issue category as an additional criterion
 			$wic_query->search_activities_with_category_slice( $search['meta_query_array'], $category_contributors );
 			// pass the retrieved constituent ID's to assembly function for details	
-			$results = self::assemble_list_for_export ( $wic_query ); 
+			$file_name = self::assemble_list_for_export ( $wic_query ); 
 			// send the file
-			self::do_the_export ( $results );
+			self::do_the_export ( $file_name );
 			// mark the whole search as downloaded (no mechanism to mark slice)	
 			WIC_DB_Access::mark_search_as_downloaded( $search_id  );
 			// done -- no log marking
@@ -135,31 +144,20 @@ class WIC_List_Constituent_Export {
 		}
 	}
 
-	private static function do_the_export ( $results ) {
-			
-		$current_user = wp_get_current_user();	
-		$fileName = 'wic-export-' . $current_user->user_firstname . '-' .  current_time( 'Y-m-d-H-i-s' )  .  '.csv' ; 
-		
+	private static function do_the_export ( $file_name ) {
+
+		$temp_file = sys_get_temp_dir() . DIRECTORY_SEPARATOR  . $file_name; 
 		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 		header('Content-Description: File Transfer');
 		header("Content-type: text/csv");
-		header("Content-Disposition: attachment; filename={$fileName}");
+		header("Content-Disposition: attachment; filename={$file_name}");
 		header("Expires: 0");
 		header("Pragma: public");
-		
-		$fh = @fopen( 'php://output', 'wb' ); // see notes on fopen -- open for write binary mode for portability
-		
-		 global $wpdb;
-		$headerDisplayed = false;
-		
-		foreach ( $results as $data ) {
-		    if ( !$headerDisplayed ) {
-		        fputcsv($fh, array_keys($data));
-		        $headerDisplayed = true;
-		    }
-		    fputcsv($fh, $data);
-		}
-		fclose($fh);
+
+
+		// $fh = @fopen( 'php://output', 'wb' ); // see notes on fopen -- open for write binary mode for portability
+		copy ( $temp_file, 'php://output' ); 
+		unlink ( $temp_file );
 	
 	}
 

@@ -112,7 +112,14 @@ INSERT INTO wp_wic_data_dictionary (ID, entity_slug, group_slug, field_slug, fie
 (NULL, 'upload', 'initial', 'upload_time', 'text', 'Upload Time', 10, 10, 10, '', 0, 1, 0, '', 0, 0, '', '', '', '', '', 0, 0, 1, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'initial', 'upload_by', 'text', 'Upload User Id', 20, 20, 20, '', 0, 1, 0, '', 0, 0, '', '', 'get_administrator_array', '', 'issue_staff_formatter', 0, 0, 1, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'initial', 'upload_description', 'textarea', 'Description', '30', '30', '30', '', '', '', '', '', '', '', '', '', '', '', '', '0', '0', '1', '', '', ''),
-(NULL, 'upload', 'initial', 'upload_file', 'file', 'File', '25', '0', '0', 'individual', '', '', '', '', '', '', '', '', '', '', '', '0', '0', '1', '', '', '');
+(NULL, 'upload', 'initial', 'upload_file', 'file', 'File', '25', '0', '0', 'individual', '', '', '', '', '', '', '', '', '', '', '', '0', '0', '1', '', '', ''),
+(NULL, 'upload', 'upload_parameters', 'serialized_upload_parameters', 'text', 'Upload Parameters', 40, 0, 0, '', 0, 1, 0, '', 0, 0, '', '', '', '', 'serialized_upload_parameters_formatter', 0, 0, 1, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'upload', 'save_options', 'includes_column_headers', 'checked', 'Has column headers', 5, 0, 0, '', 0, 0, 0, '1', 0, 1, '', '', '', '', '', 0, 0, 1, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'upload', 'save_options', 'max_execution_time', 'text', 'Max execution time', 10, 0, 0, '', 0, 0, 0, '1200', 0, 1, '', '', '', '', '', 0, 0, 1, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'upload', 'save_options', 'delimiter', 'radio', 'Delimiter', 20, 0, 0, '', 0, 0, 0, 'comma', 0, 1, '', '', 'delimiter_options', '', '', 0, 0, 1, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'upload', 'save_options', 'enclosure', 'radio', 'Enclosure', 30, 0, 0, '', 0, 0, 0, '2', 0, 1, '', '', 'enclosure_options', '', '', 0, 0, 1, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'upload', 'save_options', 'escape', 'text', 'Escape', 40, 0, 0, '', 0, 0, 0, '\\', 0, 1, '', '', '', '', '', 0, 0, 1, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'upload', 'save_options', 'max_line_length', 'text', 'Max line length', 50, 0, 0, '', 0, 0, 0, '5000', 0, 1, '', '', '', '', '', 0, 0, 1, '', 0, '0000-00-00 00:00:00');
 INSERT INTO wp_wic_form_field_groups (ID, entity_slug, group_slug, group_label, group_legend, group_order, initial_open, sidebar_location, last_updated_time, last_updated_by) VALUES
 (1, 'constituent', 'contact', 'Contact', '', 10, 1, 0, '0000-00-00 00:00:00', 0),
 (5, 'constituent', 'case', 'Case Management', '', 30, 1, 1, '0000-00-00 00:00:00', 0),
@@ -143,8 +150,11 @@ INSERT INTO wp_wic_form_field_groups (ID, entity_slug, group_slug, group_label, 
 (32, 'data_dictionary', 'current_field_config', 'Existing Groups and Fields', 'Refer to the list of current groups and fields on the constituent form to choose where to position your custom field.', 20, 1, 0, '0000-00-00 00:00:00', 0),
 (33, 'option_group', 'current_option_group_usage', 'Existing Database Values for this Option', 'Refer to the listing below of actually used option values for this option group when modifying the option value list.', 90, 1, 0, '0000-00-00 00:00:00', 0),
 (34, 'user', 'startup', 'Startup Screen', 'Select screen to start on.', 3, 1, 0, '0000-00-00 00:00:00', 0),
-(35, 'user', 'userid', '', '', 4, 1, 0, '0000-00-00 00:00:00', 0),
-(NULL, 'upload', 'initial', 'Initial Upload', '', 4, 1, 0, '0000-00-00 00:00:00', 0);
+(35, 'user', 'userid', '', '', 10, 1, 0, '0000-00-00 00:00:00', 0),
+(NULL, 'upload', 'initial', 'Initial Upload', '', 10, 1, 0, '0000-00-00 00:00:00', 0),
+(NULL, 'upload', 'upload_tips', 'Upload Tips', '', 15, 1, 0, '0000-00-00 00:00:00', 0),
+(NULL, 'upload', 'upload_parameters', 'Upload Parameters', '', 20, 1, 0, '0000-00-00 00:00:00', 0),
+(NULL, 'upload', 'save_options', 'Upload Parameters', '', 20, 1, 1, '0000-00-00 00:00:00', 0);
 INSERT INTO wp_wic_option_group (ID, option_group_slug, option_group_desc, enabled, last_updated_time, last_updated_by, mark_deleted, is_system_reserved) VALUES
 (1, 'activity_type_options', 'Activity Types', 1, '2015-02-02 11:55:19', 15, '', 0),
 (2, 'address_type_options', 'Address Types', 1, '2015-01-26 00:00:00', 15, '', 0),
@@ -170,7 +180,9 @@ INSERT INTO wp_wic_option_group (ID, option_group_slug, option_group_desc, enabl
 (28, 'count_to_ten', 'Number of issues to retrieve', 1, '0000-00-00 00:00:00', 0, '', 0),
 (29, 'trend_search_modes', 'Trend Search Modes', 1, '2015-02-10 12:00:00', 15, '0', 1),
 (30, 'capability_levels', 'Capability Levels', 1, '2015-02-11 16:38:00', 15, '', 0),
-(31, 'first_form', 'Form to show on startup', 1, '0000-00-00 00:00:00', 0, '', 1);
+(31, 'first_form', 'Form to show on startup', 1, '0000-00-00 00:00:00', 0, '', 1),
+(32, 'delimiter_options', 'Upload file columns delimited by', 1, '0000-00-00 00:00:00', 0, '', 1),
+(33, 'enclosure_options', 'Upload file columns enclosed by', 1, '0000-00-00 00:00:00', 0, '', 1);
 INSERT INTO wp_wic_option_value (ID, option_group_id, option_value, option_label, value_order, enabled, last_updated_time, last_updated_by) VALUES
 (1, '3', '', '', 30, 1, '2015-01-28 00:00:00', 15),
 (2, '3', '0', 'Closed', 10, 1, '2015-01-28 00:00:00', 15),
@@ -267,4 +279,13 @@ INSERT INTO wp_wic_option_value (ID, option_group_id, option_value, option_label
 (123, '30', 'manage_wic_constituents', 'Only Constituent Managers and Administrators', 40, 1, '0000-00-00 00:00:00', 0),
 (124, '31', 'my_cases', 'Cases assigned to me', 10, 1, '0000-00-00 00:00:00', 0),
 (125, '31', 'my_issues', 'Issues assigned to me', 20, 1, '0000-00-00 00:00:00', 0),
-(126, '31', 'search_history', 'My recent activity', 30, 1, '0000-00-00 00:00:00', 0);
+(126, '31', 'search_history', 'My recent activity', 30, 1, '0000-00-00 00:00:00', 0),
+(NULL, '32', 'comma', 'Comma', 10, 1, '0000-00-00 00:00:00', 0),
+(NULL, '32', 'semi', 'Semi-Colon', 20, 1, '0000-00-00 00:00:00', 0),
+(NULL, '32', 'tab', 'Tab', 30, 1, '0000-00-00 00:00:00', 0),
+(NULL, '32', 'space', 'Space', 40, 1, '0000-00-00 00:00:00', 0),
+(NULL, '32', 'colon', 'Colon', 50, 1, '0000-00-00 00:00:00', 0),
+(NULL, '32', 'hyphen', 'Hyphen (-)', 60, 1, '0000-00-00 00:00:00', 0),
+(NULL, '33', '1', 'Single Quote (\')', 20, 1, '0000-00-00 00:00:00', 0),
+(NULL, '33', '2', 'Double Quote (\")', 10, 1, '0000-00-00 00:00:00', 0),
+(NULL, '33', 'b', 'Back Tick (\`)', 30, 1, '0000-00-00 00:00:00', 0);

@@ -37,7 +37,6 @@ class WIC_List_Upload extends WIC_List_Parent {
 	
 	protected function format_rows( &$wic_query, &$fields ) {
 		$output = '';
-		
 				
 		$line_count = 1;
 		// convert the array objects from $wic_query into a string
@@ -50,9 +49,6 @@ class WIC_List_Upload extends WIC_List_Parent {
    	// create a new WIC access object and search for the id's
   		$wic_query2 = WIC_DB_Access_Factory::make_a_db_access_object( $wic_query->entity );
 		$wic_query2->list_by_id ( $id_list ); 
-
-		// check current user so can highlight assigned cases
-		$current_user_id = get_current_user_id();
 		
 		// loop through the rows and output a list item for each
 		foreach ( $wic_query2->result as $row_array ) {
