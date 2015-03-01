@@ -1007,8 +1007,6 @@ li.nav-tab-active  {
 }
 
 
-
-
 .wic-input.upload-description,
 .wic-input.upload-file {
 	width: 80%;
@@ -1037,6 +1035,56 @@ ul#upload-tips {
 	margin: 10px 7.11111% 10px 7.11111%;
 	font-size: .8em;
 }
+
+#wic-inner-field-group-upload_parameters-toggle-button {
+	display: none;
+}
+
+#wic-draggable-column {
+	float: left;
+	width: 50%;
+}
+#wic-droppable-column {
+	float: left;
+	width: 50%;
+}
+
+.wic-draggable {
+	width: 150px;
+	height: 20px;
+	background: #eef;
+	border: 1px solid #33f;
+	border-radius: 3px;
+	margin: 5px 0; 
+	text-align: center;
+}
+
+.wic-droppable {
+	width: 200px;
+	height: 50px;
+	background: #eee;
+	border: 1px solid #999;
+	border-radius: 3px;
+	margin: 5px 0; 
+}
+
+
+.wic-droppable.wic-droppable-hover {
+	border: 1px solid #3f3;
+}
+
+.wic-droppable.wic-droppable-highlight {
+	background: #fff;
+	border: 1px solid #f33;
+}
+.wic-droppable.wic-state-dropped {
+	background: #efe;
+	border: 1px solid #3f3;
+}
+
+
+
+
 /* list element widths */
 .pl-constituent-first_name{ width:14%;}
 .pl-constituent-middle_name{ width:14%;}

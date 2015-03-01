@@ -67,7 +67,12 @@ class WIC_Admin_Setup {
 			);
 			wp_enqueue_script('wic-changed-page');
 
-
+			wp_register_script(
+				'wic-jquery-ui',
+				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-jquery-ui.js' , __FILE__ ),
+				array ( 'jquery-ui-droppable', 'jquery-ui-draggable', 'jquery-ui-sortable' ) 
+			);
+			wp_enqueue_script('wic-jquery-ui');
 			
 			wp_register_style(
 				'wp-issues-crm-styles',

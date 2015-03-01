@@ -110,6 +110,13 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		return;		
 	}	
 	
+	protected function map ( $args ) {
+		$id = $args['id_requested']; 
+		$this->id_search_generic ( $id, 'WIC_Form_Upload_Map', '' , false, false ); // no sql, but do log search as individual, no old search
+		$map_form = new WIC_Form_Upload_Map( $args ); 
+	}
+		
+	
 	// function from parent needs to be overridden to set name value from $_FILES array
 	protected function populate_data_object_array_from_submitted_form() {
 
@@ -258,17 +265,13 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			$this->data_object_array['upload_time']->set_value( $wic_access_object->upload_time );
 			$this->data_object_array['upload_by']->set_value( $wic_access_object->upload_by );
 			$this->data_object_array['serialized_upload_parameters']->set_value( $wic_access_object->serialized_upload_parameters );
+			$this->data_object_array['serialized_column_map']->set_value( $wic_access_object->serialized_column_map );
 		}		
 	}	
 	
 	protected function details ( $args ) {
 		$this->id_search( $args );
 	}	
-	
-	protected function map ( $args ) {
-		echo self::format_tab_titles( $_GET['upload_id'] );
-		echo '<h3>here goes the mapping stuff</h3>';	
-	}
 	
 	protected function match ( $args ) {
 		echo self::format_tab_titles( $_GET['upload_id'] );

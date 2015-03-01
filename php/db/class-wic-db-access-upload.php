@@ -12,7 +12,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	public $upload_time;
 	public $upload_by;
 	public $serialized_upload_parameters;
-
+	public $serialized_column_map;
 
 	/*
 	*
@@ -240,7 +240,14 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			$upload_parameters['discrepancy']		= $discrepancy;
 		} 
 
-		$this->serialized_upload_parameters = serialize( $upload_parameters );		
+		$this->serialized_upload_parameters = serialize( $upload_parameters );
+		
+		// initialize column map for later use with unmapped columns
+		$column_map = array();
+		foreach ( $column_names as $column ) {
+			$column_map[$column] = '';			
+		}
+		$this->serialized_column_map = serialize ( $column_map );		
 		// proceed to update the upload table with the identity of the successful upload
 		$save_update_array[] = array( 
 			'key' 					=> 'upload_time', 
@@ -261,7 +268,16 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			'value'					=> $this->serialized_upload_parameters,
 			'wp_query_parameter' => '', 
 			'soundex_enabled'		=> false,
-		); 		
+		); 	
+
+		$save_update_array[] = array( 
+			'key' 					=> 'serialized_column_map', 
+			'value'					=> $this->serialized_column_map,
+			'wp_query_parameter' => '', 
+			'soundex_enabled'		=> false,
+		); 	
+		
+			
 		parent::db_save( $save_update_array );
 		
 	}

@@ -358,4 +358,19 @@ class WIC_DB_Dictionary {
 		
 	}	
 
+	public function get_uploadable_fields () {
+		
+		$uploadable_fields = array();
+		foreach ( $this->field_rules_cache as $field ) {
+			if ( 1 == $field->uploadable ) {
+				$uploadable_fields[] = 	array ( 
+					'entity' => $field->entity_slug, 
+					'field'	=> $field->field_slug,
+				 );			
+			}
+		}	
+	
+		return ( $uploadable_fields );
+	}
+
 }
