@@ -7,6 +7,9 @@
 
 class WIC_Form_Trend_Search extends WIC_Form_Parent  {
 	
+	// no header tabs
+	protected function format_tab_titles( &$data_array ){}
+	
 	// associate form with entity in data dictionary
 	protected function get_the_entity() {
 		return ( 'trend' );	

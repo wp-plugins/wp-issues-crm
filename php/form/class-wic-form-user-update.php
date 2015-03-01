@@ -12,6 +12,10 @@ class WIC_Form_User_Update extends WIC_Form_Parent  {
 		return ( 'user' );	
 	}
 
+	// no header tabs
+	protected function format_tab_titles( &$data_array ){}
+
+
 	// define the top row of buttons (return a row of wic_form_button s)
 	protected function get_the_buttons ( &$data_array ) {
 		$button_args_main = array(

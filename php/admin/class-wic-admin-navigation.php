@@ -56,7 +56,7 @@ class WIC_Admin_Navigation {
 	public function do_uploads () {
 		self::admin_check_security( 'activate_plugins' );
 		echo '<div class="wrap"><h2>' . __( 'Upload Data', 'wp-issues-crm' ) . '</h2>';
-			$wic_admin_field = new WIC_Entity_Upload; 
+			$wic_admin_upload = new WIC_Entity_Upload; 
 		echo '<div>';
 	}
 	

@@ -28,6 +28,8 @@ abstract class WIC_Form_Parent  {
 		$groups = $wic_db_dictionary->get_form_field_groups( $this->get_the_entity() );
 		return ($groups );
 	}
+	// issue tab titles before the form
+	abstract protected function format_tab_titles ( &$data_array );
 	// add attributes to the form ( e.g. onsubmit parameter )
 	abstract protected function supplemental_attributes();
 	// define the top row of buttons (return a row of wic_form_buttons)
@@ -68,6 +70,8 @@ abstract class WIC_Form_Parent  {
 	public function layout_form ( &$data_array, $message, $message_level, $sql = '' ) {
 		
 		global $wic_db_dictionary;		
+		
+		echo $this->format_tab_titles( $data_array );		
 		
 		?><div id='wic-forms'> 
 		

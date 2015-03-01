@@ -7,6 +7,8 @@
 */
 
 class WIC_Form_Activity_Update extends WIC_Form_Multivalue_Update  {
+
+	protected function format_tab_titles( &$data_array ){}
 	
 	public function __construct ( $entity, $instance ) {
 		$this->entity = $entity;

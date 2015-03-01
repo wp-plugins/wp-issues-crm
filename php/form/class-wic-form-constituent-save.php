@@ -7,7 +7,7 @@
 */
 
 class WIC_Form_Constituent_Save extends WIC_Form_Constituent_Update  {
-
+	
 	// buttons	
 	protected function get_the_buttons ( &$data_array ) {
 		$button_args_main = array(

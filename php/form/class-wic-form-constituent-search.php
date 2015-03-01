@@ -12,6 +12,9 @@ class WIC_Form_Constituent_Search extends WIC_Form_Parent  {
 		return ( 'constituent' );	
 	}
 
+	// no header tabs
+	protected function format_tab_titles( &$data_array ){}
+
 	// define the top row of buttons (return a row of wic_form_button s)
 	protected function get_the_buttons ( &$data_array ) {
 

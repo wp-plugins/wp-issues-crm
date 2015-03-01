@@ -7,6 +7,11 @@
 
 class WIC_Form_Upload_Update extends WIC_Form_Parent  {
 
+	protected function format_tab_titles( &$data_array ) {
+		return ( WIC_Entity_Upload::format_tab_titles( $data_array['ID']->get_value() ) );	
+	}
+
+
 	// associate form with entity in data dictionary
 	protected function get_the_entity() {
 		return ( 'upload' );	
@@ -21,14 +26,16 @@ class WIC_Form_Upload_Update extends WIC_Form_Parent  {
 			'button_label'					=> __('Update', 'wp-issues-crm')
 		);	
 		
-		$button = $this->create_wic_form_button ( $button_args_main );
+		$buttons = $this->create_wic_form_button ( $button_args_main );
 
-		return ( $button  ) ;
+		$buttons .= '<a href="/wp-admin/admin.php?page=wp-issues-crm-uploads">' . __( 'Back to Uploads List', 'wp-issues-crm' ) . '</a>';
+
+		return ( $buttons  ) ;
 	}
 	
 	// define the form message (return a message)
 	protected function format_message ( &$data_array, $message ) {
-		$formatted_message =  __( 'Upload details update. ' , 'wp-issues-crm' )   . $message;
+		$formatted_message =  __( 'Upload details. ' , 'wp-issues-crm' )   . $message;
 		return ( $formatted_message );
 	}
 
@@ -53,7 +60,18 @@ class WIC_Form_Upload_Update extends WIC_Form_Parent  {
 	
 	// function to be called for special group
 	protected function group_special_upload_parameters ( &$doa ) {
-		return ( $doa['serialized_upload_parameters']->get_value() ); 					
+		// note that this data is also shown as a hidden readonly control in the form
+		$array = unserialize ( $doa['serialized_upload_parameters']->get_value() );
+		$output = '<table id="wp-issues-crm-stats">';
+		foreach ($array as $key=>$value ) {
+			if ( 'includes_column_headers' == $key ) {
+				$value = ( 1 == $value ) ? 'Yes' : 'No';			
+			}
+			$output .= '<tr><td class = "wic-statistic-table-name">' . esc_html ( $key  ) . '</td><td>' . esc_html ( $value ) . '</td><tr>';
+			 		
+		}
+		$output .= '</table>';
+		return $output; 					
 	}
 	
 	// hooks not implemented

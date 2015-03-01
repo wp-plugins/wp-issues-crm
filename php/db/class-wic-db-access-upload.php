@@ -230,21 +230,17 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		$elapsed_time = time() - $save_start;
 		// expand the upload parameters array with results/accounting 
 		$upload_parameters['method'] 					= $method;
-		$upload_parameters['elapsed_time'] 			= $elapsed_time;
-		$upload_parameters['actual_max_execution'] = ini_get ( 'max_execution_time' ); // should be same as max setting if was successful
+		$upload_parameters['execution_time_allowed'] = ini_get ( 'max_execution_time' ); // should be same as max setting if was successful
+		$upload_parameters['actual_execution_time'] 			= $elapsed_time;
 		$upload_parameters['peak_memory_usage'] 	= memory_get_peak_usage( true );
-		$upload_parameters['columns count']			= $count_columns;
+		$upload_parameters['columns_count']			= $count_columns;
 		$upload_parameters['insert_count']			= $insert_count;
+		$upload_parameters['staging_table_name']	= $table_name;
 		if ( isset ( $discrepancy ) ) {
 			$upload_parameters['discrepancy']		= $discrepancy;
 		} 
-		$string_value = '';
-		foreach ( $upload_parameters as $key=>$value ) {
-			$string_value .= esc_html ( $key ) . ': ' . esc_html ( $value ) . ' <br /> ';
-		}
 
-		// can't actually serialize -- confusing characters;		
-		$this->serialized_upload_parameters = $string_value;
+		$this->serialized_upload_parameters = serialize( $upload_parameters );		
 		// proceed to update the upload table with the identity of the successful upload
 		$save_update_array[] = array( 
 			'key' 					=> 'upload_time', 

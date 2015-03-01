@@ -12,6 +12,10 @@ class WIC_Form_Issue_Update extends WIC_Form_Parent  {
 		return ( 'issue' );	
 	}
 
+	// no header tabs
+	protected function format_tab_titles( &$data_array ){}
+
+
 	// define form buttons
 	protected function get_the_buttons ( &$data_array ) {
 		$button_args_main = array(

@@ -12,7 +12,10 @@
 */
 
 class WIC_Form_Multivalue_Search extends WIC_Form_Parent  {
-	
+
+	// no header tabs
+	protected function format_tab_titles( &$data_array ){}
+
 	
 	protected $entity = '';
 	

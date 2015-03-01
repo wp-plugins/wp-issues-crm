@@ -15,20 +15,62 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	} 
 	
 	public function __construct() {
-
+		
 		$this->set_entity_parms( '' );
-		if ( ! isset ( $_POST['wic_form_button'] ) ) {
+		// default action for page is to show the list
+		if ( ! isset ( $_POST['wic_form_button'] ) && ! isset( $_GET[ 'action' ] )  ) {
 			 $this->list_uploads();
-		} else {
-			$control_array = explode( ',', $_POST['wic_form_button'] ); 		
-			$args = array (
-				'id_requested'			=>	$control_array[2],
-				'instance'				=> '', // unnecessary in this context, absence will not create an error but here for consistency about arguments;
-			);
-			// note that control[0] is superfluous in admin context since page only serves a single entity class
-			$this->{$control_array[1]}( $args );
+		// if have a button or an action requested, doing something other than list
+		} else { 
+			// first, do we have a button press? if so, take the requested action			
+			if ( isset ( $_POST['wic_form_button'] ) ) {
+				$control_array = explode( ',', $_POST['wic_form_button'] ); 		
+				$args = array (
+					'id_requested'			=>	$control_array[2],
+					'instance'				=> '', // unnecessary in this context, absence will not create an error but here for consistency about arguments;
+				);
+	 			// if we have are doing the preliminary upload, will just do that -- show no tabs, otherwise show tabs before taking action
+				// note that control[0] is superfluous in admin context since page only serves a single entity class
+				$this->{$control_array[1]}( $args );
+			// if no button, then there is a get string
+			}	else {		
+ 				$action = $_GET['action'];
+				$args = array (
+					'id_requested'			=>	$_GET['upload_id'],
+					'instance'				=> '', // unnecessary in this context, absence will not create an error but here for consistency about arguments;
+				);
+				$this->$action( $args );
+			}
+			
 		}
 	}	
+
+	public static function format_tab_titles ( $upload_id ) {
+		
+		$tab_titles_array = array (
+			'Upload Details' 	=> 'details', 		
+			'Map Fields'		=> 'map',
+			'Define Matching'	=>	'match',
+			'Complete Upload'	=>	'complete',
+		);			
+		
+		$active_tab = isset( $_GET[ 'action' ] )  ? $_GET[ 'action' ] : 'details';		
+		
+		$output = '<div id = "upload-tabs-headers"><ul class = "upload-tabs-headers">';
+		    	foreach ( $tab_titles_array as $tab_title => $tab_link ) {
+		    		$nav_tab_active = ( $active_tab == $tab_link ) ? 'nav-tab-active' : 'nav-tab-inactive';
+					$output .= '<li class="' . $nav_tab_active . '">
+							<a href="/wp-admin/admin.php?page=wp-issues-crm-uploads&action=' . $tab_link . '&upload_id=' . $upload_id . '"> '. 
+						esc_html( trim( $tab_title ) )  .'</a></li>';
+   			
+				}  
+      $output .= '</ul></div><div class = "horbar-clear-fix" ></div>';
+	
+		return ( $output );
+	
+	}
+
+
 	
 	protected function list_uploads () {
 		// table entry in the access factory will make this a standard WIC DB object
@@ -219,5 +261,22 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		}		
 	}	
 	
+	protected function details ( $args ) {
+		$this->id_search( $args );
+	}	
 	
+	protected function map ( $args ) {
+		echo self::format_tab_titles( $_GET['upload_id'] );
+		echo '<h3>here goes the mapping stuff</h3>';	
+	}
+	
+	protected function match ( $args ) {
+		echo self::format_tab_titles( $_GET['upload_id'] );
+		echo '<h3>here goes the match stuff</h3>';	
+	}
+	
+	protected function complete ( $args ) {
+		echo self::format_tab_titles( $_GET['upload_id'] );
+		echo '<h3>here goes the complete stuff</h3>';	
+	}
 }

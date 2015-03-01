@@ -8,15 +8,25 @@
 
 class WIC_Form_Upload_Save extends WIC_Form_Upload_Update  {
 
+	// no header tabs
+	protected function format_tab_titles( &$data_array ){}
+	
 	// buttons	
 	protected function get_the_buttons ( &$data_array ) {
+
 		$button_args_main = array(
 			'entity_requested'			=> 'upload',
 			'action_requested'			=> 'form_save',
 			'button_class'					=> 'button button-primary wic-form-button',
 			'button_label'					=> __('Upload', 'wp-issues-crm')
 		);	
-		return ( $this->create_wic_form_button ( $button_args_main ) ) ;
+		
+		$buttons = $this->create_wic_form_button ( $button_args_main );
+		
+		$buttons .= '<a href="/wp-admin/admin.php?page=wp-issues-crm-uploads">' . __( 'Back to Uploads List', 'wp-issues-crm' ) . '</a>';
+		
+		return ( $buttons ) ;
+
 	}
 	
 	// group screen
