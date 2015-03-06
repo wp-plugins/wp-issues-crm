@@ -293,6 +293,20 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		parent::db_update ( $save_update_array );	
 	}	
 	
+	/**
+	*
+	* support for column mapping ajax in wic_entity_upload
+	*
+	*/	
+	// quick look up
+	public static function get_column_map ( $upload_id ) {
+		global $wpdb;
+		$table = $wpdb->prefix . 'wic_upload';
+		$sql = "SELECT serialized_column_map FROM $table where ID = $upload_id";
+		$result = $wpdb->get_results( $sql );
+		return ( $result[0]->serialized_column_map );
+	}	
+	
 }
 
 

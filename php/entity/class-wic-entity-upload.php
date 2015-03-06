@@ -282,4 +282,17 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		echo self::format_tab_titles( $_GET['upload_id'] );
 		echo '<h3>here goes the complete stuff</h3>';	
 	}
+	
+	public static function get_column_map( $upload_id ) {
+		$column_map = json_encode ( unserialize ( WIC_DB_Access_Upload::get_column_map( $upload_id ) ) ) ;
+		echo $column_map;
+		wp_die();
+	}	
+	public static function remap_columns() {
+		
+		extract ( $_POST ) ;
+       echo $dog . $cat . $fish * $cloud;
+		wp_die();
+	}
+	
 }

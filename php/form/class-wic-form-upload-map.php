@@ -47,20 +47,32 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 	
 	// function to be called for special group
 	protected function group_special_upload_parameters ( &$doa ) {
-		// note that this data is also shown as a hidden readonly control in the form
+
 		$output = '';
-		$output = '<div id = "wic-draggable-column">';		
+		
+		// list fields from database for matching
+		$output .= '<div id = "wic-droppable-column">';
+		$output .= '<h3>' . __( 'Target Database Fields', 'wp-issue-crm' ) . '</h3>';
+				
+		global $wic_db_dictionary;
+		$fields_array = $wic_db_dictionary->get_uploadable_fields (); 
+				
+		foreach ( $fields_array as $field ) {
+			$output .= '<div class="wic-droppable">' . $field['entity'] . '--' . $field['field'] . '</div>';
+		}
+		$output .= '</div>';
+
+		// list fields from upload file to be matched
+		$output .= '<div id = "wic-draggable-column">';
+		$output .= '<h3>' . __( 'Fields from Upload File (drop in target)', 'wp-issue-crm' ) . '</h3>';				
 		$column_map = unserialize ( $doa['serialized_column_map']->get_value() );
 		foreach ( $column_map as $key=>$value ) {
 			$output .= '<div class="wic-draggable">' . $key . '</div>';
 		}
-		$output .= '</div><div id = "wic-droppable-column">';
-		global $wic_db_dictionary;
-		$fields_array = $wic_db_dictionary->get_uploadable_fields (); 
-		foreach ( $fields_array as $field ) {
-			$output .= '<div class="wic-droppable">' . $field['entity'] . '--' . $field['field'] . '</div>';
-		}
-		$output .= '</div><div class = "horbar-clear-fix"></div>';
+		$output .= '</div>';
+
+		$output .= '<div class = "horbar-clear-fix"></div>';
+		$output .= $doa['ID']->update_control();
 
 
 		return $output; 					

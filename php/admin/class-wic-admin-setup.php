@@ -26,6 +26,9 @@ class WIC_Admin_Setup {
 		
 		//	enqueue styles and scripts	
 		add_action( 'admin_enqueue_scripts', array( $this, 'add_wic_scripts' ) );
+		
+		//	set ajax responses early, as if in the plugin base
+		$this->set_wic_ajax_responses();
 
 		// set up download hook -- admin init is early enough to intercept button for download
 		add_action( 'admin_init', array( $this, 'do_download' ) );	
@@ -49,7 +52,11 @@ class WIC_Admin_Setup {
 	
 	}
 
-
+	public function set_wic_ajax_responses() { 
+		$wic_ajax = new WIC_Admin_Ajax;
+		add_action( 'wp_ajax_wp_issues_crm', array ( $wic_ajax, 'route_ajax' ));
+	}
+	
 	// load scripts and styles only for this plugin's pages
 	public function add_wic_scripts ( $hook ) {
 	
@@ -73,6 +80,21 @@ class WIC_Admin_Setup {
 				array ( 'jquery-ui-droppable', 'jquery-ui-draggable', 'jquery-ui-sortable' ) 
 			);
 			wp_enqueue_script('wic-jquery-ui');
+
+			wp_register_script(
+				'wic-ajax-script',
+				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-ajax-script.js' , __FILE__ ),
+				array ( 'jquery' ) 
+			);
+			wp_enqueue_script('wic-ajax-script');
+			
+			// name spacing the URL by putting it into plugin specific global object -- probably not really necessary
+			wp_localize_script( 'wic-ajax-script', 'wic_ajax_object',
+            array( 
+            	'ajax_url' 			=> admin_url( 'admin-ajax.php' ),
+            	'wic_ajax_nonce' 	=> wp_create_nonce ( 'wic_ajax_nonce' ),  
+            ) 
+			);		
 			
 			wp_register_style(
 				'wp-issues-crm-styles',
