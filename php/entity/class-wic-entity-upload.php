@@ -287,11 +287,18 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		$column_map = json_encode ( unserialize ( WIC_DB_Access_Upload::get_column_map( $upload_id ) ) ) ;
 		echo $column_map;
 		wp_die();
-	}	
-	public static function remap_columns() {
+	}
+	
+	// response to json post	
+	public static function remap_columns( $wic_data ) {
 		
-		extract ( $_POST ) ;
-       echo $dog . $cat . $fish * $cloud;
+		$wic_data = json_decode ( stripslashes ( $wic_data ) ) ;
+
+		$product = 1;
+		foreach ( $wic_data as $datum ) {
+       $product = $datum * $product;
+      }
+		echo json_encode ( $product );		
 		wp_die();
 	}
 	

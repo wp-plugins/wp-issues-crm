@@ -76,8 +76,7 @@ class WIC_Admin_Setup {
 
 			wp_register_script(
 				'wic-jquery-ui',
-				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-jquery-ui.js' , __FILE__ ),
-				array ( 'jquery-ui-droppable', 'jquery-ui-draggable', 'jquery-ui-sortable' ) 
+				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-jquery-ui.js' , __FILE__ )
 			);
 			wp_enqueue_script('wic-jquery-ui');
 
@@ -88,14 +87,25 @@ class WIC_Admin_Setup {
 			);
 			wp_enqueue_script('wic-ajax-script');
 			
-			// name spacing the URL by putting it into plugin specific global object -- probably not really necessary
+			// name spacing the URL by putting it into plugin specific global object and setting nonce
 			wp_localize_script( 'wic-ajax-script', 'wic_ajax_object',
             array( 
             	'ajax_url' 			=> admin_url( 'admin-ajax.php' ),
             	'wic_ajax_nonce' 	=> wp_create_nonce ( 'wic_ajax_nonce' ),  
             ) 
-			);		
+			);	
 			
+			// load script for upload mapping only on upload page.
+			if ( isset ( $_GET['action'] ) ) {
+				if ( 'map' == $_GET['action'] ) {
+					wp_register_script(
+						'wic-upload-map',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-map.js' , __FILE__ ),
+						array ( 'jquery-ui-droppable', 'jquery-ui-draggable', 'jquery-ui-sortable' ) 
+					);
+					wp_enqueue_script('wic-upload-map');
+				}	
+			}
 			wp_register_style(
 				'wp-issues-crm-styles',
 				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'wp-issues-crm.css' , __FILE__ )

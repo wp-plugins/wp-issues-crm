@@ -1035,19 +1035,11 @@ ul#upload-tips {
 	margin: 10px 7.11111% 10px 7.11111%;
 	font-size: .8em;
 }
-
+#wic-inner-field-group-save_options-toggle-button,
 #wic-inner-field-group-upload_parameters-toggle-button {
 	display: none;
 }
 
-#wic-draggable-column {
-	float: left;
-	width: 50%;
-}
-#wic-droppable-column {
-	float: left;
-	width: 50%;
-}
 
 .wic-draggable {
 	width: 150px;
@@ -1060,12 +1052,17 @@ ul#upload-tips {
 }
 
 .wic-droppable {
-	width: 200px;
-	height: 50px;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
 	background: #eee;
 	border: 1px solid #999;
 	border-radius: 3px;
-	margin: 5px 0; 
+	float: left; 
+	height: 50px;
+	margin: 0 2% 10px 0;
+	padding: 5px; 
+	width: 31.333%;
 }
 
 

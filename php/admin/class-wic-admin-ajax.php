@@ -20,14 +20,27 @@ class WIC_Admin_Ajax {
 		if ( ! wp_verify_nonce ( $nonce, 'wic_ajax_nonce' ) ) {
 			 die ( __( 'Bad nonce in AJAX call to WIC_Admin_Ajax', 'wp_issues_crm' ) );		
 		}
-		
-		// now, for each WP_Issues_CRM Ajax Call type, check security and route	
-		// note: choosing note to consistently instantiate an entity for AJAX calls -- keep as light as possible 	
+		/**
+		* now, for each WP_Issues_CRM Ajax Call type, check security and route
+		*	
+		* note: choosing note to consistently instantiate an entity for AJAX calls -- keep as light as possible
+		*
+		* on client side, sending:
+		*	var postData = {
+		*		action: 'wp_issues_crm', 
+		*		wic_ajax_nonce: wic_ajax_object.wic_ajax_nonce,
+		*		entity: entity,
+		*		sub_action: action,
+		*		id_requested: idRequested,
+		*		wic_data: JSON.stringify( data )
+		*		};
+		*		 
+		*/	
 		if ( 'remap_columns' == $_POST['sub_action'] ) {
 				self::ajax_check_capability( '' ); // use access setting for general WP Issues CRM access 
-				WIC_Entity_Upload::remap_columns();	
+				WIC_Entity_Upload::remap_columns( $_POST['wic_data'] );	
 		} elseif ( 'get_column_map' == $_POST['sub_action'] ) {
-				self::ajax_check_capability( '' ); // use access setting for general WP Issues CRM access 
+				self::ajax_check_capability( '' );  
 				WIC_Entity_Upload::get_column_map( $_POST['id_requested'] );	
 		}
 	}	

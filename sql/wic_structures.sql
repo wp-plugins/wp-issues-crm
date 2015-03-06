@@ -104,7 +104,7 @@ CREATE TABLE wp_wic_data_dictionary (
   reverse_sort tinyint(1) NOT NULL DEFAULT '0',
   customizable tinyint(1) NOT NULL DEFAULT '0',
   enabled tinyint(1) NOT NULL DEFAULT '1',
-  uploadable tinyint(1) NOT NULL DEFAULT '1',
+  uploadable int(11) NOT NULL,
   mark_deleted varchar(10) NOT NULL,
   last_updated_by bigint(20) NOT NULL,
   last_updated_time datetime NOT NULL,

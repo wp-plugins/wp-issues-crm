@@ -337,6 +337,7 @@ class WIC_DB_Dictionary {
 		
 	}	
 	
+	// for legend on search forms
 	public  function get_match_type_string ( $entity, $type ) {
 		
 		$match_type_string = array();
@@ -361,16 +362,43 @@ class WIC_DB_Dictionary {
 	public function get_uploadable_fields () {
 		
 		$uploadable_fields = array();
+		
+		// custom field upload order can run from 800 to 999
+		// 1000 and up goes to the activity division
+		$custom_field_base_order = 800;
 		foreach ( $this->field_rules_cache as $field ) {
-			if ( 1 == $field->uploadable ) {
+			if ( 0 < $field->uploadable ) {
 				$uploadable_fields[] = 	array ( 
 					'entity' => $field->entity_slug, 
 					'field'	=> $field->field_slug,
+					'label'	=> $field->field_label,
+					'order'	=> $field->uploadable
 				 );			
+			} elseif ( false !== stripos( $field->field_slug, 'custom_field_' ) ) {
+				$uploadable_fields[] = 	array ( 
+					'entity' => $field->entity_slug, 
+					'field'	=> $field->field_slug,
+					'label'	=> $field->field_label,
+					'order'	=> $custom_field_base_order
+				 );	
+				$custom_field_base_order++;	
 			}
 		}	
-	
+		
+		
+		$test = usort ( $uploadable_fields, array ( $this, "uploadable_sort_order" ) );		
+
 		return ( $uploadable_fields );
+	}
+
+	// support sorting of uploadable fields by uploadable order
+	private function uploadable_sort_order ( $field1, $field2 ) {
+		if ( $field1['order'] == $field2['order'] ) { 
+			$compare = 0;		
+		} else {
+			$compare =  $field1['order'] < $field2['order'] ? -1 : 1; 
+		}
+		return ( $compare );		
 	}
 
 }
