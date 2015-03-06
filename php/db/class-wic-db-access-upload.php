@@ -242,10 +242,16 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 
 		$this->serialized_upload_parameters = serialize( $upload_parameters );
 		
+		$interface_table = $wpdb->prefix . 'wic_interface';
+		// prepare to lookup fields in learned column map
+		$sql = "SELECT * FROM $interface_table WHERE upload_field_name = %s";
 		// initialize column map for later use with unmapped columns
 		$column_map = array();
 		foreach ( $column_names as $column ) {
-			$column_map[$column] = '';			
+			$lookup_sql = $wpdb->prepare ( $sql, array ( $column ) );
+			$lookup = $wpdb->get_results ( $lookup_sql );
+			$found = isset ( $lookup [0] ) ? array ( 'entity' => $lookup[0]->matched_entity, 'field' => $lookup[0]->matched_field ) : '';
+			$column_map[$column] =$found;			
 		}
 		$this->serialized_column_map = serialize ( $column_map );		
 		// proceed to update the upload table with the identity of the successful upload

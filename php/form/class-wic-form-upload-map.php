@@ -48,7 +48,7 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 	}
 	// group screen
 	protected function group_screen( $group ) { 
-		return ( 'upload_parameters' == $group->group_slug || 'save_options' == $group->group_slug ) ;	
+		return ( 'upload_parameters' == $group->group_slug  || 'save_options' == $group->group_slug ) ;	
 	}
 	
 	// special use existing groups as special within this form
@@ -93,19 +93,18 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 		$output .= '<div class = "horbar-clear-fix"></div>';
 		$output .= $doa['ID']->update_control();
 
-
 		return $output; 					
 	}
 	
 	protected function group_special_save_options ( &$doa ) {
 		
-		$output = '';
+		$output = ''; 
 				// list fields from upload file to be matched
 		$output .= '<div id = "wic-draggable-column">';
 		$output .= '<h3>' . __( 'Upload fields to be dropped', 'wp-issue-crm' ) . '</h3>';				
 		$column_map = unserialize ( $doa['serialized_column_map']->get_value() );
 		foreach ( $column_map as $key=>$value ) {
-			$output .= '<div id = "' . $key . '" class="wic-draggable">' . $key . '</div>';
+			$output .= '<div id = "wic-draggable-' . $key . '" class="wic-draggable">' . $key . '</div>';
 		}
 		$output .= '</div>';
 		return $output;

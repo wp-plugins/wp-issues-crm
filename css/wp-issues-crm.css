@@ -62,20 +62,11 @@ button.button.button-primary.wic-top-menu-button.back-to-list span.dashicons {
 .wic-top-menu-button span.dashicons {
 	color: white;
 }
-
-
-}
 /*
 *
 * icon styling for menus and also in forms
 *
 */
-
-span.dashicons.dashicons-arrow-left-alt,
-span.dashicons.dashicons-smiley,
-.dashicons-dismiss, {
-	vertical-align: bottom;
-}
 
 .dashicons-email-alt {
 	vertical-align: middle;
@@ -133,7 +124,7 @@ span.dashicons.dashicons-smiley,
 #wic-post-list .wic-form-button.second-position,
 .wic-post-form .second-position {
 	margin: 0 .888% 20px 0;
-} */
+} 
 
 
 /* body of form -- field group areas */
@@ -567,7 +558,7 @@ li.constituent-comment-issue {
 }
 
 li.constituent-comment-date {
-	margin-right: 1.5625%px; 
+	margin-right: 1.5625%; 
 }
 
 ul.constituent-comment-row,
@@ -1044,6 +1035,7 @@ ul#upload-tips {
 .wic-draggable {
 	width: 150px;
 	height: 20px;
+	cursor: move;
 	background: #eef;
 	border: 1px solid #33f;
 	border-radius: 3px;
@@ -1058,7 +1050,7 @@ ul#upload-tips {
 	background: #eee;
 	border: 1px solid #999;
 	border-radius: 3px;
-	float: left; 
+	float: left;  
 	height: 50px;
 	margin: 0 2% 10px 0;
 	padding: 5px; 
@@ -1079,6 +1071,25 @@ ul#upload-tips {
 	border: 1px solid #3f3;
 }
 
+#wic-form-upload-map #wic-form-sidebar-groups {
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	border-left: 1px solid #aaa;
+	display: inline-block;
+	height: initial;
+	overflow-y: initial;
+	overflow-x: initial;
+	padding: 0 30px;
+	vertical-align: top;
+	width: 36%;	
+}
+
+#wic-form-upload-map #wic-form-main-groups {
+	display: inline-block;
+	overflow-x: initial;
+	width: 64%; 
+}
 
 
 
@@ -1228,3 +1239,4 @@ td.wic-statistic  {
 		padding: 0;
 		width: 80%;	
 	}
+}

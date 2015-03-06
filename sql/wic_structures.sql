@@ -210,3 +210,10 @@ CREATE TABLE wp_wic_upload (
   PRIMARY KEY (ID),
   KEY upload_time_upload_by (upload_time,upload_by)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+CREATE TABLE wp_wic_interface (
+  upload_field_name varchar(255) NOT NULL,
+  matched_entity varchar(255) NOT NULL,
+  matched_field varchar(255) NOT NULL,
+  PRIMARY KEY (upload_field_name)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
