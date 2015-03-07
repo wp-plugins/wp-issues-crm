@@ -71,11 +71,12 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 				
 		foreach ( $fields_array as $field ) {
 			$show_field = $field['label'] > '' ? $field['label'] : $field['field'];
+			$unique_identifier = '___' . $field['entity'] . '___' . $field['field']; // three underscore characters before each slug
 			if ( $field['order'] < 1000 ) {			
-				$output_constituent .= '<div class="wic-droppable wic-droppable-'. $field['entity'] . '" id = "wic-droppable-' . $field['field']  . '">' 
+				$output_constituent .= '<div class="wic-droppable" id = "wic-droppable' . $unique_identifier  . '">' 
 							. $show_field . '</div>';
 			} else {
-				$output_activity .= '<div class="wic-droppable wic-droppable-'. $field['entity'] . '" id = "wic-droppable-' . $field['field']  . '">' 
+				$output_activity .= '<div class="wic-droppable" id = "wic-droppable' . $unique_identifier  . '">'  
 							. $show_field . '</div>';			
 			}
 		}
@@ -104,7 +105,7 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 		$output .= '<h3>' . __( 'Upload fields to be dropped', 'wp-issue-crm' ) . '</h3>';				
 		$column_map = unserialize ( $doa['serialized_column_map']->get_value() );
 		foreach ( $column_map as $key=>$value ) {
-			$output .= '<div id = "wic-draggable-' . $key . '" class="wic-draggable">' . $key . '</div>';
+			$output .= '<div id = "wic-draggable___' . $key . '" class="wic-draggable">' . $key . '</div>'; // column names are already unique
 		}
 		$output .= '</div>';
 		return $output;

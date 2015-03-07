@@ -23,7 +23,10 @@ var wpIssuesCRMAjaxPost = function( entity, action, idRequested, data, callback 
 	};
 
 	jQuery.post( wic_ajax_object.ajax_url, postData, function(response) {
-		callback ( JSON.parse ( response ) );
+		var decoded_response = JSON.parse ( response );
+		console.log ( 'Received JSON encoded response from AJAX Post -- decoded follows in log:');
+		console.log ( decoded_response );
+		callback ( decoded_response );
 	});
  
 }

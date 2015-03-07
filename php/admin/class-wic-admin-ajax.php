@@ -42,6 +42,9 @@ class WIC_Admin_Ajax {
 		} elseif ( 'get_column_map' == $_POST['sub_action'] ) {
 				self::ajax_check_capability( '' );  
 				WIC_Entity_Upload::get_column_map( $_POST['id_requested'] );	
+		} elseif ( 'update_column_map' == $_POST['sub_action'] ) {
+				self::ajax_check_capability( '' );  
+				WIC_Entity_Upload::update_column_map( $_POST['id_requested'], $_POST['wic_data'] );	
 		}
 	}	
 

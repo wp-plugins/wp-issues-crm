@@ -89,7 +89,10 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		$i = 1;
 		$column_names = array();
 		foreach ( $columns as $column ) {
-			$column_name = ( in_array ( sanitize_text_field ( $column ), $column_names )  || '' == sanitize_text_field ( $this->null_to_empty ( $column ) ) || 0 == $includes_column_headers ) ?  'COLUMN_' . $i : sanitize_text_field ( $column ); 
+			$column_name = ( in_array ( $this->sanitize_column_name ( $column ), $column_names ) 
+							 || '' == $this->sanitize_column_name ( $column ) 
+							 || 0 == $includes_column_headers ) 
+					?  'COLUMN_' . $i : $this->sanitize_column_name ( $column ); 
 			$column_names[] = $column_name; 			
 			$sql .= ' `' . $column_name . '` varchar(65535) NOT NULL, ';
 			$i++;		
@@ -248,6 +251,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		// initialize column map for later use with unmapped columns
 		$column_map = array();
 		foreach ( $column_names as $column ) {
+			// do lookups on field name 
 			$lookup_sql = $wpdb->prepare ( $sql, array ( $column ) );
 			$lookup = $wpdb->get_results ( $lookup_sql );
 			$found = isset ( $lookup [0] ) ? array ( 'entity' => $lookup[0]->matched_entity, 'field' => $lookup[0]->matched_field ) : '';
@@ -293,6 +297,14 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		return $value; 
 	}	
 	
+	// limit column name to letters, digits and underscore
+	private function sanitize_column_name ( $column_name ) { 
+		$stripped = preg_replace( '/[^A-Za-z0-9_]/', '', $column_name );	
+		$non_numeric_column_name = is_numeric( $stripped ) ? '' : $stripped;
+		$clean_column_name = $this->null_to_empty ( $non_numeric_column_name );
+		return ( $clean_column_name ); // may be empty if reduces to empty or a number 
+	}	
+	
 	protected function db_update ( &$save_update_array ) {
 		// get rid of the upload parameters
 		array_pop ( $save_update_array );
@@ -313,6 +325,14 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		return ( $result[0]->serialized_column_map );
 	}	
 	
+		// quick update
+	public static function update_column_map ( $upload_id, $serialized_map ) {
+		global $wpdb;
+		$table = $wpdb->prefix . 'wic_upload';
+		$sql = "UPDATE $table set serialized_column_map = '$serialized_map' WHERE ID = $upload_id";
+		$result = $wpdb->get_results( $sql );
+		return ( $sql );
+	}
 }
 
 

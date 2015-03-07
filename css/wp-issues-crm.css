@@ -1053,13 +1053,14 @@ ul#upload-tips {
 	float: left;  
 	height: 50px;
 	margin: 0 2% 10px 0;
-	padding: 5px; 
+	padding: 2px 2px 10px 2px; 
 	width: 31.333%;
 }
 
 
-.wic-droppable.wic-droppable-hover {
+.wic-droppable.wic-droppable-highlight.wic-droppable-hover {
 	border: 1px solid #3f3;
+	background: #ff3;
 }
 
 .wic-droppable.wic-droppable-highlight {

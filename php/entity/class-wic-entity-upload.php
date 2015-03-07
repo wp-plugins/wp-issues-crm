@@ -288,6 +288,15 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		echo $column_map;
 		wp_die();
 	}
+
+	public static function update_column_map( $upload_id, $column_map  ) {
+		// strip slashes, decode and serialize the column map and save it in the database
+		$outcome = WIC_DB_Access_Upload::update_column_map( $upload_id , serialize( json_decode ( stripslashes ( $column_map ) ) ) );
+		$retest =  json_encode ( unserialize ( WIC_DB_Access_Upload::get_column_map( $upload_id ) ) ) ;
+		echo $retest;
+		wp_die();
+	}
+	
 	
 	// response to json post	
 	public static function remap_columns( $wic_data ) {
