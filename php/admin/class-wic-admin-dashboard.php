@@ -243,7 +243,6 @@ class WIC_Admin_Dashboard {
 			'retrieve_limit' 	=> 50,
 			'show_deleted' 	=> true,
 			'select_mode'		=> 'id',
-			'sort_direction'	=> 'DESC',
 			'log_search'		=> false,
 		);
 

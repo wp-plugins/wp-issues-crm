@@ -78,7 +78,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		// pass a blank array to retrieve all uploads
 		$wic_query->search (  
 				array(),	
-				array( 'retrieve_limit' => 9999, 'show_deleted' => true, 'log_search' => false ) 
+				array( 'retrieve_limit' => 9999, 'show_deleted' => true, 'log_search' => false, 'sort_order' => true ) 
 			);
 		$lister_class = 'WIC_List_' . $this->entity ;
 		$lister = new $lister_class;

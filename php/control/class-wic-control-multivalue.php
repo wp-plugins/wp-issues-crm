@@ -96,12 +96,10 @@ class WIC_Control_Multivalue extends WIC_Control_Parent {
 	*/
 	public function set_value_by_parent_pointer ( $pointer ) { // pointer is the ID of the top-level entity -- constituent
 		$wic_query = WIC_DB_Access_Factory::make_a_db_access_object( $this->field->field_slug );
-		$sort_direction = $this->field->reverse_sort ? 'DESC' : 'ASC';
 		$search_parameters = array(  
 			'select_mode' => '*',
 			'show_deleted' => true,  // get all values for each		
 			'sort_order' => true,
-			'sort_direction' => $sort_direction, 
 			'retrieve_limit' => 999999999, // show all
 			'log_search' => false,
 			); 

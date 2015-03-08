@@ -168,7 +168,8 @@ class WIC_DB_Dictionary {
 		$sort_string = array();
 		foreach ( $this->field_rules_cache as $field_rule ) {
 			if ( $entity == $field_rule->entity_slug && $field_rule->sort_clause_order > 0 )  {
-				$sort_string[$field_rule->sort_clause_order] = $field_rule->field_slug;
+				$sort_clause_entry = $field_rule->field_slug . ' ' . ( $field_rule->reverse_sort ? 'DESC' : '' );
+				$sort_string[$field_rule->sort_clause_order] = $sort_clause_entry;
 			}		
 		}
 		// note that ksort drops elements with identical sort_clause_order

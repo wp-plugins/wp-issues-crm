@@ -22,10 +22,14 @@ var wpIssuesCRMAjaxPost = function( entity, action, idRequested, data, callback 
 		wic_data: JSON.stringify( data )
 	};
 
+	// note: cloning an element with ID is bad form, but if clone by class, show two copies 
+	ajaxLoader = jQuery("#ajax-loader").clone().appendTo("#post-form-message-box").css("display", "inline"); 
+
 	jQuery.post( wic_ajax_object.ajax_url, postData, function(response) {
 		var decoded_response = JSON.parse ( response );
 		console.log ( 'Received JSON encoded response from AJAX Post -- decoded follows in log:');
 		console.log ( decoded_response );
+		ajaxLoader.remove();		
 		callback ( decoded_response );
 	});
  

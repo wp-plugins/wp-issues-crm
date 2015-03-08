@@ -17,8 +17,13 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 		return ( 'upload' );	
 	}
 
-	// define the top row of buttons (return a row of wic_form_button s)
-	protected function get_the_buttons ( &$data_array ) {}
+	// no buttons in this form, ajax loader comes up as display: none -- available to display in an appropriate place
+	protected function get_the_buttons ( &$data_array ) { 
+		$buttons =  '<span id = "ajax-loader">' .
+			'<img src="' . plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'img' . DIRECTORY_SEPARATOR . 'ajax-loader.gif' , __FILE__ ) .
+			'"></span>'; 
+		return ( $buttons ); 
+	}
 	
 	// define the form message (return a message)
 	protected function format_message ( &$data_array, $message ) {

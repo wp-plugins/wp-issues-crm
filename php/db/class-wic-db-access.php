@@ -379,8 +379,8 @@ abstract class WIC_DB_Access {
 	*
 	*/
 
-	public function list_by_id ( $id_string,  $sort_direction = 'ASC' ) {
-		$this->db_list_by_id ( $id_string, $sort_direction ); 
+	public function list_by_id ( $id_string ) { 
+		$this->db_list_by_id ( $id_string );   
 	}
 
 	public static function get_mysql_time() {

@@ -947,6 +947,10 @@ button.wic-post-list-button {
 * upload form styling 
 *
 ******************************************************************/
+#ajax-loader {
+	display: none;
+}
+
 #upload-tabs-headers {
 	margin: 20px 0;
 }
