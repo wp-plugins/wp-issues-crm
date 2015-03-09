@@ -36,7 +36,8 @@ class WIC_Admin_Ajax {
 		*		};
 		*		 
 		*/	
-		if ( 'remap_columns' == $_POST['sub_action'] ) {
+
+		if ( 'remap_columns' == $_POST['sub_action'] ) { 
 				self::ajax_check_capability( '' ); // use access setting for general WP Issues CRM access 
 				WIC_Entity_Upload::remap_columns( $_POST['wic_data'] );	
 		} elseif ( 'get_column_map' == $_POST['sub_action'] ) {
@@ -45,6 +46,9 @@ class WIC_Admin_Ajax {
 		} elseif ( 'update_column_map' == $_POST['sub_action'] ) {
 				self::ajax_check_capability( '' );  
 				WIC_Entity_Upload::update_column_map( $_POST['id_requested'], $_POST['wic_data'] );	
+		} elseif ( 'update_interface_table' == $_POST['sub_action'] ) { 	
+				self::ajax_check_capability( '' );  // in this case id_requested is a column_name
+				WIC_Entity_Upload::update_interface_table( $_POST['id_requested'], $_POST['wic_data'] );	
 		}
 	}	
 

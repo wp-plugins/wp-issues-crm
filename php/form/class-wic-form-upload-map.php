@@ -39,12 +39,16 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 	// legends
 	protected function get_the_legends( $sql = '' ) {
 		// report configuration settings related to upload capacity;
-		$legend = '<p>' . __( 'See below for guidance on what WP Issues CRM expects in each target database field.', 
+		$legend = '<p>' . __( '* See below for guidance on what WP Issues CRM expects in each target database field.', 
 				'wp-issues-crm' ) . '</p>' .
 				 '<table id="wp-issues-crm-stats">' .
 				 '<tr><td class = "wic-statistic-table-name">' . 'ID: ' . '</td><td>' .  __( 'WP Issues CRM Internal ID -- you will only have this if you started with export from WP Issues CRM.', 'wp-issues-crm' ) 	 . '</td><tr>' . 
 				 '<tr><td class = "wic-statistic-table-name">' . 'address_line: ' . '</td><td>' .  __( 'Single field like so: 123 Main St, Apt 1. Do not worry about exactly how you refer to street (ST, st, str) or apartment.', 'wp-issues-crm' ) . '</td><tr>' . 		
 				 '<tr><td class = "wic-statistic-table-name">' . 'state: ' . '</td><td>' .  __( 'WP Issues CRM does not care how you abbreviate or do not abbreviate state.', 'wp-issues-crm' ) 	 . '</td><tr>' . 
+				 '<tr><td class = "wic-statistic-table-name">' . 'dates: ' . '</td><td>' .  __( 'WP Issues CRM accepts all standard date formats and date formats can vary within a column.', 'wp-issues-crm' ) 	 . '</td><tr>' .
+				 '<tr><td class = "wic-statistic-table-name">' . 'address, email and phone types: ' . '</td><td>' .  __( 'You will be able to use any existing codes you have by setting options and/or you can accept default settings for these fields.', 'wp-issues-crm' ) 	 . '</td><tr>' .
+				 '<tr><td class = "wic-statistic-table-name">' . 'Issue: ' . '</td><td>' .  __( 'This field must be a valid numeric issue/post ID (if you specify it).', 'wp-issues-crm' ) 	 . '</td><tr>' .
+				 '<tr><td class = "wic-statistic-table-name">' . 'Issue Title: ' . '</td><td>' .  __( 'If you specify issue titles that do not exist, you will have the option of automatically creating new issues -- see Validation Settings.', 'wp-issues-crm' ) 	 . '</td><tr>' .
 			'</table>';
 			
 		$legend = '<div class = "wic-upload-legend">' . $legend . '</div>';		
@@ -88,7 +92,7 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 		
 		// assemble output
 		$output .= '<div id = "wic-droppable-column">';
-		$output .= '<h3>' . __( 'Target database fields -- drag and drop upload fields into these targets', 'wp-issue-crm' ) . '</h3>';
+		$output .= '<h3>' . __( 'Target database fields -- drag and drop upload fields into these targets*', 'wp-issue-crm' ) . '</h3>';
 		$output .= '<div id = "constituent-targets"><h4>' . __( 'Constituent fields' , 'wp-issues-crm' ) . '</h4>' . $output_constituent . '</div>';		
 		$output .= '<div class = "horbar-clear-fix"></div>';
 		$output .= '<div id = "activity-targets"><h4>' . __( 'Activity fields' , 'wp-issues-crm' ) . '</h4>'. $output_activity . '</div>';
@@ -105,14 +109,24 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 	protected function group_special_save_options ( &$doa ) {
 		
 		$output = ''; 
+		
 				// list fields from upload file to be matched
+		$output .= '<div id = "wic-draggable-column-wrapper">';
+		$output .= '<h3>' . __( 'Upload fields to be dropped', 'wp-issue-crm' ) . '</h3>';
 		$output .= '<div id = "wic-draggable-column">';
-		$output .= '<h3>' . __( 'Upload fields to be dropped', 'wp-issue-crm' ) . '</h3>';				
+		
+		// get the column map array				
 		$column_map = unserialize ( $doa['serialized_column_map']->get_value() );
+
+		// get an array of sample data to use as titles for the column divs
+		$upload_parameters = unserialize ( $doa['serialized_upload_parameters']->get_value() );
+		$staging_table_name = $upload_parameters['staging_table_name'];
+		$column_titles_as_samples = WIC_DB_Access_Upload::get_sample_data ( $staging_table_name ); 
+
 		foreach ( $column_map as $key=>$value ) {
-			$output .= '<div id = "wic-draggable___' . $key . '" class="wic-draggable">' . $key . '</div>'; // column names are already unique
+			$output .= '<div id = "wic-draggable___' . $key . '" class="wic-draggable" title = "' . $column_titles_as_samples[$key] . '">' . $key . '</div>'; // column names are already unique
 		}
-		$output .= '</div>';
+		$output .= '</div></div>';
 		return $output;
 		
 	}

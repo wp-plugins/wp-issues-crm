@@ -5,6 +5,8 @@
 */
 
 jQuery(document).ready(function($) {
- // insert datapicker, etc.
+  $(".datepicker").datepicker({
+  		 dateFormat: "yy-mm-dd"
+  	});
 });
 

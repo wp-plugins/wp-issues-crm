@@ -316,6 +316,25 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	* support for column mapping ajax in wic_entity_upload
 	*
 	*/	
+	
+	// get sample data for columns
+	public static function get_sample_data ( $staging_table_name ) {
+		global $wpdb;
+		$sql = "SELECT * from $staging_table_name limit 0, 5";
+		$result = $wpdb->get_results( $sql, ARRAY_A );
+		$inverted_array = array();
+		foreach ( $result as $key => $row ) {
+			foreach ( $row as $column_head => $value ) {
+				$inverted_array[$column_head][$key] = $value;			
+			}
+		}
+		$column_head_array = array();
+		foreach ( $inverted_array as $column_head => $column ) {
+			$column_head_array[$column_head] = esc_attr ( substr( implode( ', ', $column ), 0, 100 ) );
+		}
+		return ( $column_head_array );
+	}	
+	
 	// quick look up
 	public static function get_column_map ( $upload_id ) {
 		global $wpdb;
@@ -325,14 +344,53 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		return ( $result[0]->serialized_column_map );
 	}	
 	
-		// quick update
+	// quick update
 	public static function update_column_map ( $upload_id, $serialized_map ) {
 		global $wpdb;
 		$table = $wpdb->prefix . 'wic_upload';
 		$sql = "UPDATE $table set serialized_column_map = '$serialized_map' WHERE ID = $upload_id";
+		$result = $wpdb->query( $sql );
+		return ( $result );
+	}	
+
+	// quick update
+	public static function update_interface_table ( $upload_field, $entity_field_object ) {
+
+		global $wpdb;
+
+		// if unmatching the field, entity_field_object will come in as empty string		
+		if ( is_object ( $entity_field_object ) ) {
+			$entity = $entity_field_object->entity;
+			$field = $entity_field_object->field;
+		} else { 
+			$entity = '';
+			$field  = '';		
+		}	
+
+		$table = $wpdb->prefix . 'wic_interface';
+		$sql = "SELECT matched_entity, matched_field from  $table WHERE  upload_field_name = '$upload_field'";
 		$result = $wpdb->get_results( $sql );
-		return ( $sql );
+		if ( isset ( $result[0] ) ) {
+			if ( 	$result[0]->matched_entity != $entity  ||
+					$result[0]->matched_field != $field 
+				) {
+				if ( '' != $field && '' != $entity ) {	
+					$sql = "UPDATE $table SET matched_entity = '$entity', matched_field = '$field' WHERE upload_field_name = '$upload_field'";
+				} else { // no empty entries
+					$sql = "DELETE from $table WHERE upload_field_name = '$upload_field'";				
+				}
+				$result = $wpdb->query ( $sql );
+			} 
+		} else {
+			$sql = "INSERT INTO $table ( upload_field_name, matched_entity, matched_field ) VALUES ( '$upload_field', '$entity', '$field' )";
+			$result = $wpdb->query ( $sql );
+		}
+		
+		return ( $result );
 	}
+
+	
+
 }
 
 

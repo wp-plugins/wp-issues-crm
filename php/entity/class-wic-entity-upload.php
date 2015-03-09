@@ -292,10 +292,23 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	public static function update_column_map( $upload_id, $column_map  ) {
 		// strip slashes, decode and serialize the column map and save it in the database
 		$outcome = WIC_DB_Access_Upload::update_column_map( $upload_id , serialize( json_decode ( stripslashes ( $column_map ) ) ) );
-		$retest =  json_encode ( unserialize ( WIC_DB_Access_Upload::get_column_map( $upload_id ) ) ) ;
-		echo $retest;
+		if ( false !== $outcome ) {
+			echo json_encode ( array ( 'ajax response' => __( 'AJAX update_column_map successful on server side.', 'wp_issues_crm') ) );
+		} else {
+			echo json_encode ( __( 'AJAX update_column_map ERROR on server side.', 'wp_issues_crm') );
+		}
 		wp_die();
 	}
+	
+	public static function update_interface_table ( $upload_field, $entity_field_object ) {
+		$outcome = WIC_DB_Access_Upload::update_interface_table ( $upload_field,  json_decode( stripslashes ( $entity_field_object ) ) );
+		if ( false !== $outcome ) {
+			echo json_encode ( array ( 'ajax response' => __( 'AJAX update_interface_table successful on server side.', 'wp_issues_crm') ) );
+		} else {
+			echo json_encode ( __( 'AJAX update_interface_table ERROR on server side.', 'wp_issues_crm') );
+		}		
+		wp_die();	
+	}	
 	
 	
 	// response to json post	

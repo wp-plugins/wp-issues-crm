@@ -12,12 +12,31 @@ jQuery(document).ready(function($) {
 	
 	// make field labels draggable
 	$( ".wic-draggable" ).draggable({
-		disabled: true, // do not enable until columns loaded by AJAX;
-		revert: "invalid", // note that change this to false once dropped, so no auto move back 
-		stack: ".wic-draggable",
-		start: function ( event, ui ) {
-			// restore original message -- drop any "saved" notation from previous drags
+		disabled: true, 						// do not enable until columns loaded by AJAX;
+		revert: "invalid", 					// revert to start column if not dropped; change to false on dropped, so no revert back to droppable 
+		stack: ".wic-draggable", 			// keep the moving item on top
+		start: function ( event, ui ) { 	// restore original message -- drop any "saved" notation from previous drags
 			jQuery ( "#post-form-message-box" ).text( wicSaveMapMessage );		
+		},
+		stop: function ( even, ui ) {		// effect revert to starting column for dropped items that are undropped
+			// if not dropped ( i.e., in an invalid position ) and also net set to revert anyway, 
+			// animate it slowly back to top of column of pending items 
+			// note that revert is true only when starting from initial position in column of pending items			
+			if ( ! $( this ).hasClass ( 'wic-draggable-dropped') && false === $( this ).draggable( "option", "revert" ) ) {
+				// note where it is and where it is going
+				var draggableOffset = ui.offset;	
+				var destinationOffset  = $( "#wic-draggable-column" ).offset() ;
+				// attach it back to column, where it is going (mirrors actions 4 through 6 of drop event )
+				$( this ).detach();
+				$( this ).prependTo( "#wic-draggable-column" );
+				// but smooth the perceived motion -- keep the actual offset the same and then animate back into place  
+				$( this ).css( "top" , draggableOffset.top - destinationOffset.top );
+				$( this ).css( "left" , draggableOffset.left - destinationOffset.left );
+				$( this ).animate ( {
+					top: 0,
+					left: 0
+				});
+			} 		
 		}
 	});
 	
@@ -26,35 +45,29 @@ jQuery(document).ready(function($) {
 		activeClass: 	"wic-droppable-highlight",
 		hoverClass: 	"wic-droppable-hover",
 		accept:			".wic-draggable",
-		tolerance: 		"fit",
-		// drop function should change look and update array
-		// should update draggable with a class or other indicator so that it knows it has been dropped		
+		tolerance: 		"pointer",
 		drop: function( event, ui ) {
-			// associate this draggable with this droppable by adding the droppable's ID as an additional class
 			var dropped = ui.draggable;
-			marker = $( this ).attr( "id" );
-			dropped.addClass( marker );
-			dropped.draggable( "option", "revert", false );
-			wicUpdateColumnMap ( wicParseIdentifier( dropped.attr( "id" ) ),  wicParseIdentifier ( marker ) );			
-			$( this )
-				// show this droppable as occupied
-				.addClass( "wic-state-dropped" ) // change css
-				// change accept parameter to only the current draggable (note that can't just accept nothing b/c won't register the out event)				
-				.droppable ( "option", "accept", "." + marker ); 
+			draggableID = dropped.attr( "id" );
+			droppableID = $( this ).attr( "id" );
+			// function effects 6 additional changes to the draggable and 2 to the droppable 
+			wicDropEventDetails ( draggableID, droppableID ); 
 			// update array
-			console.log ( dropped.css( "top" ) );
-
+			wicUpdateColumnMap ( wicParseIdentifier( draggableID ),  wicParseIdentifier ( droppableID ) );
 		},
 		out: function( event, ui ) {
 			var movingOut = ui.draggable;
 			marker = $( this ).attr( "id" );
-			// if moving out of droppable that have been dropped into, 	
+			// if moving out of droppable that have been dropped into, reverse actions taken by function wicDropEventDetails	
 			if ( movingOut.hasClass ( marker ) ) {
-				// remove marker from draggable
+				// (1) remove marker from draggable
 				movingOut.removeClass ( marker )
-				// mark the droppable as open
+				// (2) remove dropped state indicator from draggable
+				movingOut.removeClass ( "wic-draggable-dropped" );
+				// no need to repeat drop action (3) -- revert stays false; 
+				// don't know where we are headed -- reverse drop actions (4)-(6) when dropped or if not dropped, when stopped
 				$( this )
-					// show as open
+					// show droppable as open
 					.removeClass ( 'wic-state-dropped ')
 					// accept any draggable
 					.droppable ( "option", "accept", ".wic-draggable" ); 
@@ -65,7 +78,7 @@ jQuery(document).ready(function($) {
 	});
 	
 	// if showing column map form, load columns -- belt and suspenders -- also testing for the page when loading script
-	if ( $("#wic-form-upload-map").length > 0 ) {
+	if ( $( "#wic-form-upload-map" ).length > 0 ) {
 		loadColumnMap();
 	};
 });
@@ -82,13 +95,21 @@ function loadColumnMap() {
 	wpIssuesCRMAjaxPost( '', 'get_column_map',  jQuery('#ID').val(), '', function( response ) {
 		// calling parameters are: entity, action_requested, id_requested, data object, callback
 		wicColumnMap = response;
-		wicShowColumnMap();
+		// loop through the response dropping upload-fields into targets
+		for ( x in wicColumnMap ) {
+			if ( wicColumnMap[x] > '' ) {
+				draggableID = "wic-draggable___" + x ;
+				droppableID =  "wic-droppable" + '___' + wicColumnMap[x].entity + '___' + wicColumnMap[x].field ;
+				// drop the draggable upload field into the droppable
+				wicDropEventDetails ( draggableID, droppableID ) ;
+			}
+		}	
+		// enable the draggables
 		jQuery( ".wic-draggable" ).draggable( "enable" );
-		
 	});
-	
+
 	wicSaveMapMessage = jQuery ( "#post-form-message-box" ).text()
-	
+
 }
 
 // based on a drag action, update column map, both in browser and on server
@@ -101,35 +122,16 @@ function wicUpdateColumnMap ( upload_field, entity_field_object ) {
 	wicColumnMap[upload_field] = entity_field_object;
 	// send column map on server
 	wpIssuesCRMAjaxPost( 'upload', 'update_column_map',  jQuery('#ID').val(), wicColumnMap, function( response ) {
-		console.log ( response );
 		// reenable draggables after update complete -		
 		jQuery( ".wic-draggable" ).draggable( "enable" );
 		jQuery ( "#post-form-message-box" ).text( wicSaveMapMessage + " Saved.")
-	});	
-
-}
-
-// show matched fields as matched on form setup  
-function wicShowColumnMap() {
-	for ( x in wicColumnMap ) {
-		if ( wicColumnMap[x] > '' ) {
-			// upload field headers have already been loaded -- identify the one associated with x in column map
-			xDraggable = jQuery( "#wic-draggable___" + x );
-			// mark it with the associated target database field class
-			marker = "wic-droppable" + '___' + wicColumnMap[x].entity + '___' + wicColumnMap[x].field;
-			xDraggable.addClass( marker );
-			// make it so won't revert to already dropped location if seek to move
-			xDraggable.draggable( "option", "revert", false );
-			// the target database fields have also been loaded as divs
-			yDroppable = jQuery ( "#" + marker );
-			// put the upload field into the target div 
-			yDroppable.append ( xDraggable );
-			// mark the target div as occupied
-			yDroppable.addClass ( "wic-state-dropped" );
-			// set to accept only the currently dropped item
-			yDroppable.droppable ( "option", "accept", '.' + marker );
-		}
+	});
+	// also send the particular map update to the server for learning purposes, but only for non-generic column titles
+	if ( upload_field.slice( 0 , 7 ) != 'COLUMN_' || upload_field.length < 7 ) {
+			wpIssuesCRMAjaxPost( 'upload', 'update_interface_table',  upload_field, entity_field_object, function( response ) {
+			});  
 	}	
+
 }
 
 // extract field and entity from droppable entity OR extract upload_field from draggable entity
@@ -149,4 +151,31 @@ function wicParseIdentifier( identifier ) {
 		}  
 		return ( return_object ) ;
 	}	
+}
+
+// used in dropEvent and also in initial load
+function wicDropEventDetails ( draggableID, droppableID ) {
+	// get the objects from the identifiers
+	wicDropped = jQuery( "#" + draggableID );
+	wicDroppable = jQuery( "#" + droppableID );
+	// no take six actions as to the dropped item
+	// (1) mark dropped with an identifier from the droppable
+	wicDropped.addClass( droppableID );
+	// (2) mark dropped as in the dropped state
+	wicDropped.addClass( "wic-draggable-dropped" );
+	// (3) prevent dropped from reverting to here 
+	wicDropped.draggable( "option", "revert", false ); // if remains true will revert to this place on next move
+	// (4) detach dropped from draggable column or from previous droppable
+	wicDropped.detach();
+	// (5) append dropped to the droppable
+	wicDropped.appendTo( wicDroppable );
+	// (6) reset css to pre-drag relative position, zero
+	wicDropped.css( "top" , "0" );
+	wicDropped.css( "left" , "0" );
+	// now take two actions as to the droppable
+	wicDroppable
+		// show this droppable as occupied
+		.addClass( "wic-state-dropped" ) // change css
+		// change accept parameter to only the current draggable (note that can't just accept nothing b/c won't register the out event)				
+		.droppable ( "option", "accept", "." + droppableID ); 
 }

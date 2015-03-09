@@ -166,6 +166,11 @@ function moreFields( base ) {
 	insertHere.parentNode.insertBefore( newFields, insertHere );
 	jQuery('#wic-form-constituent-update').trigger('checkform.areYouSure'); /* must also set 'addRemoveFieldsMarksDirty' : true in Are you sure*/
 	jQuery('#wic-form-constituent-save').trigger('checkform.areYouSure');
+	// reactivate datepicker on child fields 	
+ 	jQuery( newFields ).find( ".datepicker" ).removeClass('hasDatepicker');	
+ 	jQuery( newFields ).find( ".datepicker" ).datepicker({
+			 dateFormat: "yy-mm-dd"
+		});
 }
 
 // supports moreFields by walking node tree for whole multi-value group to copy in new name/ID values

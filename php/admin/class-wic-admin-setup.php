@@ -76,7 +76,8 @@ class WIC_Admin_Setup {
 
 			wp_register_script(
 				'wic-jquery-ui',
-				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-jquery-ui.js' , __FILE__ )
+				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-jquery-ui.js' , __FILE__ ),
+				array( 'jquery-ui-datepicker' )
 			);
 			wp_enqueue_script('wic-jquery-ui');
 
@@ -112,6 +113,11 @@ class WIC_Admin_Setup {
 				);
 			wp_enqueue_style('wp-issues-crm-styles');
 			
+			wp_register_style(
+				'wic-theme-roller-style',
+				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'jquery-ui-1.11.3.custom'  . DIRECTORY_SEPARATOR .   'jquery-ui.min.css' , __FILE__ )
+				);
+			wp_enqueue_style('wic-theme-roller-style');
 		}					
 			
 	}
