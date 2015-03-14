@@ -32,7 +32,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	 			// if we have are doing the preliminary upload, will just do that -- show no tabs, otherwise show tabs before taking action
 				// note that control[0] is superfluous in admin context since page only serves a single entity class
 				$this->{$control_array[1]}( $args );
-			// if no button, then there is a get string
+			// if no button, then there better be a get string
 			}	else {		
  				$action = $_GET['action'];
 				$args = array (
@@ -50,6 +50,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		$tab_titles_array = array (
 			'Upload Details' 	=> 'details', 		
 			'Map Fields'		=> 'map',
+			'Validate Data'		=> 'validate',
 			'Define Matching'	=>	'match',
 			'Complete Upload'	=>	'complete',
 		);			
@@ -61,12 +62,12 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		    		$nav_tab_active = ( $active_tab == $tab_link ) ? 'nav-tab-active' : 'nav-tab-inactive';
 					$output .= '<li class="' . $nav_tab_active . '">
 							<a href="/wp-admin/admin.php?page=wp-issues-crm-uploads&action=' . $tab_link . '&upload_id=' . $upload_id . '"> '. 
-						esc_html( trim( $tab_title ) )  .'</a></li>';
+						esc_html( trim( __( $tab_title, 'wp-issues-crm' ) ) )  .'</a></li>';
    			
 				}  
       $output .= '</ul></div><div class = "horbar-clear-fix" ></div>';
 	
-		return ( $output );
+		return ( $output ); 
 	
 	}
 
@@ -106,15 +107,21 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	// handle a search request for an ID coming from anywhere
 	protected function id_search ( $args ) {
 		$id = $args['id_requested']; 
-		$this->id_search_generic ( $id, 'WIC_Form_Upload_Update', '' , false, false ); // no sql, but do log search as individual, no old search
+		$this->id_search_generic ( $id, 'WIC_Form_Upload_Update', '' , false, false ); 
 		return;		
 	}	
 	
+	// show the upload map fields form
 	protected function map ( $args ) {
 		$id = $args['id_requested']; 
-		$this->id_search_generic ( $id, 'WIC_Form_Upload_Map', '' , false, false ); // no sql, but do log search as individual, no old search
-		$map_form = new WIC_Form_Upload_Map( $args ); 
+		$this->id_search_generic ( $id, 'WIC_Form_Upload_Map', '' , false, false );
 	}
+	
+	// show the validate form -- this is individual field data validation doable only after mapping complete		
+	protected function validate ( $args ) {
+		$id = $args['id_requested']; 
+		$this->id_search_generic ( $id, 'WIC_Form_Upload_Validate', '' , false, false );
+	}			
 		
 	
 	// function from parent needs to be overridden to set name value from $_FILES array
@@ -128,7 +135,8 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			} elseif ( isset ( $_FILES[$field->field_slug]['name'] ) ) {
 				$this->data_object_array[$field->field_slug]->set_value( $_FILES[$field->field_slug]['name'] );			
 			}	
-		} 
+		}
+		 
 	}	
 	
 	/************************************************************************************************
@@ -266,6 +274,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			$this->data_object_array['upload_by']->set_value( $wic_access_object->upload_by );
 			$this->data_object_array['serialized_upload_parameters']->set_value( $wic_access_object->serialized_upload_parameters );
 			$this->data_object_array['serialized_column_map']->set_value( $wic_access_object->serialized_column_map );
+			$this->data_object_array['upload_status']->set_value( $wic_access_object->upload_status );
 		}		
 	}	
 	
@@ -273,9 +282,10 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		$this->id_search( $args );
 	}	
 	
+	
 	protected function match ( $args ) {
 		echo self::format_tab_titles( $_GET['upload_id'] );
-		echo '<h3>here goes the match stuff</h3>';	
+		echo '<h3>here goes the matches stuff</h3>';	
 	}
 	
 	protected function complete ( $args ) {
@@ -284,14 +294,21 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	}
 	
 	public static function get_column_map( $upload_id ) {
-		$column_map = json_encode ( unserialize ( WIC_DB_Access_Upload::get_column_map( $upload_id ) ) ) ;
+		$column_map =  WIC_DB_Access_Upload::get_column_map( $upload_id ) ;
 		echo $column_map;
 		wp_die();
 	}
 
 	public static function update_column_map( $upload_id, $column_map  ) {
-		// strip slashes, decode and serialize the column map and save it in the database
-		$outcome = WIC_DB_Access_Upload::update_column_map( $upload_id , serialize( json_decode ( stripslashes ( $column_map ) ) ) );
+		$column_map = stripslashes ( $column_map ) ;
+		// strip slashes and save it in the database
+		$outcome = WIC_DB_Access_Upload::update_column_map( $upload_id , $column_map ) ;
+		// check whether any columns mapped after latest changes
+		// upload status is degraded to staged if nothing mapped; set to mapped if something mapped (which may be an upgrade from staged or a downgrade from later step)
+		$upload_status = self::are_any_columns_mapped ( json_decode( $column_map ) ) ? 'mapped' : 'staged'; 
+	
+		WIC_DB_Access_Upload::update_upload_status( $upload_id, $upload_status );		
+				
 		if ( false !== $outcome ) {
 			echo json_encode ( array ( 'ajax response' => __( 'AJAX update_column_map successful on server side.', 'wp_issues_crm') ) );
 		} else {
@@ -311,17 +328,39 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	}	
 	
 	
-	// response to json post	
-	public static function remap_columns( $wic_data ) {
+	public static function are_any_columns_mapped ( $column_map ) {
+		$columns_mapped = false;
 		
-		$wic_data = json_decode ( stripslashes ( $wic_data ) ) ;
+		foreach ( $column_map as $column => $entity_field_array ) {
+			if ( $entity_field_array  > '' ) { 
+				if ( $entity_field_array->entity > '' && $entity_field_array->field > '' ) {
+					$columns_mapped = true;
+					break;			
+				}
+			}
+		}
+		return $columns_mapped;
+	} 	
 
-		$product = 1;
-		foreach ( $wic_data as $datum ) {
-       $product = $datum * $product;
-      }
-		echo json_encode ( $product );		
-		wp_die();
+	
+	public static function validate_upload ( $upload_id, $validation_parameters ) {
+		$validation_parameters = json_decode ( stripslashes( $validation_parameters ) ) ;
+		$record_object_array = WIC_DB_Access_Upload::get_staging_table_records(  
+			$validation_parameters->staging_table, 
+			$validation_parameters->offset ,  
+			$validation_parameters->chunk_size 
+		);		
+				
+		echo json_encode ( '<h1>got records:' . count ( $record_object_array ) . '</h1>' );
+		/* get the column map from the database
+			outer for loop, runs through the record array		
+			inner for loop across the column_map array
+			-- does validation for each field and increments counters in array appropriately
+			save each record with the validation results ( string of errors )
+			at end of outer loop, save the column map
+			send the column to a table that is to be generated based on the column map exclusively */
+		wp_die();	
 	}
+
 	
 }

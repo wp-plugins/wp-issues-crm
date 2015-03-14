@@ -102,10 +102,18 @@ class WIC_Admin_Setup {
 					wp_register_script(
 						'wic-upload-map',
 						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-map.js' , __FILE__ ),
-						array ( 'jquery-ui-droppable', 'jquery-ui-draggable', 'jquery-ui-sortable' ) 
+						array ( 'jquery-ui-droppable', 'jquery-ui-draggable' ) 
 					);
 					wp_enqueue_script('wic-upload-map');
 				}	
+				if ( 'validate' == $_GET['action'] ) { 
+					wp_register_script(
+						'wic-upload-validate',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-validate.js' , __FILE__ ),
+						array ( 'jquery-ui-progressbar' ) 
+					);
+					wp_enqueue_script('wic-upload-validate');
+				}
 			}
 			wp_register_style(
 				'wp-issues-crm-styles',

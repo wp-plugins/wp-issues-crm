@@ -1099,8 +1099,14 @@ ul#upload-tips {
 	width: 64%; 
 }
 
+#wic-upload-validate-progress-bar {
+	display: none;
+	margin: 0 7.1111111% 20px 7.1111111%;
+}
 
-
+#validation-results-table-wrapper {
+	margin: 0 0 0 7.11111%;
+}
 /* list element widths */
 .pl-constituent-first_name{ width:14%;}
 .pl-constituent-middle_name{ width:14%;}
@@ -1148,7 +1154,8 @@ li.pl-search_log-serialized_search_parameters{ display: none;}
 
 .pl-upload-upload_time { width: 15%; }
 .pl-upload-upload_by { width: 20%; }
-.pl-upload-upload_description { width: 65%; }
+.pl-upload-upload_description { width: 55%; }
+.pl-upload-upload_status { width: 10%; }
 .wic-list-legend {
 	margin: 10px 7.11111%;
 }

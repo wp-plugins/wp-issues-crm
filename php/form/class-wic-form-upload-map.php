@@ -44,7 +44,8 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 				 '<table id="wp-issues-crm-stats">' .
 				 '<tr><td class = "wic-statistic-table-name">' . 'ID: ' . '</td><td>' .  __( 'WP Issues CRM Internal ID -- you will only have this if you started with export from WP Issues CRM.', 'wp-issues-crm' ) 	 . '</td><tr>' . 
 				 '<tr><td class = "wic-statistic-table-name">' . 'address_line: ' . '</td><td>' .  __( 'Single field like so: 123 Main St, Apt 1. Do not worry about exactly how you refer to street (ST, st, str) or apartment.', 'wp-issues-crm' ) . '</td><tr>' . 		
-				 '<tr><td class = "wic-statistic-table-name">' . 'state: ' . '</td><td>' .  __( 'WP Issues CRM does not care how you abbreviate or do not abbreviate state.', 'wp-issues-crm' ) 	 . '</td><tr>' . 
+				 '<tr><td class = "wic-statistic-table-name">' . 'state: ' . '</td><td>' .  __( 'WP Issues CRM does not care how you abbreviate or do not abbreviate state -- 
+				 		you can define your state abbreviations like any other option field under Options.', 'wp-issues-crm' ) 	 . '</td><tr>' . 
 				 '<tr><td class = "wic-statistic-table-name">' . 'dates: ' . '</td><td>' .  __( 'WP Issues CRM accepts all standard date formats and date formats can vary within a column.', 'wp-issues-crm' ) 	 . '</td><tr>' .
 				 '<tr><td class = "wic-statistic-table-name">' . 'address, email and phone types: ' . '</td><td>' .  __( 'You will be able to use any existing codes you have by setting options and/or you can accept default settings for these fields.', 'wp-issues-crm' ) 	 . '</td><tr>' .
 				 '<tr><td class = "wic-statistic-table-name">' . 'Issue: ' . '</td><td>' .  __( 'This field must be a valid numeric issue/post ID (if you specify it).', 'wp-issues-crm' ) 	 . '</td><tr>' .
@@ -116,11 +117,12 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 		$output .= '<div id = "wic-draggable-column">';
 		
 		// get the column map array				
-		$column_map = unserialize ( $doa['serialized_column_map']->get_value() );
-
+		$column_map = json_decode ( $doa['serialized_column_map']->get_value() );
+ 
 		// get an array of sample data to use as titles for the column divs
-		$upload_parameters = unserialize ( $doa['serialized_upload_parameters']->get_value() );
-		$staging_table_name = $upload_parameters['staging_table_name'];
+		$upload_parameters = json_decode ( $doa['serialized_upload_parameters']->get_value() );
+
+		$staging_table_name = $upload_parameters->staging_table_name;
 		$column_titles_as_samples = WIC_DB_Access_Upload::get_sample_data ( $staging_table_name ); 
 
 		foreach ( $column_map as $key=>$value ) {

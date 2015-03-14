@@ -60,8 +60,9 @@ class WIC_Form_Upload_Update extends WIC_Form_Parent  {
 	
 	// function to be called for special group
 	protected function group_special_upload_parameters ( &$doa ) {
+
 		// note that this data is also shown as a hidden readonly control in the form
-		$array = unserialize ( $doa['serialized_upload_parameters']->get_value() );
+		$array = json_decode ( $doa['serialized_upload_parameters']->get_value() );
 		$output = '<table id="wp-issues-crm-stats">';
 		foreach ($array as $key=>$value ) {
 			if ( 'includes_column_headers' == $key ) {

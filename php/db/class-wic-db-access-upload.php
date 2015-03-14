@@ -13,6 +13,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	public $upload_by;
 	public $serialized_upload_parameters;
 	public $serialized_column_map;
+	public $upload_status;
 
 	/*
 	*
@@ -242,8 +243,10 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		if ( isset ( $discrepancy ) ) {
 			$upload_parameters['discrepancy']		= $discrepancy;
 		} 
-
-		$this->serialized_upload_parameters = serialize( $upload_parameters );
+	
+		// nota bene:  unsafe to unserialize and reserialize -- the escape character may generate problems
+		// this field should be used in a readonly way from here on out -- it is a record of the upload and is frozen.
+		$this->serialized_upload_parameters = json_encode( $upload_parameters );
 		
 		$interface_table = $wpdb->prefix . 'wic_interface';
 		// prepare to lookup fields in learned column map
@@ -254,10 +257,15 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			// do lookups on field name 
 			$lookup_sql = $wpdb->prepare ( $sql, array ( $column ) );
 			$lookup = $wpdb->get_results ( $lookup_sql );
-			$found = isset ( $lookup [0] ) ? array ( 'entity' => $lookup[0]->matched_entity, 'field' => $lookup[0]->matched_field ) : '';
+			$found = '';			
+			if ( isset ( $lookup [0] ) ) { 
+				$found = new WIC_DB_Upload_Column_Object ( $lookup[0]->matched_entity, $lookup[0]->matched_field );
+			}
 			$column_map[$column] =$found;			
 		}
-		$this->serialized_column_map = serialize ( $column_map );		
+		$this->serialized_column_map = json_encode ( $column_map );	
+		
+		$this->upload_status = WIC_Entity_Upload::are_any_columns_mapped ( $column_map ) ? 'mapped' : 'staged';
 		// proceed to update the upload table with the identity of the successful upload
 		$save_update_array[] = array( 
 			'key' 					=> 'upload_time', 
@@ -287,7 +295,13 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			'soundex_enabled'		=> false,
 		); 	
 		
-			
+		$save_update_array[] = array( 
+			'key' 					=> 'upload_status', 
+			'value'					=> $this->upload_status,
+			'wp_query_parameter' => '', 
+			'soundex_enabled'		=> false,
+		); 	
+					
 		parent::db_save( $save_update_array );
 		
 	}
@@ -352,6 +366,15 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		$result = $wpdb->query( $sql );
 		return ( $result );
 	}	
+	
+	// quick update
+	public static function update_upload_status ( $upload_id, $upload_status ) {
+		global $wpdb;
+		$table = $wpdb->prefix . 'wic_upload';
+		$sql = "UPDATE $table set upload_status = '$upload_status' WHERE ID = $upload_id";
+		$result = $wpdb->query( $sql );
+		return ( $result );
+	}	
 
 	// quick update
 	public static function update_interface_table ( $upload_field, $entity_field_object ) {
@@ -389,7 +412,19 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		return ( $result );
 	}
 
-	
+	/**
+	*
+	* support for column validation ajax in wic_entity_upload
+	*
+	*/	
+
+	public static function get_staging_table_records( $staging_table, $offset, $limit ) {
+		// if offset is zero do a rest; then maintain validation indicator
+		global $wpdb;
+		$sql = "SELECT * FROM $staging_table LIMIT $offset, $limit";
+		$result = $wpdb->get_results( $sql );
+		return ( $result ); 
+	}
 
 }
 
