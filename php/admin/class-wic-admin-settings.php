@@ -126,7 +126,6 @@ class WIC_Admin_Settings {
             'wp_issues_crm_settings_page' // page ID ( a group of settings sections)
         ); 
 
-		// naming of the callback with array elements (in the callbacks) is what ties the option array together 		
       add_settings_field(
             'use_postal_address_interface', // field id
             'Enable USPS Web Interface', // field label
@@ -142,6 +141,16 @@ class WIC_Admin_Settings {
             'wp_issues_crm_settings_page', // page 
             'postal_address_interface' // settings section within page
        ); 
+
+      add_settings_field(
+            'do_zip_code_format_check', // field id
+            'Verify USPS zip format', // field label
+            array( $this, 'do_zip_code_format_check_callback' ), // field call back 
+            'wp_issues_crm_settings_page', // page 
+            'postal_address_interface' // settings section within page
+       ); 
+
+
     
 	// Uninstall Settings (legend only)
       add_settings_section(
@@ -309,6 +318,10 @@ class WIC_Admin_Settings {
 	
 	}
 
+	public function do_zip_code_format_check_callback() {
+		printf( '<input type="checkbox" id="do_zip_code_format_check" name="wp_issues_crm_plugin_options_array[do_zip_code_format_check]" value="%s" %s />',
+            1, checked( '1', isset ( $this->plugin_options['do_zip_code_format_check'] ), false ) );
+	}
 
 
 	/*
@@ -359,12 +372,16 @@ class WIC_Admin_Settings {
 		if( isset( $input['user_name_for_postal_address_interface'] ) ) {
             $new_input['user_name_for_postal_address_interface'] = sanitize_text_field( $input['user_name_for_postal_address_interface'] );
       } 
+    		if( isset( $input['do_zip_code_format_check'] ) ) {
+            $new_input['do_zip_code_format_check'] = absint( $input['do_zip_code_format_check'] );
+      } 
   		if( isset( $input['access_level_required'] ) ) {
             $new_input['access_level_required'] = sanitize_text_field( $input['access_level_required'] );
       }
 		if( isset( $input['access_level_required_downloads'] ) ) {
             $new_input['access_level_required_downloads'] = sanitize_text_field( $input['access_level_required_downloads'] );
-      }        
+      }    
+           
       return ( $new_input );      
 	}
 

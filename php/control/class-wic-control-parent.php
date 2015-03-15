@@ -80,6 +80,10 @@ abstract class WIC_Control_Parent {
 		return ( $this->field->wp_query_parameter );	
 	}
 
+	public function get_label() {
+		return ( $this->field->field_label );	
+	}
+
 	/**********************************************************************************
 	*
 	* get default value for field itself
@@ -344,7 +348,7 @@ abstract class WIC_Control_Parent {
 					'soundex_enabled' => ( 2 == $this->field->like_search_enabled ),
 			);
 			
-			// filter to alter search for particular field types	
+			// filter to alter update for particular field types	
 			$update_clause = $this->special_update_filter( $update_clause );				
 		
 			return ( $update_clause );

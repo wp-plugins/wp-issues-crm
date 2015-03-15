@@ -99,7 +99,12 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			$i++;		
 		}
 
-		$sql .= ' STAGING_TABLE_ID bigint(20) unsigned NOT NULL AUTO_INCREMENT, PRIMARY KEY (STAGING_TABLE_ID) ) 
+		$sql .=  ' STAGING_TABLE_ID bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+					VALIDATION_STATUS varchar(1) NOT NULL,
+					VALIDATION_ERRORS varchar(65535) NOT NULL,
+					MATCHED_CONSTITUENT_ID bigint(20) unsigned NOT NULL,
+					MATCH_PASS varchar(50) NOT NULL,  
+ 					PRIMARY KEY (STAGING_TABLE_ID) ) 
 					ENGINE=MyISAM  DEFAULT CHARSET=utf8;';
 
 		$result = $wpdb->query ( $sql );
@@ -426,6 +431,40 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		return ( $result ); 
 	}
 
+	public static function record_validation_results ( &$update_clause_array, $staging_table, $id, $error ) {
+
+		global $wpdb;
+		
+		// code validation_status -- empty is valid
+		$validation_status = ( '' == $error ) ? 'y' : 'n';
+		// set up update sql from array
+		$record_update_string = ' VALIDATION_STATUS = %s, VALIDATION_ERRORS = %s ';
+		$record_update_array = array( $validation_status, $error );
+		if ( count ( $update_clause_array ) > 0 ) {
+			foreach ( $update_clause_array as $update_clause ) {
+				$record_update_string .= ', '. $update_clause['column'] . ' = %s '; 		
+				$record_update_array[] = $update_clause['value'];
+			}
+		}
+		$pre_sql = "UPDATE $staging_table SET $record_update_string WHERE STAGING_TABLE_ID = $id";
+
+		// prepare sql -- theoretically unnecessary, since data was already escaped when saving to database . . .
+		$sql = $wpdb->prepare( $pre_sql, $record_update_array );
+		// run the update
+		$result = $wpdb->query( $sql );
+
+		// $result = record count.  anything other than 1 is an error in this context. false is a database error.
+		return ( $result == 1 ); 	
+
+	}
+	
+	public static function reset_staging_table_validation_indicators( $table ) { 
+		global $wpdb;
+		$sql = "UPDATE $table SET VALIDATION_STATUS = '', VALIDATION_ERRORS = ''";	
+		$result = $wpdb->query( $sql );
+		// 0 is an OK result if reset did nothing
+		return ( $result !== false );
+	}
 }
 
 

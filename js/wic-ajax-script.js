@@ -29,9 +29,17 @@ var wpIssuesCRMAjaxPost = function( entity, action, idRequested, data, callback 
 	 } 
 
 	jQuery.post( wic_ajax_object.ajax_url, postData, function(response) {
-		var decoded_response = JSON.parse ( response );
+		try {		
+			var decoded_response = JSON.parse ( response );
+			callback ( decoded_response );
+		} catch( err ) {
+			if ( 'JSON' == err.message.substring( 0, 4 ) ) {
+				alert ( 'Apparent server side error message (JSON could not parse): ' + response );
+			} else {
+				alert ( err.message );
+			}
+		}
 		ajaxLoader.remove();		
-		callback ( decoded_response );
 	});
  
 }

@@ -20,7 +20,6 @@
 		// set chunkPlan = number of chunks to get
 		chunkPlan = Math.ceil( uploadParameters.insert_count / chunkSize );
 		// set a counter for number of times chunks called in recursion
-		console.log( 'chunkPlan:' + chunkPlan );
 		chunkCount = 0;
 	
 		$( "#wic-upload-validate-progress-bar" ).progressbar({
@@ -28,10 +27,11 @@
 		});
 
 		$("#validate-button").click(function(){
-			$( "#wic-upload-validate-progress-bar" ).progressbar ( "value", 0 );
+			$( "#validate-button" ).text( "Resetting . . ." );
+			$( "#wic-upload-validate-progress-bar" ).progressbar ( "value", false );
 	  		$( "#wic-upload-validate-progress-bar" ).show();
-	  		// start validation at 0 offset
-	  		validateUpload( 0 );
+			jQuery( "#validation-results-table-wrapper" ).html( "<h3>Resetting validation indicators. . . </h3>" );
+			resetValidationIndicators(); // note that reset callback includes invokation of validation				  		
 		}); 
 	});
 
@@ -45,24 +45,35 @@
 			"offset" : offset,
 			"chunk_size" : chunkSize		
 		}
-		console.log (validationParameters);
 		wpIssuesCRMAjaxPost( '', 'validate_upload',  uploadID, validationParameters,  function( response ) {
 			// calling parameters are: entity, action_requested, id_requested, data object, callback
-			jQuery( "#validation-results-table" ).html( response );
 			chunkCount++;
-			console.log( 'chunkCount:' + chunkCount )
 			jQuery( "#wic-upload-validate-progress-bar" ).progressbar ( "value", 100 * chunkCount / chunkPlan );
 			if ( chunkCount < chunkPlan ) {
+				progressLegend = '<h3> . . . validated ' + ( chunkCount * chunkSize ).toLocaleString( 'en-IN' )  + ' of ' + uploadParameters.insert_count.toLocaleString( 'en-IN' ) + ' records.</h3>'; 
+				jQuery( "#validation-results-table-wrapper" ).html( response + progressLegend );
 				validateUpload ( chunkCount * chunkSize );
 			} else {
-				jQuery( "#wic-upload-validate-progress-bar" ).hide();
-				jQuery( "#validate-button" ).prop( "disabled", true );	
+				progressLegend = '<h3> Validated ' + uploadParameters.insert_count.toLocaleString( 'en-IN' ) + ' records -- done.</h3>';
+				jQuery( "#validation-results-table-wrapper" ).html( response + progressLegend );
+				wpIssuesCRMAjaxPost( '', 'update_upload_status',  uploadID, 'validated',  function( response ) {		
+					jQuery( "#wic-upload-validate-progress-bar" ).hide();
+					jQuery( "#validate-button" ).prop( "disabled", true );
+					jQuery( "#validate-button" ).text( "Validated" );
+				});		
 			}
-			
 		});
-		
-	};
+	}
 	
+	function resetValidationIndicators() { 
+		wpIssuesCRMAjaxPost( '', 'reset_validation',  uploadID, uploadParameters.staging_table_name,  function( response ) {
+			jQuery( "#validation-results-table-wrapper" ).html( "<h3>" + response +  "</h3>" );
+			jQuery( "#validate-button" ).text( "Validating . . ." );
+			jQuery( "#wic-upload-validate-progress-bar" ).progressbar ( "value", 0 );
+	  		// start validation at 0 offset
+	  		validateUpload( 0 );
+		});
+	}
 
 
 })(); // end anonymous namespace enclosure

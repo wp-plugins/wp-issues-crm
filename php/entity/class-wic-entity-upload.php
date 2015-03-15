@@ -48,7 +48,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	public static function format_tab_titles ( $upload_id ) {
 		
 		$tab_titles_array = array (
-			'Upload Details' 	=> 'details', 		
+			'Upload Raw' 	=> 'details', 		
 			'Map Fields'		=> 'map',
 			'Validate Data'		=> 'validate',
 			'Define Matching'	=>	'match',
@@ -342,25 +342,146 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		return $columns_mapped;
 	} 	
 
+	public static function reset_validation ( $upload_id, $json_encoded_staging_table_name  ) {
+		
+		// reset counts in column map
+		$column_map = json_decode ( WIC_DB_Access_Upload::get_column_map ( $upload_id ) );
+		foreach ( $column_map as $column=>$entity_field_object ) {
+			if ( $entity_field_object > '' ) { 
+				$entity_field_object->non_empty_count = 0;		
+				$entity_field_object->valid_count = 0;
+			}
+		}
+		WIC_DB_Access_Upload::update_column_map ( $upload_id, json_encode ( $column_map ) );
+		
+		// reset validation indicators on staging table
+		$table = json_decode ( stripslashes( $json_encoded_staging_table_name ) );
+		
+		$result = WIC_DB_Access_Upload::reset_staging_table_validation_indicators( $table );
+		if ( $result ) {
+			wp_die( json_encode ( __( 'Staging table validation indicators reset.', 'wp-issues-crm' ) ) );
+		} else {
+			// send errors not encoded, so will generate alert on return
+			wp_die ( __( 'Error resetting staging table validation indicators', 'wp-issues-crm' ) );		
+		}
+		
+		
+	}
+
 	
 	public static function validate_upload ( $upload_id, $validation_parameters ) {
+				
+		// get the column to database field map for this upload
+		$column_map = json_decode ( WIC_DB_Access_Upload::get_column_map ( $upload_id ) );
+	
+		// construct data object array analogous to form, but with only the controls for the matched fields 
+		// no multivalue construct in this context -- no multivalue fields are uploadable -- support multivalues as separate lines of input
+		$data_object_array = array();
+		$valid_values = array(); 
+
+		// set up dictionary for use here and by controls		
+		global $wic_db_dictionary;
+		$wic_db_dictionary = new WIC_DB_Dictionary;
+
+		foreach ( $column_map as $column => $entity_field_object ) {
+			// including those columns which have been mapped			
+			if ( '' < $entity_field_object ) {
+				$field_rule = $wic_db_dictionary->get_field_rules ( $entity_field_object->entity, $entity_field_object->field );
+				$data_object_array[$column] = WIC_Control_Factory::make_a_control( $field_rule->field_type ); 	
+				$data_object_array[$column]->initialize_default_values(  $entity_field_object->entity, $entity_field_object->field,  '' );
+				// for select fields, set up an array of valid values items for validation loop (avoiding repetitive access)
+				if ( 'select' == $field_rule->field_type ) { 				
+					$valid_values[$column] = $data_object_array[$column]->valid_values();
+				}  
+			}
+		}		
+
+		// get a chunk of records to validate
 		$validation_parameters = json_decode ( stripslashes( $validation_parameters ) ) ;
 		$record_object_array = WIC_DB_Access_Upload::get_staging_table_records(  
 			$validation_parameters->staging_table, 
 			$validation_parameters->offset ,  
 			$validation_parameters->chunk_size 
 		);		
-				
-		echo json_encode ( '<h1>got records:' . count ( $record_object_array ) . '</h1>' );
-		/* get the column map from the database
-			outer for loop, runs through the record array		
-			inner for loop across the column_map array
-			-- does validation for each field and increments counters in array appropriately
-			save each record with the validation results ( string of errors )
-			at end of outer loop, save the column map
-			send the column to a table that is to be generated based on the column map exclusively */
+		
+		// loop through records, use the controls to sanitize and validate each and update each with results
+		foreach( $record_object_array as $record ) {
+			$errors = '';
+			$update_clause_array = array();
+			foreach ( $data_object_array as $column => $control ) {
+				// ignore empty columns on any record
+				if ( $record->$column > '' ) { 				
+					$control->set_value ( $record->$column );
+					$control->sanitize();			
+					$error = $control->validate();
+					// do additional validation for sanitization (e.g., date) that reduces input to empty
+					if ( '' < $record->$column && '' == $control->get_value() ) {
+						$error = sprintf ( __( 'Invalid entry for %s -- %s.', 'wp-issues-crm' ), $column_map->$column->field, $record->$column ); 					
+					}
+					// validate select fields -- assure that value in options table
+					if ( method_exists ( $control, 'valid_values' ) ) { // testing for method existence to id select fields, but using array from above
+						if ( ! in_array ( $record->$column, $valid_values[$column] ) ) {
+							$error = sprintf ( __( 'Invalid entry for %s -- %s.', 'wp-issues-crm' ), $column_map->$column->field, $record->$column ); 						
+						}					
+					}
+					$column_map->$column->non_empty_count++;
+					// validate based on individual column's error or lack of
+					if ( '' == $error ) {
+						$column_map->$column->valid_count++;
+						// if no error and valid, update staging table with sanitized value
+						$update_clause_array[] = array (
+							'column' => $column,
+							'value'	=> $control->get_value(),						
+						);					
+					}
+					// accumulate all errors across columns for record; note that empty is not an error
+					$errors .= $error;
+				}
+			}
+			// this parallels update process for forms, but is distinct since only updating the staging table -- can't use same functions
+			$result = WIC_DB_Access_Upload::record_validation_results( $update_clause_array, $validation_parameters->staging_table, $record->STAGING_TABLE_ID, $errors );
+			if ( ! $result ) {
+				wp_die( sprintf( __( 'Error recording validation results for record %s', 'wp-issues-crm' ), $record->STAGING_TABLE_ID ) );
+			}
+		}
+		// update the column map with the counts
+		WIC_DB_Access_Upload::update_column_map ( $upload_id, json_encode ( $column_map ) );
+
+		$table = self::prepare_validation_results ( $column_map );
+		echo  json_encode ( $table );
 		wp_die();	
 	}
 
+	public static function update_upload_status( $upload_id, $status ) { // data irrelevant
+		WIC_DB_Access_Upload::update_upload_status ( $upload_id, json_decode ( $status ) ); 
+	}
+	
+	public static function prepare_validation_results ( $column_map ) {
+				
+		$table =  '<table id="wp-issues-crm-stats"><tr>' .
+			'<th class = "wic-statistic-text">' . __( 'File Column', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic-text">' . __( 'Mapped to Entity', 'wp-issues-crm' ) . '</th>' .					
+			'<th class = "wic-statistic-text">' . __( 'Mapped to Field', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Non-empty Count', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Valid Count', 'wp-issues-crm' ) . '</th>' .
+		'</tr>';
+
+		foreach ( $column_map as $column => $entity_field_object ) { 
+			if ( $entity_field_object > '' ) {
+				$table .= '<tr>' .
+					'<td class = "wic-statistic-table-name">' . $column . '</td>' .
+					'<td class = "wic-statistic-text" >' . $entity_field_object->entity . '</td>' .
+					'<td class = "wic-statistic-text" >' . $entity_field_object->field . '</td>' .
+					'<td class = "wic-statistic" >' . $entity_field_object->non_empty_count . '</td>' .
+					'<td class = "wic-statistic" >' . $entity_field_object->valid_count  . '</td>' .
+				'</tr>';
+			}
+		}
+		
+		$table .= '</table>';	
+	
+		return ( $table );
+
+	}	
 	
 }

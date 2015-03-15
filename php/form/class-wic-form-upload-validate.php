@@ -61,13 +61,25 @@ class WIC_Form_Upload_Validate extends WIC_Form_Parent  {
 				// place for progress bar -- ajax controlled; initial display none
 				echo '<div id = "wic-upload-validate-progress-bar"></div>'; 	
 	  			// place show validation results (populate by ajax) in table.
-	  			echo '<div id = "validation-results-table-wrapper"><div id = "validation-results-table"></div></div>';
+	  			echo '<div id = "validation-results-table-wrapper"></div>';
 	  		// file has already been validated -- just displaying saved validation results
 			} else {
-				// send validation results
-				// generate
-	  			// show validation results (populate by ajax) in table.
-	  			echo '<div id = "validation-results-table-wrapper"></div>'; 			
+				$message =  sprintf ( __( 'Data previously validated for mapped fields for %s. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() )  . $message;
+				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
+				$button_args_main = array(
+					'entity_requested'			=> 'upload',
+					'action_requested'			=> 'form_update',
+					'button_class'					=> 'button button-primary wic-form-button',
+					'button_label'					=> __('Validated', 'wp-issues-crm'),
+					'type'							=> 'button',
+					'id'								=> 'validate-button',
+					'disabled'						=> true,
+				);	
+				$button = $this->create_wic_form_button ( $button_args_main );
+				echo $button;
+	  			echo '<div id = "validation-results-table-wrapper">' . 
+					WIC_Entity_Upload::prepare_validation_results( json_decode ( $data_array['serialized_column_map']->get_value() ) ) .	  			
+	  			'</div>';			
 			}
 		   // in all cases, echo ID and progress field
 			echo $data_array['ID']->update_control();	
