@@ -1035,7 +1035,6 @@ ul#upload-tips {
 	display: none;
 }
 
-
 .wic-draggable {
 	width: 150px;
 	height: 20px;
@@ -1102,6 +1101,49 @@ ul#upload-tips {
 #wic-upload-progress-bar {
 	display: none;
 	margin: 0 7.1111111% 20px 7.1111111%;
+}
+
+.wic-sortable-item {
+	width: 96%;
+	height: 30px;
+	cursor: move;
+	background: #eef;
+	border: 1px solid #33f;
+	border-radius: 3px;
+	margin: 10px 0; 
+	line-height: 30px;
+	padding: 5px;
+	text-align: center;
+	vertical-align: bottom;
+}
+
+#wic-match-list {
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	background: #efe;
+	border: 1px solid #3f3;
+	border-radius: 3px;
+	float: left;  
+	font-weight: bold;
+	padding: 0 2%;
+	margin: 0 1% 0 3%; 
+	width: 46%;
+}
+
+#wic-unused-match-list {
+	background: #fee;
+	border-color: #f33;
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	box-sizing: border-box;
+	background: #fee;
+	border: 1px solid #f33;
+	border-radius: 3px;
+	float: left;  
+	padding: 0 2%;
+	margin: 0 3% 0 1%;
+	width: 46%;
 }
 
 #upload-results-table-wrapper {

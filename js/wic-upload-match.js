@@ -26,7 +26,16 @@
 			value: 0
 		});
 
+		$( "ul.wic-sortable" ).sortable ( {
+			connectWith: "ul",
+			dropOnEmpty: false 
+		});
+
+  		$( "ul.wic-sortable" ).disableSelection();
+
 		$("#match-button").click(function(){
+			var sortedIDs = $( "#wic-match-list ul" ).sortable( "toArray" );
+			console.log ( sortedIDs ); 
 			alert ('wtf');
 			/* $( "#match-button" ).text( "Resetting . . ." );
 			$( "#wic-upload-progress-bar" ).progressbar ( "value", false );

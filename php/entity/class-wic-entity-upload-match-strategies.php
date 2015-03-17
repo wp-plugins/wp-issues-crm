@@ -156,21 +156,25 @@
 		foreach ( $doable_match_array as $slug => $match ) {
 			// show 5 match passes as default plan . . .
 			if ( $i < 5 ) {
-				$primary_items .= '<li class = "wic_match match_doable" id = "' . $slug . '">' . $match['label'] . '</li>';
+				$primary_items .= '<li class = "wic-match wic-sortable-item" id = "' . $slug . '">' . $match['label'] . '</li>';
 			} else {
-				$additional_items .= '<li class = "wic_match match_doable" id = "' . $slug . '">' . $match['label'] . '</li>';
+				$additional_items .= '<li class = "wic-match wic-sortable-item" id = "' . $slug . '">' . $match['label'] . '</li>';
 			}
 			$i++;
 		}
 		
 		// set up ul's for each set
-		$output = '<ul id = "wic_primary_match_list">';
+		$output =	'<div = "horbar-clear-fix"></div>';
+		$output .=  '<div id = "wic-match-list"><h3>' . __( 'Prioritize combinations to match records with here.', 'wp-issues-crm' ) . '</h3>';
+		$output .=	'<ul  class = "wic-sortable" >';
 			$output .= $primary_items;
-		$output .= '</ul>';
+		$output .= '</ul></div>';
 		
-		$output .= '<ul id = "wic_additional_match_list">';
+		$output .= '<div  id = "wic-unused-match-list"><h3>' . __( 'Place unused combinations here.', 'wp-issues-crm' ) . '</h3>';
+		$output .= '<ul class = "wic-sortable" >';
 				$output .= $additional_items;
-		$output .= '</ul>';
+		$output .= '</ul></div>';
+		$output .=	'<div = "horbar-clear-fix"></div>';
 		
 		return ( $output );
 	}
