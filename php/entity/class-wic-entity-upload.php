@@ -122,7 +122,18 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		$id = $args['id_requested']; 
 		$this->id_search_generic ( $id, 'WIC_Form_Upload_Validate', '' , false, false );
 	}			
-		
+	
+	// show the validate form -- this is individual field data validation doable only after mapping complete		
+	protected function match ( $args ) {
+		$id = $args['id_requested']; 
+		$this->id_search_generic ( $id, 'WIC_Form_Upload_Match', '' , false, false );
+	}			
+
+	protected function complete ( $args ) {
+		echo self::format_tab_titles( $_GET['upload_id'] );
+		echo '<h3>here goes the complete stuff</h3>';	
+	}
+			
 	
 	// function from parent needs to be overridden to set name value from $_FILES array
 	protected function populate_data_object_array_from_submitted_form() {
@@ -282,17 +293,12 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		$this->id_search( $args );
 	}	
 	
-	
-	protected function match ( $args ) {
-		echo self::format_tab_titles( $_GET['upload_id'] );
-		echo '<h3>here goes the matches stuff</h3>';	
-	}
-	
-	protected function complete ( $args ) {
-		echo self::format_tab_titles( $_GET['upload_id'] );
-		echo '<h3>here goes the complete stuff</h3>';	
-	}
-	
+	/*
+	*
+	* Functions to support column mapping
+	*
+	*/
+
 	public static function get_column_map( $upload_id ) {
 		$column_map =  WIC_DB_Access_Upload::get_column_map( $upload_id ) ;
 		echo $column_map;
@@ -342,6 +348,13 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		return $columns_mapped;
 	} 	
 
+	/*
+	*
+	* functions to support validation
+	*
+	*/
+
+
 	public static function reset_validation ( $upload_id, $json_encoded_staging_table_name  ) {
 		
 		// reset counts in column map
@@ -390,7 +403,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 				$data_object_array[$column] = WIC_Control_Factory::make_a_control( $field_rule->field_type ); 	
 				$data_object_array[$column]->initialize_default_values(  $entity_field_object->entity, $entity_field_object->field,  '' );
 				// for select fields, set up an array of valid values items for validation loop (avoiding repetitive access)
-				if ( 'select' == $field_rule->field_type ) { 				
+				if ( method_exists ( $data_object_array[$column], 'valid_values' ) ) { 	// select/multiselect fields			
 					$valid_values[$column] = $data_object_array[$column]->valid_values();
 				}  
 			}
@@ -412,14 +425,18 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 				// ignore empty columns on any record
 				if ( $record->$column > '' ) { 				
 					$control->set_value ( $record->$column );
-					$control->sanitize();			
+					// since will be testing for specified valid values and have already escaped,
+					// content not to sanitize multiselect ( which is expecting an array value for sanitization )
+					if ( 'multiselect' != $control->get_control_type() ) {
+						$control->sanitize();
+					}
 					$error = $control->validate();
 					// do additional validation for sanitization (e.g., date) that reduces input to empty
 					if ( '' < $record->$column && '' == $control->get_value() ) {
 						$error = sprintf ( __( 'Invalid entry for %s -- %s.', 'wp-issues-crm' ), $column_map->$column->field, $record->$column ); 					
 					}
-					// validate select fields -- assure that value in options table
-					if ( method_exists ( $control, 'valid_values' ) ) { // testing for method existence to id select fields, but using array from above
+					// validate select fields -- assure that value in options set (whether in options table or function generated per control logic)
+					if ( method_exists ( $control, 'valid_values' ) ) { 
 						if ( ! in_array ( $record->$column, $valid_values[$column] ) ) {
 							$error = sprintf ( __( 'Invalid entry for %s -- %s.', 'wp-issues-crm' ), $column_map->$column->field, $record->$column ); 						
 						}					
@@ -452,8 +469,8 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		wp_die();	
 	}
 
-	public static function update_upload_status( $upload_id, $status ) { // data irrelevant
-		WIC_DB_Access_Upload::update_upload_status ( $upload_id, json_decode ( $status ) ); 
+	public static function update_upload_status( $upload_id, $status ) { 
+		WIC_DB_Access_Upload::update_upload_status ( $upload_id, json_decode ( stripslashes( $status ) ) ) ; 
 	}
 	
 	public static function prepare_validation_results ( $column_map ) {
@@ -482,6 +499,22 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	
 		return ( $table );
 
+	}	
+	
+	/*
+	*
+	* functions to support matching
+	*
+	*/	
+
+	public static function create_match_option_array ( $upload_id ) {
+			$test = array ( 
+					array ( 'entity' => 'entity1', 'field' => 'field1' ), 
+					array ( 'entity' => 'entity2', 'field' => 'field2' ),
+					array ( 'entity' => 'entity3', 'field' => 'field3' ),					
+					array ( 'entity' => 'entity4', 'field' => 'field4' ),
+				);
+			update_option('wbtestshaz', $test  );						
 	}	
 	
 }

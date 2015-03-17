@@ -1,0 +1,178 @@
+<?php
+/*
+*
+* class-wic-entity-upload-match-strategies.php
+*
+*
+* 
+*/
+
+ class WIC_Entity_Upload_Match_Strategies {
+	
+	public function __construct() {}	
+	
+	private $recommended_match_array = array (
+
+		'id' =>	array(
+			'label'			=>	'WP Issues CRM Constituent ID',
+			'link_fields'	=> array(
+				array( 'constituent', 'ID', 0 ) // table, field, number of positions to match, 0 = all		
+			),
+		),
+		'lnfndob' => array(
+			'label'			=>	'Last Name, First Name, Date of Birth',
+			'link_fields'	=> array(
+				array( 'constituent', 'last_name', 0 ),
+				array( 'constituent', 'first_name', 0 ),
+				array( 'constituent', 'date_of_birth', 0 ),					
+			),
+		),
+		'emailfn' => array( 
+			'label'			=>	'eMail Address, First Name',
+			'link_fields'	=> array(
+				array( 'email', 'email_address', 0 ),
+			),
+		),
+		'email' => array( 
+			'label'			=>	'eMail Address',
+			'link_fields'	=> array(
+				array( 'email', 'email_address', 0 ),
+			),
+		),
+		'lnfnaddr'  => array( 
+			'label'			=>	'Last Name, First Name, Street Address',
+			'link_fields'	=> array(
+				array( 'constituent', 'last_name', 0 ),
+				array( 'constituent', 'first_name', 0 ),
+				array( 'address', 'address_line', 0 ),					
+			),
+		),
+		'lnfnaddr5'  => array( 
+			'label'			=>	'Last Name, First Name, Street Address (First 5 Characters Only)',
+			'link_fields'	=> array(
+				array( 'constituent', 'last_name', 5 ),
+				array( 'constituent', 'first_name', 5 ),
+				array( 'address', 'address_line', 5 ),					
+			),
+		),	
+		'lnfnzip'  => array( 
+			'label'			=>	'Last Name, First Name, Zip',
+			'link_fields'	=> array(
+				array( 'constituent', 'last_name', 0 ),
+				array( 'constituent', 'first_name', 0 ),
+				array( 'address', 'zip', 0 ),					
+			),
+		),
+		'lnfncity'  => array( 
+			'label'			=>	'Last Name, First Name, City',
+			'link_fields'	=> array(
+				array( 'constituent', 'last_name', 0 ),
+				array( 'constituent', 'first_name', 0 ),
+				array( 'address', 'City', 0 ),					
+			),
+		),
+		'lnfn'  => array( 
+			'label'			=>	'Last Name, First Name',
+			'link_fields'	=> array(
+				array( 'constituent', 'last_name', 0 ),
+				array( 'constituent', 'first_name', 0 ),
+			),
+		),			
+		'lnfi' => array( 
+			'label'			=>	'Last Name, First Initial',
+			'link_fields'	=> array(
+				array( 'constituent', 'last_name', 0 ),
+				array( 'constituent', 'first_name', 1 ),
+			),
+		),			
+
+	);
+		
+	
+	function assemble_starting_match_array ( $upload_id, $save_result ) {
+
+		global $wic_db_dictionary;
+
+		// get array of custom fields		
+		$custom_fields_match_array = $wic_db_dictionary->custom_fields_match_array(); 
+
+		// merge with recommended_match		
+		$all_fields_match_array = array_merge( $this->recommended_match_array, $custom_fields_match_array );
+		 
+		// get column map for this upload 
+		$column_map =  json_decode( WIC_DB_Access_Upload::get_column_map( $upload_id ) ) ;		
+
+		// invert column map to give array of database fields that are mapped to
+		$targeted_database_fields = array();
+	
+		foreach ( $column_map as $column => $entity_field_object ) {
+			if ( '' < $entity_field_object ) { // unmapped columns have an empty entity_field_object
+				$targeted_database_fields[] = array( $entity_field_object->entity, $entity_field_object->field );
+			}		
+		}		
+				
+		// filter match array by available columns
+		$doable_match_array = array();
+		foreach ( $all_fields_match_array as $slug=>$match ) {
+			$match_doable = true;
+			foreach ( $match['link_fields'] as $link_field ) {
+				$test_array = array ( $link_field[0], $link_field[1] );
+				if ( ! in_array ( $test_array, $targeted_database_fields ) ) {
+					$match_doable = false;
+					break;				
+				}			
+			}
+			if ( $match_doable ) {
+				$doable_match_array[$slug] = $match;
+			}
+		}		
+
+		// note that the match strategy array is saved to the upload table, but is not in the dictionary -- never accessed in a form
+		if ( $save_result ) {
+			$result = WIC_DB_Access_Upload::update_match_results ( $upload_id, json_encode ( $doable_match_array ) );
+			if ( false === $result ) {
+				WIC_Function_Utilities::wic_error ( __( 'Unable to update match results for upload.' , 'wp_issues_crm' ), __FILE__, __LINE__, __METHOD__, true );
+			} 		
+		}
+
+		return ( $doable_match_array );		
+
+	}
+
+	function layout_sortable_match_options( $upload_id, $save_result ) {
+		
+		// get the doable match array		
+		$doable_match_array = $this->assemble_starting_match_array( $upload_id, $save_result );	
+		
+		// return empty if no doable matches
+		if ( 0 == count ( $doable_match_array ) ) {
+			return ( '' );		
+		} 
+		
+		// split array into two sets of li's
+		$i = 0;
+		$primary_items = '';
+		$additional_items = ''; 
+		foreach ( $doable_match_array as $slug => $match ) {
+			// show 5 match passes as default plan . . .
+			if ( $i < 5 ) {
+				$primary_items .= '<li class = "wic_match match_doable" id = "' . $slug . '">' . $match['label'] . '</li>';
+			} else {
+				$additional_items .= '<li class = "wic_match match_doable" id = "' . $slug . '">' . $match['label'] . '</li>';
+			}
+			$i++;
+		}
+		
+		// set up ul's for each set
+		$output = '<ul id = "wic_primary_match_list">';
+			$output .= $primary_items;
+		$output .= '</ul>';
+		
+		$output .= '<ul id = "wic_additional_match_list">';
+				$output .= $additional_items;
+		$output .= '</ul>';
+		
+		return ( $output );
+	}
+}
+

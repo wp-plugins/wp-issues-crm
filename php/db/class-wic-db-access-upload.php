@@ -465,6 +465,21 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		// 0 is an OK result if reset did nothing
 		return ( $result !== false );
 	}
+	
+	/*
+	*
+	* support match functions
+	*/
+	
+		
+	// quick update
+	public static function update_match_results ( $upload_id, $serialized_match_results ) {
+		global $wpdb;
+		$table = $wpdb->prefix . 'wic_upload';
+		$sql = "UPDATE $table set serialized_match_results = '$serialized_match_results' WHERE ID = $upload_id";
+		$result = $wpdb->query( $sql );
+		return ( $result );
+	}	
 }
 
 

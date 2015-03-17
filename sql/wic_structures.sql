@@ -206,6 +206,7 @@ CREATE TABLE wp_wic_upload (
   upload_status varchar(255) NOT NULL,
   serialized_upload_parameters blob NOT NULL,
   serialized_column_map blob NOT NULL,
+  serialized_match_results blob NOT NULL,
   last_updated_time datetime NOT NULL,
   last_updated_by bigint(20) NOT NULL,
   PRIMARY KEY (ID),

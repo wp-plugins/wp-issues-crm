@@ -107,7 +107,7 @@ class WIC_Control_Select extends WIC_Control_Parent {
 	
 	/*********************************************************************************
 	*
-	* validate based on look up table
+	* function to support bulk validation in upload process
 	*
 	*********************************************************************************/
 

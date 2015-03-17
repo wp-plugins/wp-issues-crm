@@ -114,6 +114,14 @@ class WIC_Admin_Setup {
 					);
 					wp_enqueue_script('wic-upload-validate');
 				}
+				if ( 'match' == $_GET['action'] ) { 
+					wp_register_script(
+						'wic-upload-match',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-match.js' , __FILE__ ),
+						array ( 'jquery-ui-progressbar', 'jquery-ui-sortable' ) 
+					);
+					wp_enqueue_script('wic-upload-match');
+				}
 			}
 			wp_register_style(
 				'wp-issues-crm-styles',

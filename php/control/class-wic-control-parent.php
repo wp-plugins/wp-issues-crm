@@ -84,6 +84,10 @@ abstract class WIC_Control_Parent {
 		return ( $this->field->field_label );	
 	}
 
+	public function get_control_type() {
+		return ( $this->field->field_type );	
+	}	
+
 	/**********************************************************************************
 	*
 	* get default value for field itself
@@ -364,4 +368,6 @@ abstract class WIC_Control_Parent {
 		return ( $update_clause );	
 	}
 
+
+	
 }

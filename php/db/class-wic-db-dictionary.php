@@ -401,5 +401,21 @@ class WIC_DB_Dictionary {
 		}
 		return ( $compare );		
 	}
+	
+	// retrieve custom fields with labels
+	public function custom_fields_match_array () {
+		$custom_fields_match_array = array();
+		foreach ( $this->field_rules_cache as $field ) {	
+			if ( false !== stripos( $field->field_slug, 'custom_field_' ) ) {
+				$custom_fields_match_array[$field->field_slug] = array(
+					'label'			=>	$field->field_label,
+					'link_fields'	=> array(
+						array( 'constituent', $field->field_slug, 0 ),
+					),
+				);
+			}
+		} 
+		return ( $custom_fields_match_array );
+	}
 
 }
