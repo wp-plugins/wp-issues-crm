@@ -414,7 +414,8 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		$record_object_array = WIC_DB_Access_Upload::get_staging_table_records(  
 			$validation_parameters->staging_table, 
 			$validation_parameters->offset ,  
-			$validation_parameters->chunk_size 
+			$validation_parameters->chunk_size,
+			'*' 
 		);		
 		
 		// loop through records, use the controls to sanitize and validate each and update each with results
@@ -507,14 +508,129 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	*
 	*/	
 
-	public static function create_match_option_array ( $upload_id ) {
-			$test = array ( 
-					array ( 'entity' => 'entity1', 'field' => 'field1' ), 
-					array ( 'entity' => 'entity2', 'field' => 'field2' ),
-					array ( 'entity' => 'entity3', 'field' => 'field3' ),					
-					array ( 'entity' => 'entity4', 'field' => 'field4' ),
-				);
-			update_option('wbtestshaz', $test  );						
-	}	
+	public static function reset_match ( $upload_id, $data  ) {
+		
+		$data = json_decode ( stripslashes( $data ) );
+		// reset counts in column map
+		$match_results = json_decode ( WIC_DB_Access_Upload::get_match_results ( $upload_id ) );
+		foreach ( $match_results as $slug=>$match ) {
+			$match->order = 0;
+			$match->total_count = 0;
+			$match->have_components_count = 0;
+			$match->have_components_not_previously_matched = 0;
+			$match->matched_with_these_components = 0;
+			$match->still_unmatched = 0;						
+			$match->unmatched_unique_values_of_components = 0;
+		}
+		
+		// capture user decisions about which match strategies to use and in what order
+		$order_counter = 0;
+		foreach ( $data->usedMatch as $slug ) {
+			$order_counter++;
+			$match_results->$slug->order = $order_counter;		
+		}		
+		
+		WIC_DB_Access_Upload::update_match_results ( $upload_id, json_encode ( $match_results ) );
+		WIC_DB_Access_Upload::update_upload_status ( $upload_id, 'matched' );
+		// reset validation indicators on staging table
+		$table = $data->table;
+		
+		$result = WIC_DB_Access_Upload::reset_staging_table_match_indicators( $table );
+		if ( $result ) {
+			wp_die( json_encode ( __( 'Staging table match indicators reset.', 'wp-issues-crm' ) ) );
+		} else {
+			// send errors not encoded, so will generate alert on return
+			wp_die ( __( 'Error resetting staging table match indicators', 'wp-issues-crm' ) );		
+		}
+		
+	}
+
+	public static function match_upload ( $upload_id, $match_parameters ) {
+	
+		// get the current staging row		
+		$match_results = json_decode ( WIC_DB_Access_Upload::get_match_results ( $upload_id ) );
+		$match_rule = $match_results->{$match_parameters->working_pass};
+		$match_fields_array = $match_rule->link_fields;
+		
+		// get the column to database field map for this upload
+		$column_map = json_decode ( WIC_DB_Access_Upload::get_column_map ( $upload_id ) );		
+
+		// set up an array of the columns being used to create staging table retrieval sql and minimize size of retrieval array
+		$column_list_array = array();		
+		// look up match fields in column array to get back to column, add to match field array
+		foreach ( $match_fields_array as $match_field ) {
+			foreach ( $column_map as $column => $entity_field_object ) {
+				if ( '' < $entity_field_object ) { // unmapped columns have an empty entity_field_object
+					if ( $match_field[0] == $entity_field_object->entity && $match_field[1] ==  $entity_field_object->field ) {
+						$match_field[3] == $column;
+						$column_list_array[] = $column;	
+					}
+				}		
+			}
+		}  	
+		
+		$column_list = implode ( ',', $column_list_array );		
+		// get a chunk of records to validate
+		$match_parameters = json_decode ( stripslashes( $match_parameters ) ) ;
+		$record_object_array = WIC_DB_Access_Upload::get_staging_table_records(  
+			$match_parameters->staging_table, 
+			$match_parameters->offset,  
+			$match_parameters->chunk_size, 
+			$column_list
+		);		
+
+		// loop through records, if have necessary fields, look for match using the standard query construct
+		
+		foreach( $record_object_array as $record ) {
+			
+			// keep overall tally -- should be same in all passes
+			$match_rule->total_count++;
+			// necessary values present (otherwise store temporarily in position 4)
+			$missing = false;
+			foreach ( $match_fields_array as $match_field ) {
+				if ( '' == $record[$match_field[3]] ) {
+					$missing = true;
+					break;
+				} else {
+					$match_field[4] = $record[$match_field[3]];				
+				}			
+			}			
+			if ( ! $missing ) {
+				$match_rule->have_components_count++; // $match_field[4] fully populated for all match fields
+			} else {
+				continue;			
+			}			
+			// valid?
+			if ( 'y' == $record->VALIDATION_STATUS ) {
+				$match_rule->have_components_and_valid_count++;			
+			} else {
+				continue;			
+			}	
+			// not already matched?
+			if ( '' == $record->MATCH_PASS ) {
+				$match_rule->have_components_not_previously_matched++;			
+			} else {
+				continue;			
+			}	 		
+			// construct sql from link fields
+						
+
+			
+			//do look up in db
+			// this parallels update process for forms, but is distinct since only updating the staging table -- can't use same functions
+			$result = WIC_DB_Access_Upload::record_validation_results( $update_clause_array, $validation_parameters->staging_table, $record->STAGING_TABLE_ID, $errors );
+			if ( ! $result ) {
+				wp_die( sprintf( __( 'Error recording validation results for record %s', 'wp-issues-crm' ), $record->STAGING_TABLE_ID ) );
+			}
+		}
+		// update the column map with the counts
+		WIC_DB_Access_Upload::update_match_results ( $upload_id, json_encode ( $column_map ) );
+
+		$table = self::prepare_prepare_match_results ( $column_map );
+		echo  json_encode ( $table );
+		wp_die();	
+	}
+
+
 	
 }

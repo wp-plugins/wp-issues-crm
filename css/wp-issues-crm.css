@@ -1103,6 +1103,10 @@ ul#upload-tips {
 	margin: 0 7.1111111% 20px 7.1111111%;
 }
 
+ul.wic-sortable {
+	padding: 0 0 40px 0;
+}
+
 .wic-sortable-item {
 	width: 96%;
 	height: 30px;
@@ -1110,7 +1114,7 @@ ul#upload-tips {
 	background: #eef;
 	border: 1px solid #33f;
 	border-radius: 3px;
-	margin: 10px 0; 
+	margin: 10px 0 0 0; 
 	line-height: 30px;
 	padding: 5px;
 	text-align: center;
@@ -1127,7 +1131,7 @@ ul#upload-tips {
 	float: left;  
 	font-weight: bold;
 	padding: 0 2%;
-	margin: 0 1% 0 3%; 
+	margin: 0 1% 0 3%;
 	width: 46%;
 }
 

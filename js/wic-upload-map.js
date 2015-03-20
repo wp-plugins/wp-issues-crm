@@ -95,7 +95,7 @@
 	// on initial load, get column from database and move draggables into place
 	function loadColumnMap() {
 		
-		wpIssuesCRMAjaxPost( '', 'get_column_map',  jQuery('#ID').val(), '', function( response ) {
+		wpIssuesCRMAjaxPost( 'upload', 'get_column_map',  jQuery('#ID').val(), '', function( response ) {
 			// calling parameters are: entity, action_requested, id_requested, data object, callback
 			wicColumnMap = response;
 			// loop through the response dropping upload-fields into targets

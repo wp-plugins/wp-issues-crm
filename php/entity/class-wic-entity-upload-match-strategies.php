@@ -89,7 +89,7 @@
 	);
 		
 	
-	function assemble_starting_match_array ( $upload_id, $save_result ) {
+	function assemble_starting_match_array ( $upload_id ) { // this function is only used on match initialization -- i.e., status of upload is validation 
 
 		global $wic_db_dictionary;
 
@@ -101,19 +101,15 @@
 		 
 		// get column map for this upload 
 		$column_map =  json_decode( WIC_DB_Access_Upload::get_column_map( $upload_id ) ) ;		
-
+		
 		// invert column map to give array of database fields that are mapped to
-		$targeted_database_fields = array();
-	
-		foreach ( $column_map as $column => $entity_field_object ) {
-			if ( '' < $entity_field_object ) { // unmapped columns have an empty entity_field_object
-				$targeted_database_fields[] = array( $entity_field_object->entity, $entity_field_object->field );
-			}		
-		}		
+		$targeted_database_fields = self::invert_column_map ( $column_map );
 				
 		// filter match array by available columns
 		$doable_match_array = array();
-		foreach ( $all_fields_match_array as $slug=>$match ) {
+
+		$count_used = 0; // counter for match array -- 
+		foreach ( $all_fields_match_array as $slug => $match ) {
 			$match_doable = true;
 			foreach ( $match['link_fields'] as $link_field ) {
 				$test_array = array ( $link_field[0], $link_field[1] );
@@ -122,47 +118,59 @@
 					break;				
 				}			
 			}
+			// slot the doable items in with order of display indicator
 			if ( $match_doable ) {
-				$doable_match_array[$slug] = $match;
+				$count_used++;
+			 	 // arbitrarily set max used to 3 fields initially -- 0 values will end up aside
+				$order = ( $count_used < 4 ) ? $count_used : 0;				
+				$doable_match_array[$slug] = new WIC_DB_Upload_Match_Object ( $match['label'], $match['link_fields'], $order );
 			}
-		}		
+		}	
 
 		// note that the match strategy array is saved to the upload table, but is not in the dictionary -- never accessed in a form
-		if ( $save_result ) {
-			$result = WIC_DB_Access_Upload::update_match_results ( $upload_id, json_encode ( $doable_match_array ) );
-			if ( false === $result ) {
-				WIC_Function_Utilities::wic_error ( __( 'Unable to update match results for upload.' , 'wp_issues_crm' ), __FILE__, __LINE__, __METHOD__, true );
-			} 		
-		}
-
+		$result = WIC_DB_Access_Upload::update_match_results ( $upload_id, json_encode ( $doable_match_array ) );
+		if ( false === $result ) {
+			WIC_Function_Utilities::wic_error ( __( 'Unable to update match results for upload.' , 'wp_issues_crm' ), __FILE__, __LINE__, __METHOD__, true );
+		} 		
+		
+		// returns an associative array of objects which will become an object of objects on json_decode since js does not support associative array
 		return ( $doable_match_array );		
 
 	}
 
-	function layout_sortable_match_options( $upload_id, $save_result ) {
-		
-		// get the doable match array		
-		$doable_match_array = $this->assemble_starting_match_array( $upload_id, $save_result );	
-		
-		// return empty if no doable matches
-		if ( 0 == count ( $doable_match_array ) ) {
-			return ( '' );		
-		} 
-		
-		// split array into two sets of li's
-		$i = 0;
-		$primary_items = '';
-		$additional_items = ''; 
-		foreach ( $doable_match_array as $slug => $match ) {
-			// show 5 match passes as default plan . . .
-			if ( $i < 5 ) {
-				$primary_items .= '<li class = "wic-match wic-sortable-item" id = "' . $slug . '">' . $match['label'] . '</li>';
+	
+	function layout_sortable_match_options( $upload_id, $new ) { // new is true or false -- creating new object or note.
+
+		// get the doable match array/object	
+		if ( $new ) {	
+			$doable_match_object = $this->assemble_starting_match_array( $upload_id ); // array of objects $slug => match object
+			if ( 0 == count ( $doable_match_object ) ) {
+				return ( '' );			
+			} 
+		} else {
+			$match_result_string = WIC_DB_Access_Upload::get_match_results ( $upload_id );
+			if ( '[]' == $match_result_string ||  '{}' == $match_result_string ) { // empty array or object in json  
+				return ( '' );
 			} else {
-				$additional_items .= '<li class = "wic-match wic-sortable-item" id = "' . $slug . '">' . $match['label'] . '</li>';
+				$doable_match_object = json_decode ( $match_result_string );		// object with properties $slug->match object
+			}	
+		}	
+		
+		// split array/object into two sets of li's
+		$primary_items_array = array();
+		$additional_items = ''; 
+		foreach ( $doable_match_object as $slug => $match ) { // loop works same whether associative array (as on new) or object (as on returning)
+			if ( 0 < $match->order ) {
+				$primary_items_array[$match->order] = '<li class = "wic-match wic-sortable-item" id = "' . $slug . '">' . $match->label . '</li>';
+			} else {
+				$additional_items .= '<li class = "wic-match wic-sortable-item" id = "' . $slug . '">' . $match->label . '</li>';
 			}
-			$i++;
 		}
 		
+		// sort the primary items li's by match order and convert them back to a string
+		ksort ( $primary_items_array );
+		$primary_items = implode ( '', $primary_items_array );					
+
 		// set up ul's for each set
 		$output =	'<div = "horbar-clear-fix"></div>';
 		$output .=  '<div id = "wic-match-list"><h3>' . __( 'Prioritize combinations to match records with here.', 'wp-issues-crm' ) . '</h3>';
@@ -178,5 +186,19 @@
 		
 		return ( $output );
 	}
+
+		public static function invert_column_map ( $column_map ) {
+			$targeted_database_fields = array();
+			foreach ( $column_map as $column => $entity_field_object ) {
+				if ( '' < $entity_field_object ) { // unmapped columns have an empty entity_field_object
+					$targeted_database_fields[] = array( $entity_field_object->entity, $entity_field_object->field );
+				}		
+			}	
+			return ( $targeted_database_fields );	
+		}
+
+
+
+
 }
 

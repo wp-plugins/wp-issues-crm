@@ -96,7 +96,7 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 	* retrieve database records joined across parent and child tables based on array of search parameters
 	*
 	*/
-	protected function db_search( $meta_query_array, $search_parameters ) { // $select_mode = '*' ) {
+	protected function db_search( $meta_query_array, $search_parameters ) { 
 
 		global $wic_db_dictionary;
 

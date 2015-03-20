@@ -249,7 +249,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			$upload_parameters['discrepancy']		= $discrepancy;
 		} 
 	
-		// nota bene:  unsafe to unserialize and reserialize -- the escape character may generate problems
+		// nota bene:  may be unsafe to unserialize and reserialize -- the escape character may generate problems
 		// this field should be used in a readonly way from here on out -- it is a record of the upload and is frozen.
 		$this->serialized_upload_parameters = json_encode( $upload_parameters );
 		
@@ -423,10 +423,11 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	*
 	*/	
 
-	public static function get_staging_table_records( $staging_table, $offset, $limit ) {
+	public static function get_staging_table_records( $staging_table, $offset, $limit, $field_list ) {
 		// if offset is zero do a rest; then maintain validation indicator
 		global $wpdb;
-		$sql = "SELECT * FROM $staging_table LIMIT $offset, $limit";
+		$field_list = ( '*' == $field_list ) ? $staging_table . '.' . $field_list : $field_list;
+		$sql = "SELECT STAGING_TABLE_ID, VALIDATION_STATUS, VALIDATION_ERRORS, MATCHED_CONSTITUENT_ID, MATCH_PASS, $field_list FROM $staging_table LIMIT $offset, $limit";
 		$result = $wpdb->get_results( $sql );
 		return ( $result ); 
 	}
@@ -471,6 +472,14 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	* support match functions
 	*/
 	
+		// quick look up
+	public static function get_match_results ( $upload_id ) {
+		global $wpdb;
+		$table = $wpdb->prefix . 'wic_upload';
+		$sql = "SELECT serialized_match_results FROM $table where ID = $upload_id";
+		$result = $wpdb->get_results( $sql );
+		return ( $result[0]->serialized_match_results );
+	}
 		
 	// quick update
 	public static function update_match_results ( $upload_id, $serialized_match_results ) {
@@ -480,6 +489,24 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		$result = $wpdb->query( $sql );
 		return ( $result );
 	}	
+	
+	public static function reset_staging_table_match_indicators( $table ) { 
+		global $wpdb;
+		$sql = "UPDATE $table SET MATCHED_CONSTITUENT_ID = '', MATCH_PASS = ''";	
+		$result = $wpdb->query( $sql );
+		// 0 is an OK result if reset did nothing
+		return ( $result !== false );
+	}
+	
+	public static function lookup_constituent_match ( $match_fields_array, $staging_table ) {
+		// follow rough approach in search function for parent, but adapt to this context
+		// $match_fields_array as match fields values: 0 = entity, 1 = column, 2 = positions to match, 3 = staging column, 4 = staging value; 		
+		$sql = "SELECT // id
+					FROM 	$join
+					WHERE 1=1 $deleted_clause $where 
+					GROUP BY $top_entity.ID
+					LIMIT 0, 2"; // if more than 1, too many and stop		
+	}
 }
 
 

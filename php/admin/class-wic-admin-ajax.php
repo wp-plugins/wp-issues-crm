@@ -37,25 +37,13 @@ class WIC_Admin_Ajax {
 		*		 
 		*/	
 
-		if ( 'get_column_map' == $_POST['sub_action'] ) {
-				self::ajax_check_capability( '' );  
-				WIC_Entity_Upload::get_column_map( $_POST['id_requested'] );	
-		} elseif ( 'update_column_map' == $_POST['sub_action'] ) {
-				self::ajax_check_capability( '' );  
-				WIC_Entity_Upload::update_column_map( $_POST['id_requested'], $_POST['wic_data'] );	
-		} elseif ( 'update_interface_table' == $_POST['sub_action'] ) { 	
-				self::ajax_check_capability( '' );  // in this case id_requested is a column_name
-				WIC_Entity_Upload::update_interface_table( $_POST['id_requested'], $_POST['wic_data'] );
-		} elseif ( 'validate_upload' == $_POST['sub_action'] ) { 	
-				self::ajax_check_capability( '' );  // in this case id_requested is a column_name
-				WIC_Entity_Upload::validate_upload( $_POST['id_requested'], $_POST['wic_data'] );	
-		} elseif ( 'reset_validation' == $_POST['sub_action'] ) { 	
-				self::ajax_check_capability( '' );  // in this case id_requested is a column_name
-				WIC_Entity_Upload::reset_validation( $_POST['id_requested'], $_POST['wic_data'] );	
-		} elseif ( 'update_upload_status' == $_POST['sub_action'] ) { 	
-				self::ajax_check_capability( '' );  // in this case id_requested is a column_name
-				WIC_Entity_Upload::update_upload_status( $_POST['id_requested'], $_POST['wic_data'] );	
-		}						
+		if ( 'upload' == $_POST['entity'] ) {
+			$required_capability = 'activate_plugins';		
+		}
+		self::ajax_check_capability( $required_capability ); 
+		$class = 'WIC_Entity_' . $_POST['entity'];
+		$class::{$_POST['sub_action']}(  $_POST['id_requested'], $_POST['wic_data'] );	
+						
 	}	
 
 	private static function ajax_check_capability ( $required_capability ) {

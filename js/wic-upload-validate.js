@@ -45,7 +45,7 @@
 			"offset" : offset,
 			"chunk_size" : chunkSize		
 		}
-		wpIssuesCRMAjaxPost( '', 'validate_upload',  uploadID, validationParameters,  function( response ) {
+		wpIssuesCRMAjaxPost( 'upload', 'validate_upload',  uploadID, validationParameters,  function( response ) {
 			// calling parameters are: entity, action_requested, id_requested, data object, callback
 			chunkCount++;
 			jQuery( "#wic-upload-progress-bar" ).progressbar ( "value", 100 * chunkCount / chunkPlan );
@@ -56,7 +56,7 @@
 			} else {
 				progressLegend = '<h3> Validated ' + uploadParameters.insert_count.toLocaleString( 'en-IN' ) + ' records -- done.</h3>';
 				jQuery( "#upload-results-table-wrapper" ).html( response + progressLegend );
-				wpIssuesCRMAjaxPost( '', 'update_upload_status',  uploadID, 'validated',  function( response ) {		
+				wpIssuesCRMAjaxPost( 'upload', 'update_upload_status',  uploadID, 'validated',  function( response ) {		
 					jQuery( "#wic-upload-progress-bar" ).hide();
 					jQuery( "#validate-button" ).prop( "disabled", true );
 					jQuery( "#validate-button" ).text( "Validated" );
@@ -66,7 +66,7 @@
 	}
 	
 	function resetValidationIndicators() { 
-		wpIssuesCRMAjaxPost( '', 'reset_validation',  uploadID, uploadParameters.staging_table_name,  function( response ) {
+		wpIssuesCRMAjaxPost( 'upload', 'reset_validation',  uploadID, uploadParameters.staging_table_name,  function( response ) {
 			jQuery( "#upload-results-table-wrapper" ).html( "<h3>" + response +  "</h3>" );
 			jQuery( "#validate-button" ).text( "Validating . . ." );
 			jQuery( "#wic-upload-progress-bar" ).progressbar ( "value", 0 );
