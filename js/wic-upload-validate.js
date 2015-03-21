@@ -21,6 +21,8 @@
 		chunkPlan = Math.ceil( uploadParameters.insert_count / chunkSize );
 		// set a counter for number of times chunks called in recursion
 		chunkCount = 0;
+		// set in progress flag
+		validationInProgress = 0;	
 	
 		$( "#wic-upload-progress-bar" ).progressbar({
 			value: 0
@@ -28,11 +30,19 @@
 
 		$("#validate-button").click(function(){
 			$( "#validate-button" ).text( "Resetting . . ." );
+			validationInProgress = 1;	
 			$( "#wic-upload-progress-bar" ).progressbar ( "value", false );
 	  		$( "#wic-upload-progress-bar" ).show();
 			jQuery( "#upload-results-table-wrapper" ).html( "<h3>Resetting validation indicators. . . </h3>" );
 			resetValidationIndicators(); // note that reset callback includes invokation of validation				  		
 		}); 
+		
+				
+    $(window).on('beforeunload', function() {
+			if ( 1 == validationInProgress ) {
+				return ( 'initiated validation run, but not completed');
+			}   
+     });
 	});
 
 	
@@ -50,7 +60,7 @@
 			chunkCount++;
 			jQuery( "#wic-upload-progress-bar" ).progressbar ( "value", 100 * chunkCount / chunkPlan );
 			if ( chunkCount < chunkPlan ) {
-				progressLegend = '<h3> . . . validated ' + ( chunkCount * chunkSize ).toLocaleString( 'en-IN' )  + ' of ' + uploadParameters.insert_count.toLocaleString( 'en-IN' ) + ' records.</h3>'; 
+				progressLegend = '<h3> . . . validated ' + ( chunkCount * chunkSize ).toLocaleString( 'en-US' )  + ' of ' + uploadParameters.insert_count.toLocaleString( 'en-US' ) + ' records.</h3>'; 
 				jQuery( "#upload-results-table-wrapper" ).html( response + progressLegend );
 				validateUpload ( chunkCount * chunkSize );
 			} else {
@@ -60,6 +70,7 @@
 					jQuery( "#wic-upload-progress-bar" ).hide();
 					jQuery( "#validate-button" ).prop( "disabled", true );
 					jQuery( "#validate-button" ).text( "Validated" );
+					validationInProgress = 0;	
 				});		
 			}
 		});

@@ -7,7 +7,7 @@
 // self-executing anonymous namespace
 ( function() {
 	
-	var uploadID, uploadParameters, chunkSize, chunkPlan, chunkCount, currentPassPointer, sortedIDs;
+	var uploadID, uploadParameters, chunkSize, chunkPlan, chunkCount, currentPassPointer, sortedIDs, startingMatchButtonText, matchingInProgress;
 
 	jQuery(document).ready(function($) {
 		
@@ -27,6 +27,8 @@
 		sortedIDs; // not initialized -- undefined
 		// save starting translated text for main button 	
 		startingMatchButtonText = 	$( "#match-button" ).text();
+		// flag to test before unloading page
+		matchingInProgress = 0;
 	
 		$( "#wic-upload-progress-bar" ).progressbar({
 			value: 0
@@ -48,12 +50,19 @@
 
 		$("#match-button").click(function(){
 			sortedIDs = $( "#wic-match-list ul" ).sortable( "toArray" ); // populate the ID's array 
+			matchingInProgress = 1;
 			$( "#match-button" ).text( "Resetting . . ." );
 			$( "#wic-upload-progress-bar" ).progressbar ( "value", false );
 	  		$( "#wic-upload-progress-bar" ).show();
 			jQuery( "#upload-results-table-wrapper" ).html( "<h3>Resetting match indicators. . . </h3>" );
 			resetMatchIndicators( sortedIDs ); // note that reset callback includes invocation of validation 				  		
 		}); 
+		
+    $(window).on('beforeunload', function() {
+			if ( 1 == matchingInProgress ) {
+				return ( 'initiated match run, but not completed');
+			}   
+      });
 	});
 
 	function resetMatchIndicators( sortedIDs ) {
@@ -84,6 +93,7 @@
 				jQuery( "#wic-upload-progress-bar" ).hide();
 				jQuery( "#match-button" ).prop( "disabled", true );
 				jQuery( "#match-button" ).text( "Matched" );	
+				matchingInProgress = 0;
 			});
 		}
 	}
