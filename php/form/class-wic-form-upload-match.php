@@ -42,9 +42,15 @@ class WIC_Form_Upload_Match extends WIC_Form_Upload_Validate  {
 				$button = $this->create_wic_form_button ( $button_args_main );
 
 				echo $button;			
-				// place for progress bar -- ajax controlled; initial display none
-				echo '<div id = "wic-upload-progress-bar"></div>'; 	
+				// place for progress bar -- ajax controlled; initial display none; results wrapper also filled by ajax
+				echo '<div id = "wic-upload-progress-bar"></div>';
+
+				$match_results_table = ( 'matched' != $upload_status ) ? '' : 
+					WIC_Entity_Upload::prepare_match_results ( json_decode ( $data_array['serialized_match_results']->get_value() ) );
+					   
+				echo '<div id = "upload-results-table-wrapper">' . $match_results_table . '</div>'; 	
 				
+				echo '<div id = "upload-match-wrap">';
 				// get the match strategy lists
 				$match_strategies = new WIC_Entity_Upload_Match_Strategies ();
 				
@@ -58,7 +64,7 @@ class WIC_Form_Upload_Match extends WIC_Form_Upload_Validate  {
 					echo $match_strategies->layout_sortable_match_options( $data_array['ID']->get_value(), false );
 				}
 
-	  			echo '<div id = "upload-results-table-wrapper"></div>';
+	  			echo '</div><div class = "horbar-clear-fix"></div>';
 	  		
 	  		// file has already been completed
 			} elseif ( 'completed' == $upload_status) {

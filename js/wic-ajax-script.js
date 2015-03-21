@@ -28,16 +28,15 @@ var wpIssuesCRMAjaxPost = function( entity, action, idRequested, data, callback 
 		ajaxLoader = jQuery("#ajax-loader").clone().appendTo("#post-form-message-box").css("display", "inline");
 	 } 
 
-	jQuery.post( wic_ajax_object.ajax_url, postData, function(response) {
-		try {		
+	jQuery.post( wic_ajax_object.ajax_url, postData, function( response ) {
+		try {	
 			var decoded_response = JSON.parse ( response );
 			callback ( decoded_response );
 		} catch( err ) {
 			if ( 'JSON' == err.message.substring( 0, 4 ) ) {
-				alert ( 'Apparent server side error message (JSON could not parse): ' + response );
-			} else {
-				alert ( err.message );
-			}
+				console.log ( 'Apparent server side error message (JSON could not parse): ' + response );
+			} 
+			console.log ( 'AJAX post error message at wic-axaj-script.js, line 39 = ' + err.message );
 		}
 		ajaxLoader.remove();		
 	});

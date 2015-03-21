@@ -206,12 +206,12 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	// primary validation function for an incoming file is in control_file, but additional validation requires specifics of the upload request
 	// these are present in the data_object_array, not visible to the control file, so do this here.
 	public function validate_values() {
-		
-		$validation_errors = parent::validate_values();
+					
+		$validation_errors = parent::validate_values(); 
 		$file_name = $this->data_object_array['upload_file']->get_value();
 		
-		// if no form errors and basic file tests are OK, test readability of upload file
-		if ( '' == $validation_errors && isset ( $_FILES[$file_name] ) ) { // do additional validation only if passed basic and have file
+		 // do additional validation only if passed basic and have file ( don't have file on updates )
+		if ( '' == $validation_errors && isset ( $_FILES['upload_file'] ) ) {
 
 			// does this at least purport to be a csv file ?
 			if ( 'csv' != pathinfo( $file_name, PATHINFO_EXTENSION) && 'txt' != pathinfo( $file_name, PATHINFO_EXTENSION)) {
@@ -259,6 +259,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 						$validation_errors .= sprintf ( __( 'File appears to have inconsistent column count.  
 										First row had %1$d columns, but row %2$d had %3$d columns.', 'wp-issues-crm' ), 
 										$count, $row_count, count ( $data ) );
+						break;
 					} 
 		      }
 		
@@ -471,7 +472,13 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	}
 
 	public static function update_upload_status( $upload_id, $status ) { 
-		WIC_DB_Access_Upload::update_upload_status ( $upload_id, json_decode ( stripslashes( $status ) ) ) ; 
+		$result = WIC_DB_Access_Upload::update_upload_status ( $upload_id, json_decode ( stripslashes( $status ) ) ) ; 
+		if ( 1 == $result ) {
+			$msg = __( 'Status update OK.', 'wp-issues-crm' );		
+		} else {
+			$msg = __( 'Error setting upload status.', 'wp-issues-crm' );	
+		}
+		return ( $result = json_encode ( $msg ) );
 	}
 	
 	public static function prepare_validation_results ( $column_map ) {
@@ -508,6 +515,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	*
 	*/	
 
+	// reset_match also initializes match_results if not previously matched 
 	public static function reset_match ( $upload_id, $data  ) {
 		
 		$data = json_decode ( stripslashes( $data ) );
@@ -517,24 +525,30 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			$match->order = 0;
 			$match->total_count = 0;
 			$match->have_components_count = 0;
+			$match->have_components_and_valid_count = 0;
 			$match->have_components_not_previously_matched = 0;
 			$match->matched_with_these_components = 0;
-			$match->still_unmatched = 0;						
+			$match->not_found = 0;
+			$match->not_unique = 0;						
 			$match->unmatched_unique_values_of_components = 0;
 		}
 		
 		// capture user decisions about which match strategies to use and in what order
 		$order_counter = 0;
 		foreach ( $data->usedMatch as $slug ) {
-			$order_counter++;
+			$order_counter++; // don't start at 0 is 0 means not used
 			$match_results->$slug->order = $order_counter;		
 		}		
-		
+
+		// save fresh array ready to get started		
 		WIC_DB_Access_Upload::update_match_results ( $upload_id, json_encode ( $match_results ) );
-		WIC_DB_Access_Upload::update_upload_status ( $upload_id, 'matched' );
+
+		// status has to be validated or matched to start.  
+		// in case already matched, bust back to validated so that if match fails midstream, completion routines won't accept it
+		WIC_DB_Access_Upload::update_upload_status ( $upload_id, 'validated' );
+
 		// reset validation indicators on staging table
 		$table = $data->table;
-		
 		$result = WIC_DB_Access_Upload::reset_staging_table_match_indicators( $table );
 		if ( $result ) {
 			wp_die( json_encode ( __( 'Staging table match indicators reset.', 'wp-issues-crm' ) ) );
@@ -545,24 +559,34 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		
 	}
 
+	/*
+	*
+	* match_upload answers AJAX call to test match a chunk of staging table records
+	* does database lookups and records interim results
+	* returns updated result table
+	*
+	*
+	*/
 	public static function match_upload ( $upload_id, $match_parameters ) {
 	
 		// get the current staging row		
-		$match_results = json_decode ( WIC_DB_Access_Upload::get_match_results ( $upload_id ) );
+		$match_results = json_decode (  WIC_DB_Access_Upload::get_match_results ( $upload_id ) ) ;
+		$match_parameters = json_decode ( stripslashes( $match_parameters ) );
 		$match_rule = $match_results->{$match_parameters->working_pass};
 		$match_fields_array = $match_rule->link_fields;
-		
+
 		// get the column to database field map for this upload
 		$column_map = json_decode ( WIC_DB_Access_Upload::get_column_map ( $upload_id ) );		
 
 		// set up an array of the columns being used to create staging table retrieval sql and minimize size of retrieval array
 		$column_list_array = array();		
 		// look up match fields in column array to get back to column, add to match field array
-		foreach ( $match_fields_array as $match_field ) {
+		foreach ( $match_fields_array as &$match_field ) { // passing by pointer so directly modify array element
 			foreach ( $column_map as $column => $entity_field_object ) {
+				
 				if ( '' < $entity_field_object ) { // unmapped columns have an empty entity_field_object
 					if ( $match_field[0] == $entity_field_object->entity && $match_field[1] ==  $entity_field_object->field ) {
-						$match_field[3] == $column;
+						$match_field[3] = $column;
 						$column_list_array[] = $column;	
 					}
 				}		
@@ -571,28 +595,47 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		
 		$column_list = implode ( ',', $column_list_array );		
 		// get a chunk of records to validate
-		$match_parameters = json_decode ( stripslashes( $match_parameters ) ) ;
 		$record_object_array = WIC_DB_Access_Upload::get_staging_table_records(  
 			$match_parameters->staging_table, 
 			$match_parameters->offset,  
 			$match_parameters->chunk_size, 
 			$column_list
 		);		
+		
+		// create a constituent db object for repetitive use in the look up loop
+		$wic_query = WIC_DB_Access_Factory::make_a_db_access_object( 'constituent' ); 
+
+		// define consistent search parameters for use with lookups
+		$search_parameters = array (
+			'select_mode' 		=> 'id', 	// only want id back
+			'sort_order' 		=> false, 	// don't care for sort
+			'compute_total' 	=> false,	// no need to find total of all dups	
+			'retrieve_limit'	=> 2,			// one dup is too many
+			'show_deleted'		=> true, 	// match deleted records
+			'log_search' 		=> false,	// don't log the searches
+		);
+
 
 		// loop through records, if have necessary fields, look for match using the standard query construct
-		
 		foreach( $record_object_array as $record ) {
-			
+			// reinitialize meta query array
+			$meta_query_array = array();
 			// keep overall tally -- should be same in all passes
 			$match_rule->total_count++;
 			// necessary values present (otherwise store temporarily in position 4)
 			$missing = false;
 			foreach ( $match_fields_array as $match_field ) {
-				if ( '' == $record[$match_field[3]] ) {
+				if ( ''   ==  $record->$match_field[3] ) {
 					$missing = true;
 					break;
 				} else {
-					$match_field[4] = $record[$match_field[3]];				
+					$meta_query_array[] = array (
+						'table'	=> $match_field[0],
+						'key' 	=> $match_field[1],
+						'value'	=> 0 == $match_field[2] ? $record->$match_field[3] : substr ( $record->$match_field[3], 0, $match_field[2] ),
+						'compare'=> 0 == $match_field[2] ? '=' : 'like',
+						'wp_query_parameter' => '',
+					);					
 				}			
 			}			
 			if ( ! $missing ) {
@@ -612,24 +655,86 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			} else {
 				continue;			
 			}	 		
-			// construct sql from link fields
-						
-
+			// construct sql from link fields, do lookup field 
+			$wic_query->search ( $meta_query_array, $search_parameters );
 			
-			//do look up in db
-			// this parallels update process for forms, but is distinct since only updating the staging table -- can't use same functions
-			$result = WIC_DB_Access_Upload::record_validation_results( $update_clause_array, $validation_parameters->staging_table, $record->STAGING_TABLE_ID, $errors );
-			if ( ! $result ) {
-				wp_die( sprintf( __( 'Error recording validation results for record %s', 'wp-issues-crm' ), $record->STAGING_TABLE_ID ) );
+			// maintain pass tallies and record outcome on staging table in matched case
+			if ( 1 > $wic_query->found_count ) { // i.e, found count = 0
+				$match_rule->not_found++;	
+			} elseif ( 1 < $wic_query->found_count ) {
+				$match_rule->not_unique++;
+			} elseif ( 1 == $wic_query->found_count ) {
+				$match_rule->matched_with_these_components++;
+			}
+			// mark staging table with outcome if there was match in this pass; 
+			// stamping with match_pass indicates that there was a match; 
+			// stamping the match_id indicates that the match was unique
+			if ( 0 < $wic_query->found_count ) {
+				// mark staging table record to record match outcome
+				$result = WIC_DB_Access_Upload::record_match_results( 
+					$match_parameters->working_pass, 
+					$match_parameters->staging_table, 
+					$record->STAGING_TABLE_ID, 
+					( 1 == $wic_query->found_count ) ? $wic_query->result[0]->ID : 0 
+					);
+				if ( ! $result ) {
+					wp_die( sprintf( __( 'Error recording match results for record %s', 'wp-issues-crm' ), $record->STAGING_TABLE_ID ) );
+				}
 			}
 		}
-		// update the column map with the counts
-		WIC_DB_Access_Upload::update_match_results ( $upload_id, json_encode ( $column_map ) );
+		// update the match_results array with the counts
+		$match_results->{$match_parameters->working_pass} = $match_rule;
+		// save the match results array
+		WIC_DB_Access_Upload::update_match_results ( $upload_id, json_encode ( $match_results ) );
 
-		$table = self::prepare_prepare_match_results ( $column_map );
+		$table = self::prepare_match_results ( $match_results );
 		echo  json_encode ( $table );
-		wp_die();	
+		wp_die();
+			
 	}
+
+	public static function prepare_match_results ( $match_results ) {
+		
+		// extract the active match rules
+		$active_match_rules = array();
+		foreach ( $match_results as $slug => $match_object ) {
+			if ( 0 < $match_object->order ) {
+				$active_match_rules[$match_object->order]	= $match_object;		
+			}		
+		}
+		ksort ( $active_match_rules );
+						
+		$table =  '<table id="wp-issues-crm-stats"><tr>' .
+			'<th class = "wic-statistic-text wic-statistic-long">' . __( 'Match Pass', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Pass Records', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Have Match Fields', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( ' ... also valid', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( ' ... also not matched', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Matched Unique', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Not Found', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Not Unique on DB', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Unmatched, Unique on Staging', 'wp-issues-crm' ) . '</th>' .
+		'</tr>';
+
+		foreach ( $active_match_rules as $order => $upload_match_object ) { 
+			$table .= '<tr>' .
+				'<td class = "wic-statistic-table-name">' . $upload_match_object->label . '</td>' .
+				'<td class = "wic-statistic" >' . $upload_match_object->total_count  . '</td>' .
+				'<td class = "wic-statistic" >' . $upload_match_object->have_components_count  . '</td>' .
+				'<td class = "wic-statistic" >' . $upload_match_object->have_components_and_valid_count  . '</td>' .			
+				'<td class = "wic-statistic" >' . $upload_match_object->have_components_not_previously_matched  . '</td>' .
+				'<td class = "wic-statistic" >' . $upload_match_object->matched_with_these_components  . '</td>' .
+				'<td class = "wic-statistic" >' . $upload_match_object->not_found  . '</td>' .
+				'<td class = "wic-statistic" >' . $upload_match_object->not_unique  . '</td>' .
+				'<td class = "wic-statistic" >' . $upload_match_object->unmatched_unique_values_of_components  . '</td>' .
+			'</tr>';
+		}
+		
+		$table .= '</table>';	
+	
+		return ( $table );
+
+	}	
 
 
 	

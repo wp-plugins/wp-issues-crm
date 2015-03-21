@@ -116,6 +116,7 @@ INSERT INTO `wp_wic_data_dictionary` (`ID`, `entity_slug`, `group_slug`, `field_
 (NULL, 'upload', 'initial', 'upload_status', 'select', 'Status', 35, 35, 35, '', 0, 1, 0, '', 0, 0, '', '', 'upload_status', '', '', 0, 0, 1, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'initial', 'serialized_upload_parameters', 'textarea', '', 40, 0, 0, '', 0, 1, 1, '', 0, 0, '', '', '', '', '', 0, 0, 1, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'initial', 'serialized_column_map', 'textarea', '', 50, 0, 0, '', 0, 1, 1, '', 0, 0, '', '', '', '', '', 0, 0, 1, 0, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'upload', 'initial', 'serialized_match_results', 'textarea', '', 60, 0, 0, '', 0, 1, 1, '', 0, 0, '', '', '', '', '', 0, 0, 1, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'save_options', 'includes_column_headers', 'checked', 'Has column headers', 5, 0, 0, '', 0, 0, 0, '1', 0, 1, '', '', '', '', '', 0, 0, 1, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'save_options', 'max_execution_time', 'text', 'Max execution time', 10, 0, 0, '', 0, 0, 0, '1200', 0, 1, '', '', '', '', '', 0, 0, 1, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'save_options', 'delimiter', 'radio', 'Delimiter', 20, 0, 0, '', 0, 0, 0, 'comma', 0, 1, '', '', 'delimiter_options', '', '', 0, 0, 1, 0, '', 0, '0000-00-00 00:00:00'),

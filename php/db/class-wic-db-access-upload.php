@@ -498,14 +498,14 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		return ( $result !== false );
 	}
 	
-	public static function lookup_constituent_match ( $match_fields_array, $staging_table ) {
-		// follow rough approach in search function for parent, but adapt to this context
-		// $match_fields_array as match fields values: 0 = entity, 1 = column, 2 = positions to match, 3 = staging column, 4 = staging value; 		
-		$sql = "SELECT // id
-					FROM 	$join
-					WHERE 1=1 $deleted_clause $where 
-					GROUP BY $top_entity.ID
-					LIMIT 0, 2"; // if more than 1, too many and stop		
+	public static function record_match_results ( $working_pass, $staging_table, $staging_id, $match_to_id ) {
+
+		global $wpdb;
+		$sql = "UPDATE $staging_table SET MATCHED_CONSTITUENT_ID = $match_to_id, MATCH_PASS = '$working_pass' WHERE STAGING_TABLE_ID = $staging_id";
+		$result = $wpdb->query( $sql );
+		// $result = record count.  anything other than 1 is an error in this context. false is a database error.
+		return ( $result == 1 ); 	
+
 	}
 }
 

@@ -1121,6 +1121,9 @@ ul.wic-sortable {
 	vertical-align: bottom;
 }
 
+#upload-match-wrap {
+	margin: 0 7.1111111% 20px 7.1111111%;
+}
 #wic-match-list {
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
@@ -1131,8 +1134,8 @@ ul.wic-sortable {
 	float: left;  
 	font-weight: bold;
 	padding: 0 2%;
-	margin: 0 1% 0 3%;
-	width: 46%;
+	margin: 0 1% 0 0;
+	width: 49%;
 }
 
 #wic-unused-match-list {
@@ -1146,12 +1149,15 @@ ul.wic-sortable {
 	border-radius: 3px;
 	float: left;  
 	padding: 0 2%;
-	margin: 0 3% 0 1%;
-	width: 46%;
+	margin: 0 0 0 1%;
+	width: 49%;
 }
 
 #upload-results-table-wrapper {
 	margin: 0 7.11111%;
+}
+.wic-statistic-long {
+	min-width: 250px;
 }
 /* list element widths */
 .pl-constituent-first_name{ width:14%;}
