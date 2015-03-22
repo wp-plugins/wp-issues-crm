@@ -29,6 +29,7 @@
 		});
 
 		$("#validate-button").click(function(){
+			jQuery( "#validate-button" ).prop( "disabled", true );
 			$( "#validate-button" ).text( "Resetting . . ." );
 			validationInProgress = 1;	
 			$( "#wic-upload-progress-bar" ).progressbar ( "value", false );
@@ -68,7 +69,6 @@
 				jQuery( "#upload-results-table-wrapper" ).html( response + progressLegend );
 				wpIssuesCRMAjaxPost( 'upload', 'update_upload_status',  uploadID, 'validated',  function( response ) {		
 					jQuery( "#wic-upload-progress-bar" ).hide();
-					jQuery( "#validate-button" ).prop( "disabled", true );
 					jQuery( "#validate-button" ).text( "Validated" );
 					validationInProgress = 0;	
 				});		

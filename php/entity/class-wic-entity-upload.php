@@ -530,7 +530,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			$match->matched_with_these_components = 0;
 			$match->not_found = 0;
 			$match->not_unique = 0;						
-			$match->unmatched_unique_values_of_components = '';
+			$match->unmatched_unique_values_of_components = '?';
 		}
 		
 		// capture user decisions about which match strategies to use and in what order
@@ -748,9 +748,9 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		ksort ( $active_match_rules );
 						
 		$table =  '<table id="wp-issues-crm-stats">' .
-		'<tr><td></td>	<th class = "wic-statistic-text" colspan="4">Input to this pass</th>' .
-							'<th class = "wic-statistic-text" colspan="3">Results from this pass</th>' .	
-							'<th class = "wic-statistic-text" >Left over</th></tr>' .
+		'<tr><td></td>	<th class = "wic-statistic-text" colspan="4">' . __( 'Pass input', 'wp-issues-crm' ) . '</th>' .
+							'<th class = "wic-statistic-text" colspan="3">' . __( 'Pass results', 'wp-issues-crm' ) . '</th>' .	
+							'<th class = "wic-statistic-text" >Unmatched</th></tr>' .
 		'<tr>' .
 			'<th class = "wic-statistic-text wic-statistic-long">' . __( 'Match Pass', 'wp-issues-crm' ) . '</th>' .
 			'<th class = "wic-statistic">' . __( 'Records', 'wp-issues-crm' ) . '</th>' .
@@ -758,10 +758,14 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			'<th class = "wic-statistic">' . __( ' ... also valid', 'wp-issues-crm' ) . '</th>' .
 			'<th class = "wic-statistic">' . __( ' ... also not matched', 'wp-issues-crm' ) . '</th>' .
 			'<th class = "wic-statistic">' . __( 'Matched unique', 'wp-issues-crm' ) . '</th>' .
-			'<th class = "wic-statistic">' . __( 'Not Found', 'wp-issues-crm' ) . '</th>' .
-			'<th class = "wic-statistic">' . __( 'Matched not unique', 'wp-issues-crm' ) . '</th>' .
-			'<th class = "wic-statistic">' . __( 'Unmatched, unique values', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Not found', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Not unique', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Unique values', 'wp-issues-crm' ) . '</th>' .
 		'</tr>';
+
+		$total_matched = 0;
+		$total_not_unique = 0;
+		$total_unique_unmatched_values = 0;
 
 		foreach ( $active_match_rules as $order => $upload_match_object ) { 
 			$table .= '<tr>' .
@@ -775,8 +779,23 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 				'<td class = "wic-statistic" >' . $upload_match_object->not_unique  . '</td>' .
 				'<td class = "wic-statistic" >' . $upload_match_object->unmatched_unique_values_of_components  . '</td>' .
 			'</tr>';
+			
+			$total_matched += $upload_match_object->matched_with_these_components;
+			$total_not_unique += $upload_match_object->not_unique;
+			if ( '?' !== $upload_match_object->unmatched_unique_values_of_components ) {
+				$total_unique_unmatched_values += $upload_match_object->unmatched_unique_values_of_components;
+			} else {
+				$total_unique_unmatched_values = '<em>?</em>';
+			}
 		}
-		
+		$table .= 	'<tr>' .
+						'<td class = "wic-statistic-table-name">' . __( 'Total, all passes:', 'wp-issues-crm' ) . '</td>' .
+						'<td  colspan="4"></td>' .
+						'<td class = "wic-statistic" >' . $total_matched . '</td>' . 
+						'<td class = "wic-statistic" ></td>' .
+						'<td class = "wic-statistic" >' . $total_not_unique . '</td>' .
+						'<td class = "wic-statistic" >' . $total_unique_unmatched_values . '</td>' . 
+						'<tr>' ;						
 		$table .= '</table>';	
 	
 		return ( $table );

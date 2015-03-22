@@ -49,6 +49,9 @@
   		$( "ul.wic-sortable" ).disableSelection();
 
 		$("#match-button").click(function(){
+			
+			jQuery( "#match-button" ).prop( "disabled", true );
+			jQuery( "ul.wic-sortable" ).sortable ( "disable" );
 			sortedIDs = $( "#wic-match-list ul" ).sortable( "toArray" ); // populate the ID's array 
 			matchingInProgress = 1;
 			$( "#match-button" ).text( "Resetting . . ." );
@@ -89,7 +92,8 @@
 		} else { 
 			// create the unmatched table
 			jQuery( "#wic-upload-progress-bar" ).progressbar ( "value", false );
-			jQuery( "#match-button" ).text( "Analyzing unmatched . . ." );
+			jQuery( "#match-button" ).text( "Analyzing . . ." );
+			jQuery( "#upload-results-table-wrapper h3" ).text ( " . . . identifying unique values remaining unmatched after all passes." )
 			analyzeUnmatched (); // after analysis, will close out processing;
 		}
 	}
@@ -110,8 +114,8 @@
 			// calling parameters are: entity, action_requested, id_requested, data object, callback
 			chunkCount++;
 			jQuery( "#wic-upload-progress-bar" ).progressbar ( "value", 100 * chunkCount / chunkPlan );
-			// progressLegend = '<h3> . . . matched ' + ( chunkCount * chunkSize ).toLocaleString( 'en-IN' )  + ' of ' + uploadParameters.insert_count.toLocaleString( 'en-IN' ) + ' records in current pass.</h3>'; 
-			jQuery( "#upload-results-table-wrapper" ).html( response ); //  + progressLegend );
+			progressLegend = '<h3> . . . matched ' + ( chunkCount * chunkSize ).toLocaleString( 'en-US' )  + ' of ' + uploadParameters.insert_count.toLocaleString( 'en-IN' ) + ' records in current pass.</h3>'; 
+			jQuery( "#upload-results-table-wrapper" ).html( progressLegend + response ); //  + progressLegend );
 			if ( chunkCount < chunkPlan ) {
 				matchUploadPass ( chunkCount * chunkSize );
 			} else {
@@ -130,11 +134,12 @@
 		
 		wpIssuesCRMAjaxPost( 'upload', 'create_unique_unmatched_table',  uploadID, matchParameters,  function( response ) {
 			// calling parameters are: entity, action_requested, id_requested, data object, callback
-			jQuery( "#upload-results-table-wrapper" ).html( response ); 
+			progressLegend = '<h3>Test match results for ' +  uploadParameters.insert_count.toLocaleString( 'en-US' ) + ' input records saved in staging table.</h3>';
+			jQuery( "#upload-results-table-wrapper" ).html( progressLegend + response ); 
 			// close out processing
 			wpIssuesCRMAjaxPost( 'upload', 'update_upload_status',  uploadID, 'matched',  function( response ) {		
 				jQuery( "#wic-upload-progress-bar" ).hide();
-				jQuery( "#match-button" ).prop( "disabled", true );
+				jQuery( "ul.wic-sortable" ).sortable( "enable" );
 				jQuery( "#match-button" ).text( "Matched" );	
 				matchingInProgress = 0;
 			});

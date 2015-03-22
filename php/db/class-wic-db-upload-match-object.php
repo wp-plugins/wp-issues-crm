@@ -30,7 +30,7 @@ class WIC_DB_Upload_Match_Object {
 	 	$matched_with_these_components = 0,
 	 	$not_found = 0,
 	 	$not_unique = 0,						
-	 	$unmatched_unique_values_of_components = ''
+	 	$unmatched_unique_values_of_components = '?'
 	) 
 	 {
 		$this->label = $label;

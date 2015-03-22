@@ -45,9 +45,15 @@ class WIC_Form_Upload_Match extends WIC_Form_Upload_Validate  {
 				// place for progress bar -- ajax controlled; initial display none; results wrapper also filled by ajax
 				echo '<div id = "wic-upload-progress-bar"></div>';
 
-				$match_results_table = ( 'matched' != $upload_status ) ? '' : 
-					WIC_Entity_Upload::prepare_match_results ( json_decode ( $data_array['serialized_match_results']->get_value() ) );
-					   
+				$match_results_table = '';
+				if ( 'matched' == $upload_status ) { 
+					$upload_parameters = json_decode ( $data_array['serialized_upload_parameters']->get_value() ); 
+					$match_results_table = '<h3>' . sprintf( __( 'Previous test match results for %s records saved in staging table.', 'wp-issues-crm' ),
+						$upload_parameters->insert_count) . 
+						'</h3>';
+					$match_results_table .= 
+						WIC_Entity_Upload::prepare_match_results ( json_decode ( $data_array['serialized_match_results']->get_value() ) );
+				}	   
 				echo '<div id = "upload-results-table-wrapper">' . $match_results_table . '</div>'; 	
 				
 				echo '<div id = "upload-match-wrap">';
