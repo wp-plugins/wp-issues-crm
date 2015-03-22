@@ -87,14 +87,10 @@
 			// initiate next pass with offset 0
 			matchUploadPass (0);
 		} else { 
-			// close out processing
-			progressLegend = '<h3> Mapped ' + uploadParameters.insert_count.toLocaleString( 'en-IN' ) + ' records -- done.</h3>';
-			wpIssuesCRMAjaxPost( 'upload', 'update_upload_status',  uploadID, 'matched',  function( response ) {		
-				jQuery( "#wic-upload-progress-bar" ).hide();
-				jQuery( "#match-button" ).prop( "disabled", true );
-				jQuery( "#match-button" ).text( "Matched" );	
-				matchingInProgress = 0;
-			});
+			// create the unmatched table
+			jQuery( "#wic-upload-progress-bar" ).progressbar ( "value", false );
+			jQuery( "#match-button" ).text( "Analyzing unmatched . . ." );
+			analyzeUnmatched (); // after analysis, will close out processing;
 		}
 	}
 
@@ -126,6 +122,24 @@
 		});
 	}
 	
+	function analyzeUnmatched () {		
+
+		var matchParameters = {
+			"staging_table" : uploadParameters.staging_table_name,
+		}
+		
+		wpIssuesCRMAjaxPost( 'upload', 'create_unique_unmatched_table',  uploadID, matchParameters,  function( response ) {
+			// calling parameters are: entity, action_requested, id_requested, data object, callback
+			jQuery( "#upload-results-table-wrapper" ).html( response ); 
+			// close out processing
+			wpIssuesCRMAjaxPost( 'upload', 'update_upload_status',  uploadID, 'matched',  function( response ) {		
+				jQuery( "#wic-upload-progress-bar" ).hide();
+				jQuery( "#match-button" ).prop( "disabled", true );
+				jQuery( "#match-button" ).text( "Matched" );	
+				matchingInProgress = 0;
+			});
+		});
+	}
 
 
 })(); // end anonymous namespace enclosure

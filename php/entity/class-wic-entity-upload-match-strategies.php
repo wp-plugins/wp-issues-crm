@@ -11,6 +11,8 @@
 	
 	public function __construct() {}	
 	
+	// note that these options effectively define required fields for constituent entry when doing uploads
+	// can also do with custom fields though
 	private $recommended_match_array = array (
 
 		'id' =>	array(

@@ -530,7 +530,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			$match->matched_with_these_components = 0;
 			$match->not_found = 0;
 			$match->not_unique = 0;						
-			$match->unmatched_unique_values_of_components = 0;
+			$match->unmatched_unique_values_of_components = '';
 		}
 		
 		// capture user decisions about which match strategies to use and in what order
@@ -583,7 +583,6 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		// look up match fields in column array to get back to column, add to match field array
 		foreach ( $match_fields_array as &$match_field ) { // passing by pointer so directly modify array element
 			foreach ( $column_map as $column => $entity_field_object ) {
-				
 				if ( '' < $entity_field_object ) { // unmapped columns have an empty entity_field_object
 					if ( $match_field[0] == $entity_field_object->entity && $match_field[1] ==  $entity_field_object->field ) {
 						$match_field[3] = $column;
@@ -592,7 +591,9 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 				}		
 			}
 		}  	
-		
+
+		unset ( $match_field ); // this is critical -- surprising results results in for loop further below if not done; 
+										// see http://php.net/manual/en/control-structures.foreach.php -- reference remains after loop
 		$column_list = implode ( ',', $column_list_array );		
 		// get a chunk of records to validate
 		$record_object_array = WIC_DB_Access_Upload::get_staging_table_records(  
@@ -624,7 +625,8 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			$match_rule->total_count++;
 			// necessary values present (otherwise store temporarily in position 4)
 			$missing = false;
-			foreach ( $match_fields_array as $match_field ) {
+
+			foreach ( $match_fields_array as $match_field ) { 	
 				if ( ''   ==  $record->$match_field[3] ) {
 					$missing = true;
 					break;
@@ -637,7 +639,8 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 						'wp_query_parameter' => '',
 					);					
 				}			
-			}			
+			}	
+	
 			if ( ! $missing ) {
 				$match_rule->have_components_count++; // $match_field[4] fully populated for all match fields
 			} else {
@@ -657,27 +660,54 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			}	 		
 			// construct sql from link fields, do lookup field 
 			$wic_query->search ( $meta_query_array, $search_parameters );
-			
-			// maintain pass tallies and record outcome on staging table in matched case
+			// now, maintain pass tallies and record outcome on staging table
+			// first, initialize match_pass found variables -- populated below only in case of found match
+			// and not previously populated (don't reach these lines at all if previously populated)			
+			$match_pass = '';
+			$matched_constituent_id = 0;
+			// initialize $not_found_match_pass recording variables -- these are populated below only in case of
+			// not_found match and not already populated -- so, it holds the first (should be most unique) pass in which
+			// all necessary variables were present for matching and the values of those variables -- 
+			// a subsequent less unique pass may result in a match in which case these won't be used, but if no match in any 
+			// pass, these will be used to create constituent stub for insertion in final upload completion stage
+			$first_not_found_match_pass 	= '';
+			$not_found_values					= ''; 	
+			// not found case -- populate not found pass and values
 			if ( 1 > $wic_query->found_count ) { // i.e, found count = 0
 				$match_rule->not_found++;	
+				if ( '' == $record->FIRST_NOT_FOUND_MATCH_PASS  ) {
+					$first_not_found_match_pass = $match_parameters->working_pass;
+					foreach ( $match_fields_array as $match_field ) {
+						$not_found_values .= ( 0 == $match_field[2] ) ? 
+							$record->$match_field[3] : substr ( $record->$match_field[3], 0, $match_field[2] );
+					}	 				
+				} 
+			// found multi case -- populate match pass, but leave matched_id as 0; 
 			} elseif ( 1 < $wic_query->found_count ) {
 				$match_rule->not_unique++;
+				$match_pass = $match_parameters->working_pass;
+				$matched_constituent_id = 0;
+			// found unique case -- populate match pass (which means no matching will be attempted on future passes) and set matched id
 			} elseif ( 1 == $wic_query->found_count ) {
 				$match_rule->matched_with_these_components++;
+				$match_pass = $match_parameters->working_pass;
+				$matched_constituent_id = $wic_query->result[0]->ID;
 			}
 			// mark staging table with outcome if there was match in this pass; 
 			// stamping with match_pass indicates that there was a match; 
 			// stamping the match_id indicates that the match was unique
-			if ( 0 < $wic_query->found_count ) {
+			if ( '' < $match_pass || '' < $first_not_found_match_pass ) {
 				// mark staging table record to record match outcome
+				// returns error unless exactly one of $match_pass and $first_not_found_match_pass > ''
 				$result = WIC_DB_Access_Upload::record_match_results( 
-					$match_parameters->working_pass, 
 					$match_parameters->staging_table, 
-					$record->STAGING_TABLE_ID, 
-					( 1 == $wic_query->found_count ) ? $wic_query->result[0]->ID : 0 
+					$record->STAGING_TABLE_ID,
+					$match_pass,
+					$matched_constituent_id,
+					$first_not_found_match_pass,
+					$not_found_values 
 					);
-				if ( ! $result ) {
+				if ( false === $result ) {
 					wp_die( sprintf( __( 'Error recording match results for record %s', 'wp-issues-crm' ), $record->STAGING_TABLE_ID ) );
 				}
 			}
@@ -693,6 +723,19 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			
 	}
 
+	public static function create_unique_unmatched_table ( $upload_id, $match_parameters ) {
+		$match_parameters = json_decode ( stripslashes( $match_parameters ) );
+		$staging_table = $match_parameters->staging_table;
+		$result = WIC_DB_Access_Upload::create_unique_unmatched_table ( $upload_id, $staging_table );
+		if ( false === $result ) {
+			wp_die( __( 'Error creating unique values table.', 'wp-issues-crm' ) );
+		} else {
+			echo json_encode ( self::prepare_match_results ( $result ) ); // updated table
+			wp_die(); 
+		} 
+		
+	}
+
 	public static function prepare_match_results ( $match_results ) {
 		
 		// extract the active match rules
@@ -704,16 +747,20 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		}
 		ksort ( $active_match_rules );
 						
-		$table =  '<table id="wp-issues-crm-stats"><tr>' .
+		$table =  '<table id="wp-issues-crm-stats">' .
+		'<tr><td></td>	<th class = "wic-statistic-text" colspan="4">Input to this pass</th>' .
+							'<th class = "wic-statistic-text" colspan="3">Results from this pass</th>' .	
+							'<th class = "wic-statistic-text" >Left over</th></tr>' .
+		'<tr>' .
 			'<th class = "wic-statistic-text wic-statistic-long">' . __( 'Match Pass', 'wp-issues-crm' ) . '</th>' .
-			'<th class = "wic-statistic">' . __( 'Pass Records', 'wp-issues-crm' ) . '</th>' .
-			'<th class = "wic-statistic">' . __( 'Have Match Fields', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Records', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'With data', 'wp-issues-crm' ) . '</th>' .
 			'<th class = "wic-statistic">' . __( ' ... also valid', 'wp-issues-crm' ) . '</th>' .
 			'<th class = "wic-statistic">' . __( ' ... also not matched', 'wp-issues-crm' ) . '</th>' .
-			'<th class = "wic-statistic">' . __( 'Matched Unique', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Matched unique', 'wp-issues-crm' ) . '</th>' .
 			'<th class = "wic-statistic">' . __( 'Not Found', 'wp-issues-crm' ) . '</th>' .
-			'<th class = "wic-statistic">' . __( 'Not Unique on DB', 'wp-issues-crm' ) . '</th>' .
-			'<th class = "wic-statistic">' . __( 'Unmatched, Unique on Staging', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Matched not unique', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Unmatched, unique values', 'wp-issues-crm' ) . '</th>' .
 		'</tr>';
 
 		foreach ( $active_match_rules as $order => $upload_match_object ) { 

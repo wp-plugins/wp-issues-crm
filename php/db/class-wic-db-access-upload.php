@@ -100,11 +100,13 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		}
 
 		$sql .=  ' STAGING_TABLE_ID bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-					VALIDATION_STATUS varchar(1) NOT NULL,
-					VALIDATION_ERRORS varchar(65535) NOT NULL,
-					MATCHED_CONSTITUENT_ID bigint(20) unsigned NOT NULL,
-					MATCH_PASS varchar(50) NOT NULL,  
- 					PRIMARY KEY (STAGING_TABLE_ID) ) 
+					VALIDATION_STATUS varchar(1) NOT NULL, '	.					// y or n -- n if there are errors, y if validated clean
+					'VALIDATION_ERRORS varchar(65535) NOT NULL, ' .				// concatenation of all field validation errors
+					'MATCHED_CONSTITUENT_ID bigint(20) unsigned NOT NULL, ' . // constituent id found in marked match pass
+					'MATCH_PASS varchar(50) NOT NULL, ' . 							// populated only if constituent id found; stops later pass attempts to find
+					'FIRST_NOT_FOUND_MATCH_PASS varchar(50) NOT NULL, ' .		// first match pass where values present if not found; may be found in later pass
+					'NOT_FOUND_VALUES varchar(65535) NOT NULL, ' .				// concatenated values from not found match pass  
+ 					'PRIMARY KEY (STAGING_TABLE_ID) ) 
 					ENGINE=MyISAM  DEFAULT CHARSET=utf8;';
 
 		$result = $wpdb->query ( $sql );
@@ -156,7 +158,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		}	
 		/****************
 		*
-		*	note: dominant consideration in setting rows_per_packet below is to avoid user blowing up and having to find system parameters
+		*	note: dominant consideration in setting rows_per_packet below is to avoid user blowing up and having to look for system parameters
 		*	-- mysql max_allowed_packet (in multi-row inserts)
 		*		http://dev.mysql.com/doc/refman/5.5/en/packet-too-large.html
 		* 	-- php memory_limit (from array)
@@ -427,7 +429,10 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		// if offset is zero do a rest; then maintain validation indicator
 		global $wpdb;
 		$field_list = ( '*' == $field_list ) ? $staging_table . '.' . $field_list : $field_list;
-		$sql = "SELECT STAGING_TABLE_ID, VALIDATION_STATUS, VALIDATION_ERRORS, MATCHED_CONSTITUENT_ID, MATCH_PASS, $field_list FROM $staging_table LIMIT $offset, $limit";
+		$sql = "SELECT STAGING_TABLE_ID, VALIDATION_STATUS, VALIDATION_ERRORS, 
+				MATCHED_CONSTITUENT_ID, MATCH_PASS, 
+ 				FIRST_NOT_FOUND_MATCH_PASS, NOT_FOUND_VALUES,				
+				$field_list FROM $staging_table LIMIT $offset, $limit";
 		$result = $wpdb->get_results( $sql );
 		return ( $result ); 
 	}
@@ -436,7 +441,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 
 		global $wpdb;
 		
-		// code validation_status -- empty is valid
+		// code validation_status -- empty error is valid
 		$validation_status = ( '' == $error ) ? 'y' : 'n';
 		// set up update sql from array
 		$record_update_string = ' VALIDATION_STATUS = %s, VALIDATION_ERRORS = %s ';
@@ -492,21 +497,128 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	
 	public static function reset_staging_table_match_indicators( $table ) { 
 		global $wpdb;
-		$sql = "UPDATE $table SET MATCHED_CONSTITUENT_ID = '', MATCH_PASS = ''";	
+		$sql = "UPDATE $table SET MATCHED_CONSTITUENT_ID = 0, MATCH_PASS = '', FIRST_NOT_FOUND_MATCH_PASS = '', NOT_FOUND_VALUES = '' ";	
 		$result = $wpdb->query( $sql );
 		// 0 is an OK result if reset did nothing
-		return ( $result !== false );
+		
+		$unmatched_table = $table . '_unmatched';
+
+
+		$sql = "DROP TABLE IF EXISTS $unmatched_table";
+
+		$result2 = $wpdb->query( $sql );		
+		
+		return ( $result !== false && $result2 != false );
 	}
 	
-	public static function record_match_results ( $working_pass, $staging_table, $staging_id, $match_to_id ) {
+	public static function record_match_results ( 
+					$staging_table, 
+					$staging_id,
+ 					$match_pass,
+					$matched_constituent_id,
+					$first_not_found_match_pass,
+					$not_found_values ) {
+		
+		// should only be called if exactly one value is non-blank 
+		if ( ( '' == $match_pass && '' == $first_not_found_match_pass ) || ( '' < $match_pass && '' < $first_not_found_match_pass ) ) {
+			return ( false );		
+		}
 
 		global $wpdb;
-		$sql = "UPDATE $staging_table SET MATCHED_CONSTITUENT_ID = $match_to_id, MATCH_PASS = '$working_pass' WHERE STAGING_TABLE_ID = $staging_id";
+
+		// set up to update either the found variables or the not found variables  
+		$set_clause = ( '' < $match_pass ) ? 
+			" SET MATCH_PASS = '$match_pass', MATCHED_CONSTITUENT_ID = $matched_constituent_id " :
+			$wpdb->prepare( " SET FIRST_NOT_FOUND_MATCH_PASS = '$first_not_found_match_pass', NOT_FOUND_VALUES = %s ", array( $not_found_values ) );  
+		$sql = "UPDATE $staging_table 
+			$set_clause  
+			WHERE STAGING_TABLE_ID = $staging_id";
 		$result = $wpdb->query( $sql );
 		// $result = record count.  anything other than 1 is an error in this context. false is a database error.
 		return ( $result == 1 ); 	
 
 	}
+	
+   public static function create_unique_unmatched_table ( $upload_id, $staging_table ) {		
+		// create parallel lists of constituent fields and related fields in the upload -- working directly from column map
+		$column_map = json_decode ( WIC_DB_Access_Upload::get_column_map ( $upload_id ) );
+		$constituent_field_array = array();
+		$staging_table_column_array = array();		
+		foreach ( $column_map as $column => $entity_field_object ) {
+			if ( '' < $entity_field_object ) { // unmapped columns have an empty entity_field_object
+				if ( 'constituent' == $entity_field_object->entity  ) {
+					$constituent_field_array[] = $entity_field_object->field;
+					$staging_table_column_array[] = $column;	
+				}
+			}		
+		}		
+		
+		$unmatched_staging_table = $staging_table . '_unmatched'; 
+
+		global $wpdb;
+		// create a table with the the available constituent columns
+		$sql = "CREATE TABLE $unmatched_staging_table ( "; 
+		foreach ( $constituent_field_array as $field ) {
+			$sql .= ' ' . $field . ' varchar(65535) NOT NULL, ';
+		}
+
+		$sql .=  'FIRST_NOT_FOUND_MATCH_PASS varchar(50) NOT NULL,
+					INSERTED_CONSTITUENT_ID bigint(20) unsigned NOT NULL,
+					STAGING_TABLE_ID_STRING varchar(65535) NOT NULL,
+					KEY MATCH_PASS (FIRST_NOT_FOUND_MATCH_PASS) ) 
+					ENGINE=MyISAM  DEFAULT CHARSET=utf8;';
+
+		$result = $wpdb->query ( $sql );
+		if ( false === $result ) {
+			return ( false );		
+		}
+
+		// populate that table with unique unfound values		
+		$select_column_list = '';
+		foreach ( $staging_table_column_array as $column ) {
+			$select_column_list .= ' MAX(' . $column . '), ';		
+		}
+		$sql = 	"INSERT $unmatched_staging_table
+					SELECT $select_column_list FIRST_NOT_FOUND_MATCH_PASS, 0, GROUP_CONCAT( STAGING_TABLE_ID )
+					FROM $staging_table 
+					WHERE MATCH_PASS = '' AND FIRST_NOT_FOUND_MATCH_PASS > '' AND VALIDATION_STATUS = 'y'
+					GROUP BY FIRST_NOT_FOUND_MATCH_PASS, NOT_FOUND_VALUES";
+		// MATCH_PASS = '' means never matched.  Might have FIRST_NOT_FOUND_MATCH_PASS = '' if lacked fields for all passes
+		$insert_count = $wpdb->query ( $sql );
+		if ( false === $insert_count ) {
+			return ( false );		
+		} 
+		
+		// calculate unique counts from each match pass
+		$sql = "SELECT FIRST_NOT_FOUND_MATCH_PASS as pass_slug, COUNT(FIRST_NOT_FOUND_MATCH_PASS) AS pass_count
+				FROM $unmatched_staging_table 
+				GROUP BY FIRST_NOT_FOUND_MATCH_PASS";
+		$result_array = $wpdb->get_results ( $sql );
+		if ( false === $result_array ) {
+			return ( false );		
+		} 
+
+
+		// update match result array
+		$match_results = json_decode ( self::get_match_results( $upload_id ) );
+
+		// set all unmatched counters to 0 -- initialized as empty up to this point (next step may not hit them all)
+		foreach ( $match_results as $rule ) {
+			$rule->unmatched_unique_values_of_components = 0;			
+		}	
+
+		if ( 0 != count ( $result_array ) ) { 
+			foreach ( $result_array as $result ) { 
+				$match_results->{$result->pass_slug}->unmatched_unique_values_of_components = $result->pass_count;		
+			}
+		}
+		
+		self::update_match_results ( $upload_id, json_encode ( $match_results ) );
+		
+		return ( $match_results );
+	}
+
+	
 }
 
 
