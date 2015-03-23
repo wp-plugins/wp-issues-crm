@@ -26,18 +26,20 @@ class WIC_Form_Upload_Match extends WIC_Form_Upload_Validate  {
 				$message_level = 'error';
 				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
 			// file has been mapped and validated and ready for test matching -- needs to be matched/rematched
-			} elseif ( 'validated' == $upload_status || 'matched' == $upload_status ) { 
+			} elseif ( 'validated' == $upload_status || 'matched' == $upload_status || 'defaulted' == $upload_status ) { 
 				// show message inviting match/rematch
 				$message =  sprintf ( __( 'Match records from %s to your previously saved constituents in WP Issues CRM. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() );
 				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
 				// show validation start button (not a submit -- will drive AJAX)
+				$disabled = ( 'matched' == $upload_status || 'defaulted' == $upload_status );
 				$button_args_main = array(
 					'entity_requested'			=> 'upload',
 					'action_requested'			=> 'form_update',
 					'button_class'					=> 'button button-primary wic-form-button',
 					'button_label'					=> __('Save/Test Match', 'wp-issues-crm'),
 					'type'							=> 'button',
-					'id'								=> 'match-button'
+					'id'								=> 'match-button',
+					'disabled'						=> $disabled,
 				);	
 				$button = $this->create_wic_form_button ( $button_args_main );
 
@@ -46,7 +48,7 @@ class WIC_Form_Upload_Match extends WIC_Form_Upload_Validate  {
 				echo '<div id = "wic-upload-progress-bar"></div>';
 
 				$match_results_table = '';
-				if ( 'matched' == $upload_status ) { 
+				if ( 'matched' == $upload_status || 'defaulted' == $upload_status ) { 
 					$upload_parameters = json_decode ( $data_array['serialized_upload_parameters']->get_value() ); 
 					$match_results_table = '<h3>' . sprintf( __( 'Previous test match results for %s records saved in staging table.', 'wp-issues-crm' ),
 						$upload_parameters->insert_count) . 
@@ -66,7 +68,7 @@ class WIC_Form_Upload_Match extends WIC_Form_Upload_Validate  {
 				if ( 'validated' == $upload_status ) {
 					echo $match_strategies->layout_sortable_match_options( $data_array['ID']->get_value(), true );
 				// if status is matched, then have a match result array that the user has defined and it has not //been remapped, so use it (false)				
-				} elseif ( 'matched' == $upload_status )  {
+				} elseif ( 'matched' == $upload_status || 'defaulted' == $upload_status )  {
 					echo $match_strategies->layout_sortable_match_options( $data_array['ID']->get_value(), false );
 				}
 
@@ -77,21 +79,16 @@ class WIC_Form_Upload_Match extends WIC_Form_Upload_Validate  {
 				$message =  sprintf ( __( 'Records previouly matched for %s. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() )  . $message;
 				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
 				
-				// show button as disabled				
-				$button_args_main = array(
-					'entity_requested'			=> 'upload',
-					'action_requested'			=> 'form_update',
-					'button_class'					=> 'button button-primary wic-form-button',
-					'button_label'					=> __('Matched', 'wp-issues-crm'),
-					'type'							=> 'button',
-					'id'								=> 'match-button',
-					'disabled'						=> true,
-				);	
-				$button = $this->create_wic_form_button ( $button_args_main );
-				echo $button;
-	  			echo '<div id = "upload-results-table-wrapper">' . 
-					// 	  			
-	  			'</div>';			
+				// don't show button just results 
+ 
+				$upload_parameters = json_decode ( $data_array['serialized_upload_parameters']->get_value() ); 
+				$match_results_table = '<h3>' . sprintf( __( 'Match implemented for completed upload of %s records saved in staging table.', 'wp-issues-crm' ),
+					$upload_parameters->insert_count) . 
+				'</h3>';
+				$match_results_table .= 
+					WIC_Entity_Upload::prepare_match_results ( json_decode ( $data_array['serialized_match_results']->get_value() ) );
+				echo '<div id = "upload-results-table-wrapper">' . $match_results_table . '</div>';   			
+			
 			}
 		   // in all cases, echo ID and progress field
 			echo $data_array['ID']->update_control();	

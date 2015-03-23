@@ -93,7 +93,7 @@ class WIC_DB_Access_Dictionary Extends WIC_DB_Access_WIC {
 			"
 			select entity_slug, field_slug, field_label
 			from $table 
-			where option_group = %s
+			where option_group = %s and transient = 0
 			",
 			array ( $option_group )
 			);

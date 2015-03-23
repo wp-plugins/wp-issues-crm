@@ -50,7 +50,9 @@ class WIC_Form_Upload_Update extends WIC_Form_Parent  {
 	
 	// group screen
 	protected function group_screen( $group ) {
-		return ( 'save_options' != $group->group_slug && 'upload_tips' != $group->group_slug   ) ;	
+		return ( 'initial' == $group->group_slug || 
+					'upload_parameters' == $group->group_slug  
+		  ) ;	
 	}
 	
 	// special group handling for the comment group

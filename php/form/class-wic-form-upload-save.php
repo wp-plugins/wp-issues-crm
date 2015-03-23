@@ -32,7 +32,10 @@ class WIC_Form_Upload_Save extends WIC_Form_Upload_Update  {
 	// group screen
 	protected function group_screen ( $group ) {
 		// upload parameters is the post upload results report, not the upload parameters settings
-		return ( 'upload_parameters' != $group->group_slug  );
+		return ( 'save_options' == $group->group_slug ||   
+					'initial' == $group->group_slug ||
+					'upload_tips' == $group->group_slug  
+					);
 	}	
 
 	// special group handling for the comment group

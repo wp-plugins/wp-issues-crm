@@ -1078,6 +1078,20 @@ ul#upload-tips {
 	font-weight: bold;
 }
 
+.upload-validation-perfect {
+	color: #3b5;
+}
+
+.upload-validation-ok {
+	color: #CC922F;
+}
+
+.upload-validation-bad {
+	color: #f33;
+	font-weight: bold;
+}
+
+
 #wic-form-upload-map #wic-form-sidebar-groups {
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
@@ -1159,6 +1173,38 @@ ul.wic-sortable {
 .wic-statistic-long {
 	min-width: 250px;
 }
+#wic-upload-default-form-body {
+	margin: 0 7.1111%;
+}
+ul.upload-status-summary {
+	list-style-type: square;
+	list-style-position: inside;
+	list
+}
+
+#wic-upload-default-form-body {
+	margin: 0 7.1111%;
+}
+
+#wic-upload-default-form-body  .field-group-show-hide-button {
+	margin: 10px 0 0 0;	
+}
+
+#wic-upload-default-form-body  .wic-input {
+	display: block;
+	width: 150px;	
+}
+
+#wic-upload-default-form-body .wic-label,
+#wic-upload-default-form-body .wic-label.state  {
+	display: block;
+	margin: 0;
+	font-size: 0.9em;	
+	text-align: left; 
+	
+}
+
+
 /* list element widths */
 .pl-constituent-first_name{ width:14%;}
 .pl-constituent-middle_name{ width:14%;}

@@ -48,10 +48,11 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	public static function format_tab_titles ( $upload_id ) {
 		
 		$tab_titles_array = array (
-			'Upload Raw' 	=> 'details', 		
+			'Describe' 	=> 'details', 		
 			'Map Fields'		=> 'map',
 			'Validate Data'		=> 'validate',
 			'Define Matching'	=>	'match',
+			'Set Defaults'	=>	'set_defaults',			
 			'Complete Upload'	=>	'complete',
 		);			
 		
@@ -123,11 +124,16 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		$this->id_search_generic ( $id, 'WIC_Form_Upload_Validate', '' , false, false );
 	}			
 	
-	// show the validate form -- this is individual field data validation doable only after mapping complete		
+	// show the match form		
 	protected function match ( $args ) {
 		$id = $args['id_requested']; 
 		$this->id_search_generic ( $id, 'WIC_Form_Upload_Match', '' , false, false );
 	}			
+
+	protected function set_defaults ( $args ) {
+		$id = $args['id_requested']; 
+		$this->id_search_generic ( $id, 'WIC_Form_Upload_Set_Defaults', '' , false, false );
+	}
 
 	protected function complete ( $args ) {
 		echo self::format_tab_titles( $_GET['upload_id'] );
@@ -493,12 +499,21 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 
 		foreach ( $column_map as $column => $entity_field_object ) { 
 			if ( $entity_field_object > '' ) {
+				if ( 0 == $entity_field_object->non_empty_count ) {
+					$validation_level_coloring = 'upload-validation-bad';
+				} elseif ( $entity_field_object->non_empty_count == $entity_field_object->valid_count ) {
+					$validation_level_coloring = 'upload-validation-perfect';
+				} elseif ( $entity_field_object->valid_count / $entity_field_object->non_empty_count > .95 ) {
+					$validation_level_coloring = 'upload-validation-ok';
+				} else {
+					$validation_level_coloring = 'upload-validation-bad';				
+				}
 				$table .= '<tr>' .
 					'<td class = "wic-statistic-table-name">' . $column . '</td>' .
 					'<td class = "wic-statistic-text" >' . $entity_field_object->entity . '</td>' .
 					'<td class = "wic-statistic-text" >' . $entity_field_object->field . '</td>' .
 					'<td class = "wic-statistic" >' . $entity_field_object->non_empty_count . '</td>' .
-					'<td class = "wic-statistic" >' . $entity_field_object->valid_count  . '</td>' .
+					'<td class = "wic-statistic ' . $validation_level_coloring . '" >' . $entity_field_object->valid_count  . '</td>' .
 				'</tr>';
 			}
 		}
@@ -802,6 +817,11 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 
 	}	
 
-
-	
+  /*
+  * function supporting default definitions
+  */
+   // pass through from original entity
+	public static function get_issue_options( $value ) {
+		return ( WIC_Entity_Activity::get_issue_options( $value ) );
+	}
 }

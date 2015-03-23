@@ -1,6 +1,6 @@
 /*
 *
-* wic-upload-validate.js
+* wic-upload-set-defaults.js
 *
 */
 

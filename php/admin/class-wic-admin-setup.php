@@ -122,6 +122,14 @@ class WIC_Admin_Setup {
 					);
 					wp_enqueue_script('wic-upload-match');
 				}
+				if ( 'set_defaults' == $_GET['action'] ) { 
+					wp_register_script(
+						'wic-upload-set-defaults',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-set-defaults.js' , __FILE__ ),
+						array ( 'jquery-ui-progressbar' ) 
+					);
+					wp_enqueue_script('wic-set-defaults');
+				}
 			}
 			wp_register_style(
 				'wp-issues-crm-styles',

@@ -87,59 +87,8 @@ abstract class WIC_Form_Parent  {
 		   		echo $buttons;	?>			   
 		
 			<?php	
-			
-			// set up buffers for field output[.=] in two areas of the screen
-			$main_groups = '';
-			$sidebar_groups = '';
-
-			// go to the data dictionary and get the list of groups for the entity			
-			$groups = $this->get_the_groups();
-
-		   foreach ( $groups as $group ) { 
-
-		   	// set up buffer for all group content
-				$group_output = '';
-				
-				// child class MUST define a group screen that returns true to show any groups
-				if ( $this->group_screen( $group ) ) {	
-				
-					$group_output .= '<div class = "wic-form-field-group" id = "wic-field-group-' . esc_attr( $group->group_slug  ) . '">';				
-					
-						// show-hide button for group
-						$button_args = array (
-							'class'			=> 	'field-group-show-hide-button',		
-							'name_base'		=> 	'wic-inner-field-group-',
-							'name_variable' => 	$group->group_slug ,
-							'label' 			=> 	$group->group_label ,
-							'show_initial' => 	$group->initial_open,
-						);
-						$group_output .= $this->output_show_hide_toggle_button( $button_args );			
-					
-						// wrapper for group to show-hide 
-						$show_class = $group->initial_open ? 'visible-template' : 'hidden-template';
-						$group_output .= '<div class="' . $show_class . '" id = "wic-inner-field-group-' . esc_attr( $group->group_slug ) . '">' .					
-						'<p class = "wic-form-field-group-legend">' . esc_html ( $group->group_legend )  . '</p>';
-						
-						// here is the main content -- either   . . .
-						if ( $this->group_special ( $group->group_slug ) ) { 				// if implemented returns true -- run special function to output a group
-							$special_function = 'group_special_' . $group->group_slug; 	// must define the special function too 
-							$group_output .= $this->$special_function( $data_array );
-						} else {	// standard main form logic 	
-							$group_fields =  $wic_db_dictionary->get_fields_for_group ( $this->get_the_entity(), $group->group_slug );
-							$group_output .= $this->the_controls ( $group_fields, $data_array );
-						}
-							
-					$group_output .= '</div></div>';	
-					
-				} 
-				
-				// put group output into either side or main buffer
-  				if ( $group->sidebar_location ) {
-					$sidebar_groups .= $group_output;  				
-  				} else {
-  					$main_groups .= $group_output;
-  				}
-		   } // close foreach group
+			$group_array = $this->generate_group_content_for_entity( $data_array );
+			extract ( $group_array );
 		
 			// output form
 			echo 	'<div id="wic-form-body">' . '<div id="wic-form-main-groups">' . $main_groups . '</div>' .
@@ -162,6 +111,72 @@ abstract class WIC_Form_Parent  {
 		<?php 
 		
 	}
+
+	protected function generate_group_content_for_entity( &$data_array ) {
+		
+		global $wic_db_dictionary;
+		// set up buffers for field output[.=] in two areas of the screen
+		$main_groups = '';
+		$sidebar_groups = '';
+
+		// go to the data dictionary and get the list of groups for the entity			
+		$groups = $this->get_the_groups();
+
+	   foreach ( $groups as $group ) { 
+
+	   	// set up buffer for all group content
+			$group_output = '';
+			
+			// child class MUST define a group screen that returns true to show any groups
+			if ( $this->group_screen( $group ) ) {	
+			
+				$group_output .= '<div class = "wic-form-field-group" id = "wic-field-group-' . esc_attr( $group->group_slug  ) . '">';				
+				
+					// show-hide button for group
+					$button_args = array (
+						'class'			=> 	'field-group-show-hide-button',		
+						'name_base'		=> 	'wic-inner-field-group-',
+						'name_variable' => 	$group->group_slug ,
+						'label' 			=> 	$group->group_label ,
+						'show_initial' => 	$group->initial_open,
+					);
+					$group_output .= $this->output_show_hide_toggle_button( $button_args );			
+				
+					// wrapper for group to show-hide 
+					$show_class = $group->initial_open ? 'visible-template' : 'hidden-template';
+					$group_output .= '<div class="' . $show_class . '" id = "wic-inner-field-group-' . esc_attr( $group->group_slug ) . '">' .					
+					'<p class = "wic-form-field-group-legend">' . esc_html ( $group->group_legend )  . '</p>';
+					
+					// here is the main content -- either   . . .
+					if ( $this->group_special ( $group->group_slug ) ) { 				// if implemented returns true -- run special function to output a group
+						$special_function = 'group_special_' . $group->group_slug; 	// must define the special function too 
+						$group_output .= $this->$special_function( $data_array );
+					} else {	// standard main form logic 	
+						$group_fields =  $wic_db_dictionary->get_fields_for_group ( $this->get_the_entity(), $group->group_slug );
+						$group_output .= $this->the_controls ( $group_fields, $data_array );
+					}
+						
+				$group_output .= '</div></div>';	
+				
+			} 
+			
+			// put group output into either side or main buffer
+  				if ( $group->sidebar_location ) {
+				$sidebar_groups .= $group_output;  				
+  				} else {
+  					$main_groups .= $group_output;
+  				}
+	   } // close foreach group
+	
+		return ( array( 
+			'sidebar_groups' => $sidebar_groups, 
+			'main_groups' => $main_groups,				
+			) 
+		);
+	
+	}
+
+
 
 	// return form identity in css form
 	protected function get_the_form_id() {
