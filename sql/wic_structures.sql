@@ -85,7 +85,7 @@ CREATE TABLE wp_wic_data_dictionary (
   group_slug varchar(30) NOT NULL,
   field_slug varchar(30) NOT NULL,
   field_type varchar(30) NOT NULL,
-  field_label varchar(60) NOT NULL,
+  field_label varchar(120) NOT NULL,
   field_order mediumint(9) NOT NULL,
   listing_order int(11) NOT NULL,
   sort_clause_order mediumint(11) NOT NULL,

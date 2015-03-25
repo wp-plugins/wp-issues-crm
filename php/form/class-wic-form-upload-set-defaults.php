@@ -16,8 +16,8 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 		?><div id='wic-forms'> 
 		
 		<form id = "<?php echo $this->get_the_form_id(); ?>" <?php $this->supplemental_attributes(); ?> class="wic-post-form" method="POST" autocomplete = "on">
-
-			<?php // form layout driven by upload status
+			
+			<?php // form layout driven by upload status 
 			$upload_status = $data_array['upload_status']->get_value();
 			
 			// file has not been defaulted or has been remapped  but not revalidated or not not rematched -- show error message		
@@ -37,45 +37,31 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 					'entity_requested'			=> 'upload',
 					'action_requested'			=> 'form_update',
 					'button_class'					=> 'button button-primary wic-form-button',
-					'button_label'					=> __('Test Setting', 'wp-issues-crm'),
+					'button_label'					=> __('Test Settings', 'wp-issues-crm'),
 					'type'							=> 'button',
 					'id'								=> 'match-button',
 					'disabled'						=> $disabled,
 				);	
 				$button = $this->create_wic_form_button ( $button_args_main );
-
 				echo $button;
 				
-				
-								
+				// invoke parent form generation logic to generate controls	
 				$group_array = $this->generate_group_content_for_entity( $data_array );
 				extract ( $group_array );
 			
 				// output form
-				echo 	'<div id="wic-upload-default-form-body">' . '<div id="wic-form-main-groups">' . $main_groups . '</div>' .
-						'<div id="wic-form-sidebar-groups">' . $sidebar_groups . '</div>' . '</div>';					// serialized_default_decisions
-
-
-
-
-
-
-			
-				// place for progress bar -- ajax controlled; initial display none; results wrapper also filled by ajax
-				echo '<div id = "wic-upload-progress-bar"></div>';
-
-				$match_results_table = '';
-				if ( 'matched' == $upload_status ) { 
-					$upload_parameters = json_decode ( $data_array['serialized_upload_parameters']->get_value() ); 
-					$match_results_table = '<h3>' . sprintf( __( 'Previous test match results for %s records saved in staging table.', 'wp-issues-crm' ),
-						$upload_parameters->insert_count) . 
-						'</h3>';
-					$match_results_table .= 
-						WIC_Entity_Upload::prepare_match_results ( json_decode ( $data_array['serialized_match_results']->get_value() ) );
-				}	   
-				echo '<div id = "upload-results-table-wrapper">' . $match_results_table . '</div>'; 	
-				
-
+				echo 	'<div id="wic-upload-default-form-body">' . 
+							'<div id="wic-form-main-groups">' . 
+								$main_groups . 
+							'</div>' .
+							'<div id="wic-form-sidebar-groups">' . 
+								$sidebar_groups . 
+								// place for progress bar and results div for lookup of issue titles if used
+								'<div id = "wic-issue-lookup-progress-bar"></div>';
+								'<div id = "wic-issue-lookup-results-wrapper"></div>';
+							'</div>' . 
+						'</div>';					// serialized_default_decisions
+			echo '</div><div class = "horbar-clear-fix"></div>';
 	  		// file has already been completed
 			} elseif ( 'completed' == $upload_status) {
 				$message =  sprintf ( __( 'Records previouly matched for %s. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() )  . $message;
@@ -96,10 +82,15 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 	  			echo '<div id = "upload-results-table-wrapper">' . 
 					// 	  			
 	  			'</div>';			
-			}
+			} 
+			echo $data_array['serialized_upload_parameters']->update_control();		   
 		   // in all cases, echo ID and progress field
 			echo $data_array['ID']->update_control();	
-			echo $data_array['serialized_upload_parameters']->update_control();		
+					
+			echo $data_array['serialized_upload_parameters']->update_control();
+			echo $data_array['serialized_column_map']->update_control();		
+			echo $data_array['serialized_match_results']->update_control();	
+			echo $data_array['serialized_default_decisions']->update_control();		
 		 	wp_nonce_field( 'wp_issues_crm_post', 'wp_issues_crm_post_form_nonce_field', true, true ); 
 			echo $this->get_the_legends( $sql ); ?>
 			</div>								
@@ -149,19 +140,19 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 
 		$output = '<ul class = "upload-status-summary" >' .
 					'<li>' .
-						sprintf( __( 'File as uploaded has %d input records.', 'wp-issues-crm' ), $total_input ) .
+						sprintf( __( '%d input records.', 'wp-issues-crm' ), $total_input ) .
 					'</li>' .
 					'<li>' .
-						sprintf( __( '%d records have valid data and match to a unique constituent.  
+						sprintf( __( '%d records with valid data and matching to a unique constituent.  
 							These may include multiple activity or other updates for the same constituent. ', 'wp-issues-crm' ), $valid_matched ) .
 					'</li>' .
 					'<li>' .
-						sprintf( __( '%d records have valid data but cannot be uploaded because they match to more than one constituent.', 
+						sprintf( __( '%d records with valid data that cannot be uploaded because they match to more than one constituent.', 
 							'wp-issues-crm' ), $valid_dups ) .
 					'</li>' .
 					'<li>' .
-						sprintf( __( 'Among records having valid data that do not match to any constituent, 
-							there were %s unique identifying combinations that could be used to create new constituents.', 
+						sprintf( __( '%d unique identifiers that could be used to create new constituents 
+							from records having valid data that do not match to any constituent.', 
 							'wp-issues-crm' ), $valid_unique ) .
 					'</li>' .														
 				'</ul>';	

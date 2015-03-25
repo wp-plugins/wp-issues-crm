@@ -438,19 +438,43 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 					if ( 'multiselect' != $control->get_control_type() ) {
 						$control->sanitize();
 					}
+					// invoke the control's validation routine -- covers most cases
 					$error = $control->validate();
+					// do validation for constituent ID field that doesn't require validation in form context since not user supplied
+					if ( 'constituent' == $column_map->$column->entity && 'ID' == $column_map->$column->field ) {
+						$wic_query = 	WIC_DB_Access_Factory::make_a_db_access_object( 'constituent' );
+						// set up search arguments and parameters
+						$search_parameters = array( // accept default search parameters -- 
+							'select_mode' => 'id',
+							'retrieve_limit' => 2,
+							'show_deleted' => true,		
+							'log_search' => false,
+						);
+						$query_clause =  array (
+								array (
+									'table'	=> 'constituent',
+									'key' 	=> 'ID',
+									'value'	=> $control->get_value(),
+									'compare'=> '=',
+									'wp_query_parameter' => '',
+								)
+							);
+						$wic_query->search ( $query_clause, $search_parameters );
+						$error = ( 1 == $wic_query->found_count ) ? '' : __( 'Bad constituent ID', 'wp-issues-crm' );
+					}
 					// do additional validation for sanitization (e.g., date) that reduces input to empty
 					if ( '' < $record->$column && '' == $control->get_value() ) {
 						$error = sprintf ( __( 'Invalid entry for %s -- %s.', 'wp-issues-crm' ), $column_map->$column->field, $record->$column ); 					
 					}
 					// validate select fields -- assure that value in options set (whether in options table or function generated per control logic)
+					// in normal context, select field assumes yielding valid values
 					if ( method_exists ( $control, 'valid_values' ) ) { 
 						if ( ! in_array ( $record->$column, $valid_values[$column] ) ) {
 							$error = sprintf ( __( 'Invalid entry for %s -- %s.', 'wp-issues-crm' ), $column_map->$column->field, $record->$column ); 						
 						}					
 					}
 					$column_map->$column->non_empty_count++;
-					// validate based on individual column's error or lack of
+					// report individual column validation results
 					if ( '' == $error ) {
 						$column_map->$column->valid_count++;
 						// if no error and valid, update staging table with sanitized value
@@ -458,7 +482,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 							'column' => $column,
 							'value'	=> $control->get_value(),						
 						);					
-					}
+					} 
 					// accumulate all errors across columns for record; note that empty is not an error
 					$errors .= $error;
 				}

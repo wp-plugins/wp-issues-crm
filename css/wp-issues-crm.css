@@ -1179,7 +1179,8 @@ ul.wic-sortable {
 ul.upload-status-summary {
 	list-style-type: square;
 	list-style-position: inside;
-	list
+	font-size: 0.9em;
+	margin-right: 20px;
 }
 
 #wic-upload-default-form-body {
@@ -1204,7 +1205,12 @@ ul.upload-status-summary {
 	
 }
 
-
+#wic-upload-default-form-body #wic-form-main-groups,
+#wic-upload-default-form-body #wic-form-sidebar-groups{
+	width: 50%;
+	height: auto;
+	overflow-y: auto;
+}
 /* list element widths */
 .pl-constituent-first_name{ width:14%;}
 .pl-constituent-middle_name{ width:14%;}
