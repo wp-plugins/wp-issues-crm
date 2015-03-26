@@ -126,9 +126,9 @@ class WIC_Admin_Setup {
 					wp_register_script(
 						'wic-upload-set-defaults',
 						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-set-defaults.js' , __FILE__ ),
-						array ( 'jquery-ui-progressbar' ) 
+						array ( 'jquery-ui-progressbar','jquery-ui-datepicker' ) 
 					);
-					wp_enqueue_script('wic-set-defaults');
+					wp_enqueue_script('wic-upload-set-defaults');
 				}
 			}
 			wp_register_style(

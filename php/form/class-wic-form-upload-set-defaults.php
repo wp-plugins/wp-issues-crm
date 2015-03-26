@@ -39,7 +39,7 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 					'button_class'					=> 'button button-primary wic-form-button',
 					'button_label'					=> __('Test Settings', 'wp-issues-crm'),
 					'type'							=> 'button',
-					'id'								=> 'match-button',
+					'id'								=> 'settings-test-button',
 					'disabled'						=> $disabled,
 				);	
 				$button = $this->create_wic_form_button ( $button_args_main );
@@ -51,17 +51,17 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 			
 				// output form
 				echo 	'<div id="wic-upload-default-form-body">' . 
-							'<div id="wic-form-main-groups">' . 
+							'<div id="wic-form-main-groups">' .  
 								$main_groups . 
 							'</div>' .
 							'<div id="wic-form-sidebar-groups">' . 
 								$sidebar_groups . 
 								// place for progress bar and results div for lookup of issue titles if used
-								'<div id = "wic-issue-lookup-progress-bar"></div>';
-								'<div id = "wic-issue-lookup-results-wrapper"></div>';
+								'<div id = "wic-issue-lookup-progress-bar"></div>' .
+								'<div id = "wic-issue-lookup-results-wrapper"></div>' .
 							'</div>' . 
-						'</div>';					// serialized_default_decisions
-			echo '</div><div class = "horbar-clear-fix"></div>';
+						'</div>';					// wic-upload-default-form-body
+			echo '<div class = "horbar-clear-fix"></div>';
 	  		// file has already been completed
 			} elseif ( 'completed' == $upload_status) {
 				$message =  sprintf ( __( 'Records previouly matched for %s. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() )  . $message;
@@ -83,10 +83,9 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 					// 	  			
 	  			'</div>';			
 			} 
-			echo $data_array['serialized_upload_parameters']->update_control();		   
-		   // in all cases, echo ID and progress field
+	   
+		   // in all cases, echo ID, serialized working fields, nonce
 			echo $data_array['ID']->update_control();	
-					
 			echo $data_array['serialized_upload_parameters']->update_control();
 			echo $data_array['serialized_column_map']->update_control();		
 			echo $data_array['serialized_match_results']->update_control();	

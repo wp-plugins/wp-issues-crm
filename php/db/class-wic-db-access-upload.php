@@ -618,6 +618,16 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		return ( $match_results );
 	}
 
+	// support default decisions logging
+		// quick update
+	public static function update_default_decisions ( $upload_id, $serialized_default_decisions ) {
+		global $wpdb;
+		$table = $wpdb->prefix . 'wic_upload';
+		$sql = "UPDATE $table set serialized_default_decisions = '$serialized_default_decisions' WHERE ID = $upload_id";
+		$result = $wpdb->query( $sql );
+		return ( $result );
+	}	
+
 	
 }
 

@@ -134,7 +134,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		$id = $args['id_requested']; 
 		$this->id_search_generic ( $id, 'WIC_Form_Upload_Set_Defaults', '' , false, false );
 	}
-
+	
 	protected function complete ( $args ) {
 		echo self::format_tab_titles( $_GET['upload_id'] );
 		echo '<h3>here goes the complete stuff</h3>';	
@@ -847,5 +847,9 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
    // pass through from original entity
 	public static function get_issue_options( $value ) {
 		return ( WIC_Entity_Activity::get_issue_options( $value ) );
+	}
+	
+	public static function update_default_decisions ( $id, $data ) {
+		WIC_DB_Access_Upload::update_default_decisions ( $id, $data );
 	}
 }
