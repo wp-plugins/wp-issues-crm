@@ -130,7 +130,7 @@ INSERT INTO `wp_wic_data_dictionary` (`ID`, `entity_slug`, `group_slug`, `field_
 (NULL, 'upload', 'activity_default', 'pro_con', 'select', 'Activity Pro/Con', 30, 0, 0, '', 0, 0, 0, '', 0, 1, '', 'Pro/Con', 'pro_con_options', '', '', 0, 0, 1, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'constituent_match', 'update_matched', 'checked', 'Update matched constituents (uncheck to skip matched):', 10, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', '', '', '', 0, 0, 1, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'constituent_match', 'add_unmatched', 'checked', 'Add unmatched constituents (uncheck to skip unmatched):', 20, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', '', '', '', 0, 0, 1, 0, '', 0, '0000-00-00 00:00:00'),
-(NULL, 'upload', 'constituent_match', 'protect_identity', 'checked', 'Protect primary identity (uncheck to allow update of name, dob, home address):', 30, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', '', '', '', 0, 0, 1, 0, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'upload', 'constituent_match', 'protect_identity', 'checked', 'Protect primary identity (uncheck to allow update of name, dob, address):', 30, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', '', '', '', 0, 0, 1, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'constituent_default', 'address_type', 'select', 'Address type ', 30, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', 'address_type_options', '', '', 0, 0, 1, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'constituent_default', 'city', 'text', 'City/town ', 40, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', '', '', '', 0, 0, 1, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'constituent_default', 'state', 'select', 'State ', 50, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', 'state_options', '', '', 0, 0, 1, 0, '', 0, '0000-00-00 00:00:00'),
@@ -178,7 +178,7 @@ INSERT INTO wp_wic_form_field_groups (ID, entity_slug, group_slug, group_label, 
 (NULL, 'upload', 'constituent_match', 'Constituent add/update choices', '', 20, 1, 0, '0000-00-00 00:00:00', 0),
 (NULL, 'upload', 'constituent_default', 'Constituent default values', 'If constituent fields not mapped or missing, these defaults will be used.', 30, 1, 0, '0000-00-00 00:00:00', 0),
 (NULL, 'upload', 'activity_default', 'Activity default values ', 'If activity fields not mapped or missing, these defaults will be used.  
-Even if no activity fields are mapped, if you set activity defaults, an activity record will be created for each constituent in the upload file.', 
+If no activity fields are mapped and you set activity defaults, an activity record will be created for each constituent in the upload file using the defaults.', 
 40, 1, 1, '0000-00-00 00:00:00', 0),
 (NULL, 'upload', 'new_issue_creation', 'New Issue Titles ', 'If your upload includes new issues titles, WP Issues CRM can create new posts/issues for them.', 50, 1, 1, '0000-00-00 00:00:00', 0);
 INSERT INTO wp_wic_option_group (ID, option_group_slug, option_group_desc, enabled, last_updated_time, last_updated_by, mark_deleted, is_system_reserved) VALUES

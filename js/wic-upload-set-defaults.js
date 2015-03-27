@@ -27,25 +27,25 @@
 		controlsArray =  jQuery ( ":input" ).not( ":button, :hidden" );
 		saveHeaderMessage = jQuery ( "#post-form-message-box" ).text();
 	
-		console.log ( 'uploadParameters:' );
-		console.log ( uploadParameters );
-		console.log ( 'columnMap' );
-		console.log ( columnMap );
-		console.log ( 'matchResults' );	
-		console.log ( matchResults );
-		console.log ( 'defaultDecisions' );
-		console.log ( defaultDecisions );
-		console.log ( controlsArray );
-		populateForm();
+		// populate form with saved values or initialize
+		populateForm();	
+
+		// hide controls that don't make a difference and replace with messages	
+		decideWhatToShow();	
+	
+		// listen to save all updates to default options
+		controlsArray.change ( function() {
+			recordDefaultDecisions();
+			decideWhatToShow()		
+		});	
+	
 		
 		$( "#wic-upload-progress-bar" ).progressbar({
 			value: 0
 		});
 
-  		$( "ul.wic-sortable" ).disableSelection();
-
 		$("#settings-test-button").click(function(){
-			recordDefaultDecisions()
+			jQuery ( "#post-form-message-box" ).removeClass ( "wic-form-errors-found" );	
 			// jQuery( "#settings-test-button" ).prop( "disabled", true );
 			$( "#wic-upload-progress-bar" ).progressbar ( "value", false );
 	  		$( "#wic-upload-progress-bar" ).show();
@@ -56,7 +56,8 @@
 	});
 
 	// populate displayed  orm values from hidden field;
-	function populateForm() { 
+	function populateForm() {
+		// if user has already set defaults . . . 
 		if ( ! jQuery.isEmptyObject ( defaultDecisions ) ) { 
 			controlsArray.each ( function ( index ) {
 				elementID 		= jQuery( this ).attr( "id" ) 
@@ -67,8 +68,96 @@
 					jQuery( this ).val( defaultDecisions[ jQuery( this ).attr( "id" ) ]);
 				}
 			});
+		// if user has not set defaults, make some recommendations
+		} else {
+			jQuery ( "#update_matched" ).prop ( "checked", true );
+			jQuery ( "#add_unmatched" ).prop ( "checked", true );
+			jQuery ( "#protect_identity" ).prop ( "checked", true );
+			jQuery ( "#activity_date" ).val ( "2011-01-01" );
 		}
 	}
+	
+	function decideWhatToShow() { 
+
+		// first compute totals relevant for add/update fields
+		var validMatched = 0;
+		var validUnique  = 0;
+		// 
+		for ( var matchSlug in matchResults  ) { 
+			validMatched +=  matchResults[matchSlug].matched_with_these_components;
+			validUnique  +=  Number( matchResults[matchSlug].unmatched_unique_values_of_components ) ;
+				// this field has type string because of ancestry as a literal ? for display purposes
+		}	
+		// the null case -- kill the form
+		if ( 0 == validMatched && 0 == validUnique ) {
+			jQuery ( "#post-form-message-box" ).text ( "No new or matched records to upload -- revisit prior steps." );
+			jQuery ( "#post-form-message-box" ).addClass ( "wic-form-errors-found" );			
+			jQuery ( ":input" ).prop ( "disabled", true );
+		// if no matched constituents, disable update choices
+		} else if ( 0 == validMatched ) {
+			jQuery ( "#update_matched" ).prop ( "checked", false );
+			jQuery ( "#protect_identity" ).prop ( "checked", false );
+			jQuery ( "#update_matched" ).prop ( "disabled", true );
+			jQuery ( "#protect_identity" ).prop ( "disabled", true );
+		// if nothing to add, disable the add choice
+		} else if ( 0 == validUnique ) {
+			jQuery ( "#add_unmatched" ).prop ( "checked", false );
+			jQuery ( "#add_unmatched" ).prop ( "disabled", true );
+		}
+		
+		// enable disable protect identity, depending on whether doing updates to matched.
+		if ( jQuery ( "#update_matched" ).prop( "checked" ) ){
+			jQuery ( "#protect_identity" ).prop ( "disabled", false );
+		} else {
+			jQuery ( "#protect_identity" ).prop ( "disabled", true );		
+		}		
+		
+		// hide defaults for fields that have already been mapped		
+		// hide phone or email default type if phone or email not supplied.
+		// show logic unnecessary because nothing will cause them to show within the form
+		var phonePresent = false;
+		var emailPresent = false;
+		var issuePresent = false;
+		var str = '';
+		var hidegroup = ''; 
+		for ( var inputColumn in columnMap  ) {
+			str = columnMap[inputColumn].field;
+			if ( undefined != str ) { 
+				hideGroup =  '#wic-control-' + str.replace ( '-', '_' ); 
+				jQuery( hideGroup ).hide();
+			}	 
+			if ( 'email_address' == columnMap[inputColumn].field ) {
+				emailPresent = true;			
+			}
+			if ( 'phone_number' == columnMap[inputColumn].field ) {
+				phonePresent = true;			
+			}
+			if ( 'issue' == columnMap[inputColumn].field ) {
+				phonePresent = true;			
+			}
+		}
+		if ( ! phonePresent ) {
+			jQuery ( "#wic-control-phone-type" ).hide();			
+		}
+		if ( ! emailPresent ) {
+			jQuery ( "#wic-control-email-type" ).hide();			
+		}
+		
+		// show/hide title elements in constituent default field group based on whether inputs are hidden
+		if ( 0 == jQuery( "#wic-field-group-constituent_default" ).find( ":input" ).not( ":button, :hidden" ).length ) {
+			jQuery( "#wic-inner-field-group-constituent_default-toggle-button" ).hide();	
+			jQuery( "#wic-inner-field-group-constituent_default p" ).hide();			
+		} else {
+			jQuery( "#wic-inner-field-group-constituent_default-toggle-button" ).show();	
+			jQuery( "#wic-inner-field-group-constituent_default p" ).show();			
+		}
+		
+		if ( '' < jQuery( "#issue" ).val() ) {
+			jQuery( "#wic-control-post-title" ).hide() 		
+		} else if ( ! issuePresent ) {
+			jQuery( "#wic-control-post-title" ).show()
+		}
+	}	
 	
 	function recordDefaultDecisions() {
 

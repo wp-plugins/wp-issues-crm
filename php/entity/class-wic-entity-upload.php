@@ -3,6 +3,68 @@
 *
 *	wic-entity-upload.php
 *
+*
+*  Upload of files managed by this entity.
+*
+*  File upload is handled in tabbed stages
+*		-- do raw upload, validating only csv format with consistent columnt count
+*		-- map fields (fully flexible)
+*		-- validate data
+*			+ IF the field is mapped, all form edits are applied -- sanitization, validation and individual required check; 
+*			+ If mapped select field must have good values (validation implicit in form context)  
+*			+ Additionally, IF the constituent identity field is mapped it is validated as a good ID
+*			+ Enforcing required at this stage makes sense because if user is not supplying other data that makes it required, can always unmap field
+*				(example, has matched address-type; missing values generate errors, but these are good errors if street address is supplied and
+*					silence the errors by unmapping address-type and relying on default)
+*		-- matching
+*			+ user can select match of input to existing records from valid identity specifying combinations or custom fields
+*			+ hierarchy of matching order is suggested to user, but user can override
+*			+ apart from constituent ID and any custom fields, all permitted matching modes include group required identify fields ( fn/ln/email ) 
+*		-- set defaults for constituent	
+*			+ Determine basic add/update behavior for matched records
+*			+ All option to not overwrite good names and addresses with possibly sloppy names and addresses -- set default do not overwrite
+*			+ Only allow defaulting of unmapped fields -- if a column can be replaced in part with defaults, replace it entirely
+*		-- set defaults for activities ( in same tab as constituents )
+*			+ Only allow defaulting of unmapped fields -- if a column can be replaced in part with defaults, replace it entirely
+*			+ If issue number is present, it controls; otherwise look to title
+*		-- possible errors/warnings for defaults
+*			+ errors: a data entity is included (mapped or defaulted), but required information is neither mapped nor defaulted ( e.g., if address, type and city )
+*			+ warning: both issue number and title are present, title will be disregarded 
+*			+ custom matching, but no fn/ln/email mapped (all will be rejected) or mapped, but warn about non-blanks
+*		-- preupdate as part of update  -- if any unique unmatched
+*			+ save constituent stub
+*			+ save pointer to constituent stub
+*			+ AT THIS STAGE, HAVE TO ENFORCE GROUP REQUIRED (fn/ln/email) because could be unique matching based on a custom identifier
+*			+ now, everything is matched, has a constituent stub and that stub has fn or ln or will have email when updates complete
+*		-- actual update
+*			+ if have matched OLD record, must make decision about what to update
+*				* for fn/ln, go by "protect primary identity" indicator, but even if unchecked, update only if existing value non-blank
+*				* for address, if new type add, if existing type, go by "protect identity" indicator, but even unchecked, update only if existing value non-blank
+*				* for other constituent information -- demographics and custom -- update if non-blank
+*				* for email/phone, if new type add, if old type, update if non-blank 
+*				* use defaults consistent with these rules where fields unmapped, as if they were the original values
+*			+ for new records, EZ -- add all; use supplied default
+*
+*	Enforcement of proper staging sequence is as follows:
+*		-- maintain status field for upload	
+*			+ set to staged or mapped in initial db_save() -- mapped if default mappings are available
+*			+ otherwise maintained interactively
+*				* when column map is updated, set to mapped if any columns are in mapped status (otherwise, busted back to staged)
+*				* on js completion of validate, set to validated	
+*				* when match indicators reset (on start a rematch), set to validated
+*				* on completion of mapping, set to mapped
+*				* on successful default test, set to defaulted
+*		-- check status in forms
+*				* can always remap if not completed [need to add this check]
+*				* don't show full validation button if not in status mapped.  If staged, error; if other (beyond validation) show 'previously validated'. 
+*				* don't show match button unless validated, already mapped, or already defaulted -- 
+*					-- cannot match do this if only staged
+*					-- can come back to this if already defaulted
+*					-- cannot come back if already completed
+*				* don't show match default form unless matched or already defaulted
+*				-- dilemma: AJAX form updates defaults immediately, but doesn't validate immediately. Don't want to say status 'defaulted' until happy.
+*					at same time, don't want to lose partial updates to defaults if leave form
+*					SO: set reset default object when match is reset -- a new match is required iff any prior remap or rematch 
 */
 
 
@@ -323,9 +385,10 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		WIC_DB_Access_Upload::update_upload_status( $upload_id, $upload_status );		
 				
 		if ( false !== $outcome ) {
-			echo json_encode ( array ( 'ajax response' => __( 'AJAX update_column_map successful on server side.', 'wp_issues_crm') ) );
+			echo json_encode ( __( 'AJAX update_column_map successful on server side.', 'wp_issues_crm')  );
 		} else {
-			echo json_encode ( __( 'AJAX update_column_map ERROR on server side.', 'wp_issues_crm') );
+			// non json reponse generates console log error entry			
+			echo __( 'AJAX update_column_map ERROR on server side.', 'wp_issues_crm') ;
 		}
 		wp_die();
 	}
@@ -335,7 +398,8 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		if ( false !== $outcome ) {
 			echo json_encode ( array ( 'ajax response' => __( 'AJAX update_interface_table successful on server side.', 'wp_issues_crm') ) );
 		} else {
-			echo json_encode ( __( 'AJAX update_interface_table ERROR on server side.', 'wp_issues_crm') );
+			// non json reponse generates console log error entry	
+			echo __( 'AJAX update_interface_table ERROR on server side.', 'wp_issues_crm') ;
 		}		
 		wp_die();	
 	}	
@@ -378,10 +442,10 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		$table = json_decode ( stripslashes( $json_encoded_staging_table_name ) );
 		
 		$result = WIC_DB_Access_Upload::reset_staging_table_validation_indicators( $table );
-		if ( $result ) {
+		if ( false !== $result ) {
 			wp_die( json_encode ( __( 'Staging table validation indicators reset.', 'wp-issues-crm' ) ) );
 		} else {
-			// send errors not encoded, so will generate alert on return
+			// send errors not encoded, so will generate console log on return
 			wp_die ( __( 'Error resetting staging table validation indicators', 'wp-issues-crm' ) );		
 		}
 		
@@ -440,6 +504,8 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 					}
 					// invoke the control's validation routine -- covers most cases
 					$error = $control->validate();
+					// also add individual required error ( group required ignored and enforced through map step)
+					$error .= $control->required_check();
 					// do validation for constituent ID field that doesn't require validation in form context since not user supplied
 					if ( 'constituent' == $column_map->$column->entity && 'ID' == $column_map->$column->field ) {
 						$wic_query = 	WIC_DB_Access_Factory::make_a_db_access_object( 'constituent' );
@@ -489,13 +555,16 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			}
 			// this parallels update process for forms, but is distinct since only updating the staging table -- can't use same functions
 			$result = WIC_DB_Access_Upload::record_validation_results( $update_clause_array, $validation_parameters->staging_table, $record->STAGING_TABLE_ID, $errors );
-			if ( ! $result ) {
+			if ( false === $result ) {
 				wp_die( sprintf( __( 'Error recording validation results for record %s', 'wp-issues-crm' ), $record->STAGING_TABLE_ID ) );
 			}
 		}
 		// update the column map with the counts
-		WIC_DB_Access_Upload::update_column_map ( $upload_id, json_encode ( $column_map ) );
-
+		$result = WIC_DB_Access_Upload::update_column_map ( $upload_id, json_encode ( $column_map ) );
+		if ( false === $result ) {
+			wp_die( sprintf( __( 'Error updating validation totals.', 'wp-issues-crm' ), $record->STAGING_TABLE_ID ) );
+		}
+		
 		$table = self::prepare_validation_results ( $column_map );
 		echo  json_encode ( $table );
 		wp_die();	
@@ -555,6 +624,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	*/	
 
 	// reset_match also initializes match_results if not previously matched 
+	// also resets defaults
 	public static function reset_match ( $upload_id, $data  ) {
 		
 		$data = json_decode ( stripslashes( $data ) );
@@ -586,16 +656,20 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		// in case already matched, bust back to validated so that if match fails midstream, completion routines won't accept it
 		WIC_DB_Access_Upload::update_upload_status ( $upload_id, 'validated' );
 
+		// reset default settings -- see notes above
+		WIC_DB_Access_Upload::update_default_decisions ( $upload_id, '' );
+
 		// reset validation indicators on staging table
 		$table = $data->table;
 		$result = WIC_DB_Access_Upload::reset_staging_table_match_indicators( $table );
-		if ( $result ) {
+		if ( false !== $result ) {
 			wp_die( json_encode ( __( 'Staging table match indicators reset.', 'wp-issues-crm' ) ) );
 		} else {
 			// send errors not encoded, so will generate alert on return
 			wp_die ( __( 'Error resetting staging table match indicators', 'wp-issues-crm' ) );		
 		}
 		
+
 	}
 
 	/*
@@ -850,6 +924,12 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	}
 	
 	public static function update_default_decisions ( $id, $data ) {
-		WIC_DB_Access_Upload::update_default_decisions ( $id, $data );
+		$result = WIC_DB_Access_Upload::update_default_decisions ( $id, $data );
+		if ( $result !== false ) {
+			wp_die ( json_encode ( sprintf( __( 'Default decisions recorded.  Result code = %s.', 'wp-issues-crm' ), $result ) ) );
+		} else {
+			// send errors not encoded, so will generate alert on return
+			wp_die ( __( 'Error recording default decisions', 'wp-issues-crm' ) );		
+		}
 	}
 }

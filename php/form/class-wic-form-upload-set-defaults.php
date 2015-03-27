@@ -27,8 +27,8 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
 			// file has been mapped and validated and ready for test matching -- needs to be matched/rematched
 			} elseif ( 'matched' == $upload_status || 'defaulted' == $upload_status ) { 
-				$message = 	sprintf ( __( 'Set defaults for upload of %s', 'wp-issues-crm' ), $data_array['upload_file']->get_value() );
-				$message_level = '';
+				$message = 	sprintf ( __( 'Set defaults for upload of %s. ', 'wp-issues-crm' ), $data_array['upload_file']->get_value() );
+				$message_level = 'guidance';
 				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
 
 				// show field test button (not a submit -- will drive AJAX)
@@ -44,6 +44,13 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 				);	
 				$button = $this->create_wic_form_button ( $button_args_main );
 				echo $button;
+				/*
+				*
+				* here show message on results of testing -- may include warning; explanation, for example that issue trumps title
+				*
+				*
+				*
+				*/
 				
 				// invoke parent form generation logic to generate controls	
 				$group_array = $this->generate_group_content_for_entity( $data_array );
@@ -63,8 +70,8 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 						'</div>';					// wic-upload-default-form-body
 			echo '<div class = "horbar-clear-fix"></div>';
 	  		// file has already been completed
-			} elseif ( 'completed' == $upload_status) {
-				$message =  sprintf ( __( 'Records previouly matched for %s. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() )  . $message;
+			} elseif ( 'completed' == $upload_status) { // needs work here
+						$message =  sprintf ( __( 'Records previouly matched for %s. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() )  . $message;
 				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
 				
 				// show button as disabled				
