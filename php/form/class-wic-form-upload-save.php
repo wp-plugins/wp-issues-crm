@@ -74,7 +74,7 @@ class WIC_Form_Upload_Save extends WIC_Form_Upload_Update  {
 		$legend = '<p>' . __( 'The system settings below can be adjusted with the assistance of your hosting provider.  To upload 
 				successfully, file_uploads must be "on" and size parameters must exceed your file size.
 				Input time relates to your connection speed.  Execution time relates to the work done in storing
-				the uploaded file to the database ( in preliminary form on upload or in final form after mapping ). WP Issues
+				the uploaded file to a temporary staging table within your database. WP Issues
 				CRM is able to alter max_execution_time dynamically in many installations. Generally, you should not have 
 				problems with your memory_limit while uploading files with WP Issues CRM. Your system settings are shown below:', 
 				'wp-issues-crm' ) . '</p>' .

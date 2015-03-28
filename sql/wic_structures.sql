@@ -208,6 +208,7 @@ CREATE TABLE wp_wic_upload (
   serialized_column_map blob NOT NULL,
   serialized_match_results blob NOT NULL,
   serialized_default_decisions blob NOT NULL,
+  serialized_final_results blob NOT NULL,
   last_updated_time datetime NOT NULL,
   last_updated_by bigint(20) NOT NULL,
   PRIMARY KEY (ID),

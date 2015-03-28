@@ -1050,7 +1050,7 @@ ul#upload-tips {
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
-	background: #efe;
+	background: #f4fff4;
 	border: 1px solid #3f3;
 	border-radius: 3px;
 	float: left;  
@@ -1062,18 +1062,18 @@ ul#upload-tips {
 
 
 .wic-droppable.wic-droppable-highlight.wic-droppable-hover {
-	background: #cfc;
+	background: #dfd;
 	border: 2px solid #0f0;
 	font-weight: bold;
 }
 
 .wic-droppable.wic-droppable-highlight {
-	background: #dfd;
+	background: #efe;
 	border: 1px solid #3f3;
 
 }
 .wic-droppable.wic-state-dropped {
-	background: #fee;
+	background: #fff4f4;
 	border: 1px solid #999;
 	font-weight: bold;
 }
@@ -1142,7 +1142,7 @@ ul.wic-sortable {
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
-	background: #efe;
+	background: #f4fff4;
 	border: 1px solid #3f3;
 	border-radius: 3px;
 	float: left;  
@@ -1158,7 +1158,7 @@ ul.wic-sortable {
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
-	background: #fee;
+	background: #fff4f4;
 	border: 1px solid #f33;
 	border-radius: 3px;
 	float: left;  
@@ -1218,6 +1218,27 @@ ul.upload-status-summary {
 
 #new-issue-progress-bar {
   height: 10px;
+}
+
+#upload-settings-need-attention {
+	background: #fff4f4;
+	border-left: 4px solid red;
+	margin: 10px 6% 0 0;
+	padding: 10px 20px;
+	list-style: square;
+	list-style-position: inside;
+}
+#upload-settings-good-to-go {
+	background: #f4fff4;
+	border-left: 4px solid #7AD03A;
+	margin: 10px 6% 0 0;
+	padding: 10px 20px;
+	list-style: none;
+	list-style-position: inside;
+}
+
+#upload-game-plan {
+	margin: 0 7.1111%;
 }
 /* list element widths */
 .pl-constituent-first_name{ width:14%;}

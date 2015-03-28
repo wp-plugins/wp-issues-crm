@@ -104,5 +104,23 @@ class WIC_Form_Upload_Match extends WIC_Form_Upload_Validate  {
 		<?php 
 		
 	}
+
+	protected function get_the_legends( $sql = '' ) {
+		// report configuration settings related to upload capacity;
+		$legend = '<p>' . __( 'WP Issues CRM attempts matches between the upload file and your existing database records in multiple passes 
+									in the order that you prioritize the match criteria. You should usually proceed from most specific to least specific,
+									but what is most specific ( i.e., most likely to be unique ) may vary depending on your data. You can test alternative match sequences.
+									The match options shown include only those for which you have fields mapped.', 'wp-issues-crm' ) . '</p><p>' . 
+								__( 'If records are unmatched after all passes but possess the matching fields you prioritized for at least one match pass, 
+									they will be flagged as possible additions as new constituents. They will be grouped with records containing the 
+									same values for the matching fields in the first pass in which they were unmatched.  Constituents will not be added unless at least
+									one of the input records so grouped contains a core identifier -- last name, first name or email -- making the new constituent viable.',
+									'wp-issues-crm' ) .
+					'</p>';
+			
+		$legend = '<div class = "wic-upload-legend">' . $legend . '</div>';		
+		return $legend;
+		
+	}
 	 	
 }

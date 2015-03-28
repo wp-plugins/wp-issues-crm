@@ -24,15 +24,21 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	protected function assemble_save_update_array ( &$doa ) {
 		
 		$save_update_array = parent::assemble_save_update_array ( $doa );
+				
 		
-		// prepare upload parameters as straight key value_array
-		foreach ( $doa as $field => $control ) {
-			if ( $control->is_transient() ) {
-				$update_parameter_array[$field] = $control->get_value();
-			}
+		// prepare to create upload parameters as straight key value_array
+		$update_parameter_array = array();		
+		
+		// access list of save_options fields
+		global $wic_db_dictionary;
+		$group_fields = $wic_db_dictionary->get_fields_for_group ( 'upload', 'save_options' );
+		
+		// extract values of the save options from the data object array
+		foreach ( $group_fields as $order => $field_slug ) {
+			$update_parameter_array[$field_slug] = $doa[$field_slug]->get_value();
 		}			
 
-		// add a last entry to the save_update_array which will need to be popped off in db_save and db_update
+		// add the update_parameter_array as a last entry to the save_update_array which will need to be popped off in db_save and db_update
 		$save_update_array[] = $update_parameter_array;			
 			
 		return ( $save_update_array );
@@ -539,80 +545,120 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 
 	}
 	
+	/*
+	*	If staging table has at least one "group required" identifier -- last_name, first_name or email -- can create new constituents.
+	*	In this step, create an intermediate table grouping staging table by the identifiers in the match process --
+	*			group by the first match stage for which record had all available identifiers; include only those not matched in any pass
+	*	This "_unmatched" table includes constituent stubs with all fields on the constituent entity and pointers back to staging table records.
+	*	Filter out any records which lack all of the group identifiers -- all constituent stubs on this table can be added
+	*	Complete report of unmatched counts, omitting from the count (as from the _unmatched table) those records that are not viable (lacking fn/ln/email)
+	*  
+	*/	
    public static function create_unique_unmatched_table ( $upload_id, $staging_table ) {		
 		// create parallel lists of constituent fields and related fields in the upload -- working directly from column map
 		$column_map = json_decode ( WIC_DB_Access_Upload::get_column_map ( $upload_id ) );
 		$constituent_field_array = array();
-		$staging_table_column_array = array();		
+		$staging_table_column_array = array();	
+		$group_required_identifiers_array = array();	
 		foreach ( $column_map as $column => $entity_field_object ) {
 			if ( '' < $entity_field_object ) { // unmapped columns have an empty entity_field_object
 				if ( 'constituent' == $entity_field_object->entity  ) {
 					$constituent_field_array[] = $entity_field_object->field;
 					$staging_table_column_array[] = $column;	
 				}
+				// create secondary array to construct having clause to assure at least one identifier present
+				if ( 	( 'constituent' == $entity_field_object->entity && 'first_name' 		== $entity_field_object->field ) || 
+						( 'constituent' == $entity_field_object->entity && 'last_name' 		== $entity_field_object->field ) ||
+						( 'email' == $entity_field_object->entity 		&& 'email_address' 	== $entity_field_object->field ) ) {
+					$group_required_identifiers_array[] = $column;
+					// group required in sense that none is individually required, but must have at least one				
+					// does not exactly match to dictionary which supports email as multivalued -- durable enough idea to hard code
+				}
 			}		
 		}		
-		
-		$unmatched_staging_table = $staging_table . '_unmatched'; 
 
-		global $wpdb;
-		// create a table with the the available constituent columns
-		$sql = "CREATE TABLE $unmatched_staging_table ( "; 
-		foreach ( $constituent_field_array as $field ) {
-			$sql .= ' ' . $field . ' varchar(65535) NOT NULL, ';
-		}
-
-		$sql .=  'FIRST_NOT_FOUND_MATCH_PASS varchar(50) NOT NULL,
-					INSERTED_CONSTITUENT_ID bigint(20) unsigned NOT NULL,
-					STAGING_TABLE_ID_STRING varchar(65535) NOT NULL,
-					KEY MATCH_PASS (FIRST_NOT_FOUND_MATCH_PASS) ) 
-					ENGINE=MyISAM  DEFAULT CHARSET=utf8;';
-
-		$result = $wpdb->query ( $sql );
-		if ( false === $result ) {
-			return ( false );		
-		}
-
-		// populate that table with unique unfound values		
-		$select_column_list = '';
-		foreach ( $staging_table_column_array as $column ) {
-			$select_column_list .= ' MAX(' . $column . '), ';		
-		}
-		$sql = 	"INSERT $unmatched_staging_table
-					SELECT $select_column_list FIRST_NOT_FOUND_MATCH_PASS, 0, GROUP_CONCAT( STAGING_TABLE_ID )
-					FROM $staging_table 
-					WHERE MATCH_PASS = '' AND FIRST_NOT_FOUND_MATCH_PASS > '' AND VALIDATION_STATUS = 'y'
-					GROUP BY FIRST_NOT_FOUND_MATCH_PASS, NOT_FOUND_VALUES";
-		// MATCH_PASS = '' means never matched.  Might have FIRST_NOT_FOUND_MATCH_PASS = '' if lacked fields for all passes
-		$insert_count = $wpdb->query ( $sql );
-		if ( false === $insert_count ) {
-			return ( false );		
-		} 
-		
-		// calculate unique counts from each match pass
-		$sql = "SELECT FIRST_NOT_FOUND_MATCH_PASS as pass_slug, COUNT(FIRST_NOT_FOUND_MATCH_PASS) AS pass_count
-				FROM $unmatched_staging_table 
-				GROUP BY FIRST_NOT_FOUND_MATCH_PASS";
-		$result_array = $wpdb->get_results ( $sql );
-		if ( false === $result_array ) {
-			return ( false );		
-		} 
-
-
-		// update match result array
+		// get match result array ( has everything but the unmatched filled in at this stage )
 		$match_results = json_decode ( self::get_match_results( $upload_id ) );
 
-		// set all unmatched counters to 0 -- initialized as empty up to this point (next step may not hit them all)
+		// set all unmatched counters to 0 -- initialized as '? up to this point (next step may not hit them all)
 		foreach ( $match_results as $rule ) {
 			$rule->unmatched_unique_values_of_components = 0;			
 		}	
 
-		if ( 0 != count ( $result_array ) ) { 
-			foreach ( $result_array as $result ) { 
-				$match_results->{$result->pass_slug}->unmatched_unique_values_of_components = $result->pass_count;		
+		// proceed to prepare constituent stubs for addition and count additions,
+		// but only if have mapped some group required identifiers -- if none, cannot be adding constituents
+		$identifiers_count = count ( $group_required_identifiers_array ); 
+		if ( $identifiers_count > 0 ) {
+			
+			$unmatched_staging_table = $staging_table . '_unmatched'; 
+	
+			global $wpdb;
+			// create a table with the the available constituent columns
+			$sql = "CREATE TABLE $unmatched_staging_table ( "; 
+			foreach ( $constituent_field_array as $field ) {
+				$sql .= ' ' . $field . ' varchar(65535) NOT NULL, ';
 			}
-		}
+	
+			$sql .=  'FIRST_NOT_FOUND_MATCH_PASS varchar(50) NOT NULL,
+						INSERTED_CONSTITUENT_ID bigint(20) unsigned NOT NULL,
+						STAGING_TABLE_ID_STRING varchar(65535) NOT NULL,
+						KEY MATCH_PASS (FIRST_NOT_FOUND_MATCH_PASS) ) 
+						ENGINE=MyISAM  DEFAULT CHARSET=utf8;';
+	
+			$result = $wpdb->query ( $sql );
+			if ( false === $result ) {
+				return ( false );		
+			}
+	
+			// populate that table with unique unfound values
+			
+			// all input columns mapped to properties of constituent entity		
+			$select_column_list = '';  
+			foreach ( $staging_table_column_array as $column ) {
+				$select_column_list .= ' MAX(' . $column . '), ';		
+			}
+			
+			// all available identifiers -- require have at least one to form constituent stub
+			// note that email will not actually be in the constituent stub, but will pick it up later 
+			// since have pointer back to staging record
+			$having_clause = ' HAVING ';  
+			$i = 0;
+			foreach ( $group_required_identifiers_array as $column ) {
+				$i++;
+				$having_clause .= " MAX( $column ) > ''  ";
+				$having_clause .= ( $i < $identifiers_count ) ? 'OR' : ''; 		
+			}
+			
+			$sql = 	"INSERT $unmatched_staging_table
+						SELECT $select_column_list FIRST_NOT_FOUND_MATCH_PASS, 0, GROUP_CONCAT( STAGING_TABLE_ID )
+						FROM $staging_table 
+						WHERE MATCH_PASS = '' AND FIRST_NOT_FOUND_MATCH_PASS > '' AND VALIDATION_STATUS = 'y'
+						GROUP BY FIRST_NOT_FOUND_MATCH_PASS, NOT_FOUND_VALUES
+						$having_clause						
+						";
+			// MATCH_PASS = '' means never matched.  Might have FIRST_NOT_FOUND_MATCH_PASS = '' if lacked fields for all passes
+			$insert_count = $wpdb->query ( $sql );
+			if ( false === $insert_count ) {
+				return ( false );		
+			} 
+			
+			// calculate unique counts from each match pass
+			$sql = "SELECT FIRST_NOT_FOUND_MATCH_PASS as pass_slug, COUNT(FIRST_NOT_FOUND_MATCH_PASS) AS pass_count
+					FROM $unmatched_staging_table 
+					GROUP BY FIRST_NOT_FOUND_MATCH_PASS";
+			$result_array = $wpdb->get_results ( $sql );
+			if ( false === $result_array ) {
+				return ( false );		
+			} 
+	
+			if ( 0 != count ( $result_array ) ) { 
+				foreach ( $result_array as $result ) { 
+					$match_results->{$result->pass_slug}->unmatched_unique_values_of_components = $result->pass_count;		
+				}
+			}
+		} // close branch of having at least one group required identifier		
 		
+		// this may reflect all 0's in unmatched unique if did not find group identifiers 	
 		self::update_match_results ( $upload_id, json_encode ( $match_results ) );
 		
 		return ( $match_results );
@@ -628,7 +674,12 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		return ( $result );
 	}	
 
-	public static function get_unmatched_issues ( $staging_table, $issue_title_column ) {
+
+	// for issue titles that don't exist on wp_post, create a table for later insertion
+	// makes no sense to default tags or cats -- in normal usage, these should vary across records 
+	// also, they are unlikely to be included in input sources -- if they are, user knows how to do
+	// preprocessing, so can probably do a different way
+	public static function get_unmatched_issues ( $staging_table, $issue_title_column, $issue_content_column ) {
 		
 		global $wpdb;
 		// new staging table name				
@@ -640,16 +691,26 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		$result = $wpdb->query( $sql );		
 			
 		$sql = "CREATE TABLE $new_issue_table (
+			new_issue_ID bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 			new_issue_title varchar(255) NOT NULL,
+			new_issue_content varchar(65535) NOT NULL,
 			record_count bigint(20) unsigned NOT NULL,
 			inserted_post_id bigint(20) unsigned NOT NULL,
+			PRIMARY KEY (new_issue_ID),			
 			KEY new_issue_title (new_issue_title)
 			) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ";
-		$result = $wpdb->query( $sql );				
+		$result = $wpdb->query( $sql );
 		
-		$sql = 	"INSERT INTO $new_issue_table ( new_issue_title, record_count )
+		$new_issue_content_source = ( $issue_content_column > '' ) ? $issue_content_column : "''";				
+		
+		$sql = 	"INSERT INTO $new_issue_table ( new_issue_title, new_issue_content, record_count )
 					SELECT new_issue_title, record_count 
-					FROM ( SELECT $issue_title_column as new_issue_title, count(STAGING_TABLE_ID) as record_count FROM $staging_table GROUP BY $issue_title_column ) as issues
+					FROM ( 
+						SELECT 
+							$issue_title_column as new_issue_title,
+							$new_issue_content_source as new_issue_content, 
+							count(STAGING_TABLE_ID) as record_count 
+						FROM $staging_table GROUP BY $issue_title_column ) as issues
 					LEFT JOIN $post_table ON new_issue_title = post_title
 						AND ( post_status = 'publish' or post_status = 'private' ) and post_type = 'post'
 					WHERE post_title is null
@@ -662,6 +723,143 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		return ($results);
 	
 	}
+	
+	/*	
+	*
+	* function to support final completion
+	*
+	*/
+	
+	// quick look up
+	public static function get_final_results ( $upload_id ) {
+		global $wpdb;
+		$table = $wpdb->prefix . 'wic_upload';
+		$sql = "SELECT serialized_final_results FROM $table where ID = $upload_id";
+		$result = $wpdb->get_results( $sql );
+		return ( $result[0]->serialized_final_results );
+	}
+		
+	// quick update
+	public static function update_final_results ( $upload_id, $serialized_final_results ) {
+		global $wpdb;
+		$table = $wpdb->prefix . 'wic_upload';
+		$sql = "UPDATE $table set serialized_final_results = '$serialized_final_results' WHERE ID = $upload_id";
+		$result = $wpdb->query( $sql );
+		return ( $result );
+	}	
+	
+	public static function save_new_issues ( $upload_id, $staging_table, $offset, $chunk_size ) {
+		global $wpdb;
+		$table = $staging_table . '_new_issues';
+		
+		$final_results = json_decode ( self::get_final_results ( $upload_id ) );
+		
+		// is there a new issues table at all -- not created if no titles mapped
+		$sql = "SHOW TABLES LIKE '$table'";
+		$result = $wpdb->get_results ( $sql );
+
+		$new_issues_saved = 0;
+		// if table not found, $new_issues_saved stays 0		
+		if ( 0 < count ( $result ) ) {
+			$sql = "SELECT * FROM $table";
+			$new_issues = $wbdb->get_results( $sql );
+
+			$wic_query = WIC_DB_Access_Factory::make_a_db_access_object( 'issue' );
+			$save_array_template = array (
+				array( 'key' 	=> 'ID', 
+				 'value'	=> '', 
+				 'wp_query_parameter' => 'p', 
+				), 
+				array( 'key' 	=> 'post_title', 
+				 'value'	=> '', 
+				 'wp_query_parameter' => 'post_title', 
+				),
+				array( 'key' 	=> 'post_content', 
+				 'value'	=> '', 
+				 'wp_query_parameter' => 'post_content', 
+				), 
+			); 
+			foreach ( $new_issues as $new_issue ) {
+				$save_array_template[1]['value'] = $new_issue->new_issue_title;
+				$save_array_template[2]['value'] = $new_issue->new_issue_content;
+
+				$wic_query->db_save ( $save_array_template );
+				$id_to_save = $wic_query->insert_id;
+				$new_issue_id = $new_issue->new_issue_id;				
+				
+				$sql = "UPDATE $table SET inserted_post_id = $id_to_save WHERE new_issue_ID = $new_issue_id";
+				$wpdb->query ( $sql );
+				$new_issues_saved++;
+			}				
+		} 	
+		$final_results->new_issues_saved = $new_issues_saved;		
+		$final_results = json_encode ( $final_results );
+		self::update_final_results( $upload_id, $final_results );
+		return ( $final_results ) ;		
+	}
+	
+	public static function save_new_constituents	( $upload_id, $staging_table, $offset, $chunk_size ) {
+		global $wpdb;
+		global $wic_db_dictionary;
+		$data_object_array = array(); // construct this with only the controls we need
+		
+		$table = $staging_table . '_unmatched';
+		
+		$final_results = json_decode ( self::get_final_results ( $upload_id ) );
+		
+		// is there a new issues table at all -- not created if no titles mapped
+		$sql = "SHOW TABLES LIKE '$table'";
+		$result = $wpdb->get_results ( $sql );
+
+		$new_constituents_saved = 0;
+		$input_records_associated_with_new_constituents_saved = 0;
+		if ( 0 < count ( $result ) ) {
+			$sql = "SELECT * FROM $table LIMIT $offset, $chunk_size";
+			$new_constituents = $wbdb->get_results( $sql );
+
+			// get array of columns of table, excluding an 'ID' column which we will be disregarding
+			$column_map = json_decode ( WIC_DB_Access_Upload::get_column_map ( $upload_id ) );
+			$constituent_field_array = array();
+			foreach ( $column_map as $column => $entity_field_object ) {
+				if ( '' < $entity_field_object ) { // unmapped columns have an empty entity_field_object
+					if ( 'constituent' == $entity_field_object->entity && 'ID' != $entity_field_object->field ) {
+						$field_rule = $wic_db_dictionary->get_field_rules ( $entity, $field_slug );					
+						$data_object_array[$field_rule->field_slug] = WIC_Control_Factory::make_a_control( $field->field_type );					
+					}
+				}		
+			}	
+			
+			$wic_query = WIC_DB_Access_Factory::make_a_db_access_object( 'constituent' );
+			
+			foreach ( $new_constituents as $new_constituent ) {
+				$save_update_array = array();			
+				foreach ( $data_object_array as $field => $control ) {
+					$control->set_value( $new_constituent->$field );
+				}
+				$wic_access_object->save_update( $data_object_array );
+				$new_constituents_saved++;
+				$id_to_save = $wic_query->insert_id;
+						
+				$staging_table_id_array = explode ( STAGING_TABLE_ID_STRING );
+				
+				// note that posting insert ID's back to the staging table, not to the unmatched table
+				foreach ( $staging_table_id_array as $staging_table_id ) {
+					$sql = "UPDATE $staging_table SET INSERTED_CONSTITUENT_ID = $id_to_save WHERE STAGING_TABLE_ID = $staging_table_id";
+					$input_records_associated_with_new_constituents_saved++;
+				}	 
+			}
+		}
+		$final_results->new_constituents_saved = $new_constituents_saved;		
+		$final_results->input_records_associated_with_new_constituents_saved = $input_records_associated_with_new_constituents_saved;
+		$final_results = json_encode ( $final_results );
+		self::update_final_results( $upload_id, $final_results );
+		return ( $final_results ) ;		
+	}
+	
+	public static function update_constituents	( $staging_table, $offset, $chunk_size ) {
+			
+	}	
+	
 }
 
 

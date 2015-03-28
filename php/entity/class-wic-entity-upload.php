@@ -134,8 +134,6 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		return ( $output ); 
 	
 	}
-
-
 	
 	protected function list_uploads () {
 		// table entry in the access factory will make this a standard WIC DB object
@@ -199,8 +197,8 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	}
 	
 	protected function complete ( $args ) {
-		echo self::format_tab_titles( $_GET['upload_id'] );
-		echo '<h3>here goes the complete stuff</h3>';	
+		$id = $args['id_requested']; 
+		$this->id_search_generic ( $id, 'WIC_Form_Upload_Complete', '' , false, false );
 	}
 			
 	
@@ -874,7 +872,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			'<th class = "wic-statistic">' . __( 'Matched unique', 'wp-issues-crm' ) . '</th>' .
 			'<th class = "wic-statistic">' . __( 'Not found', 'wp-issues-crm' ) . '</th>' .
 			'<th class = "wic-statistic">' . __( 'Not unique', 'wp-issues-crm' ) . '</th>' .
-			'<th class = "wic-statistic">' . __( 'Unique values', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Viable unique values', 'wp-issues-crm' ) . '</th>' .
 		'</tr>';
 
 		$total_matched = 0;
@@ -917,7 +915,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	}	
 
   /*
-  * function supporting default definitions
+  * functions supporting default definitions
   */
    // pass through from original entity
 	public static function get_issue_options( $value ) {
@@ -936,7 +934,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	
 	public static function get_unmatched_issue_table ( $id, $data ) {
 		$data = json_decode( stripslashes ( $data ) );
-		$results = WIC_DB_Access_Upload::get_unmatched_issues( $data->staging_table, $data->issue_title_column );
+		$results = WIC_DB_Access_Upload::get_unmatched_issues( $data->staging_table, $data->issue_title_column, $data->issue_content_column );
 			$table = '<table id="wp-issues-crm-stats">' .
 			'<tr>' .
 				'<th class = "wic-statistic-text">' . __( 'Input file issue titles -- possible new issues', 'wp-issues-crm' ) . '</th>' .
@@ -952,4 +950,36 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		wp_die ( json_encode ( $table ) );
 					
 	}
+	
+	/*
+  *
+  * functions supporting final upload completion
+  *
+  */	
+	public static function complete_upload ( $upload_id, $data ){
+		/* 
+		*  data object properties include
+		*  phase -- what upload function to call
+		*  staging_table
+		*  offset		
+		*  chunk_size
+		*/
+		$data = json_decode ( stripslashes ( $data ) );
+		$method_to_call = 'complete_upload_' . $data->phase; 	
+		// call underlying function for phase
+		$result = WIC_DB_Access_Upload::$method_to_call( $upload_id, $data->staging_table, $data->offset, $data->chunk_size );
+
+		// report results or report error
+		if ( $result !== false ) {		
+			wp_die ( json_encode ( $result ) );
+		} else {
+			wp_die ( sprintf ( __('Error in upload completion -- phase %s.' , 'wp-issues-crm' ), $data->phase ) );		
+		}
+	}
+
+
+
+
+	
+	
 }

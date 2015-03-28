@@ -25,18 +25,18 @@
 		// getting all form elements holding non-hidden values
 		// note that other elements may become hidden as a result of logic, but array will remain constant
 		controlsArray =  jQuery ( ":input" ).not( ":button, :hidden" );
-		saveHeaderMessage = jQuery ( "#post-form-message-box" ).text();
+		saveHeaderMessage = jQuery ( "#post-form-message-base" ).text();	
 	
 		// populate form with saved values or initialize
 		populateForm();	
 
 		// hide controls that don't make a difference or are misleading	
 		decideWhatToShow();	
-	
+		
 		// listen to save all updates to default options
 		controlsArray.change ( function() {
 			recordDefaultDecisions();
-			decideWhatToShow()		
+			decideWhatToShow();
 		});	
 		
 		// add zip code validation for default field
@@ -53,7 +53,7 @@
       });
 	});
 
-	// populate displayed  orm values from hidden field;
+	// populate displayed  form values from hidden field;
 	function populateForm() {
 		// if user has already set defaults . . . 
 		if ( ! jQuery.isEmptyObject ( defaultDecisions ) ) { 
@@ -109,28 +109,56 @@
 			jQuery ( "#protect_identity" ).prop ( "disabled", true );		
 		}		
 		
+		// drop prior set of messages		
+		// message box will always be red or green -- error or good news
+		jQuery( "#upload-settings-need-attention" ).remove();
+		jQuery( "#upload-settings-good-to-go" ).remove();
+		var commentsArray = [];
+		var errorsArray = [];
+		
+		// if both matched and unmatched are unchecked, nothing will be uploaded
+		if ( false === jQuery ( "#update_matched" ).prop ( "checked" ) && false === jQuery ( "#add_unmatched" ).prop ( "checked" ) ) {
+			errorsArray.push ( 'You have specified that no records will be updated or added -- nothing to upload.')		
+		}
+
 		// hide defaults for fields that have already been mapped		
 		// hide phone or email default type if phone or email not supplied.
 		// show logic unnecessary because nothing will cause them to show within the form
-		var phoneMapped = false;
-		var emailMapped = false;
-		var issueMapped = false;
-		var titleMapped = false;
+		// generate messages if field values needed		
+		var addressMapped = false;
+		var phoneMapped 	= false;
+		var emailMapped 	= false;
+		var issueMapped 	= false;
+		var titleMapped 	= false;
+		var activityMapped = false;
+		var issueMapped	= false;
 		var issueTitleColumn = '';
+		var issueContentColumn = '';
 		var str = '';
 		var hidegroup = ''; 
 		for ( var inputColumn in columnMap  ) {
+			// don't show defaults for fields that have already been mapped
 			str = columnMap[inputColumn].field;
 			if ( undefined != str ) { 
 				hideGroup =  '#wic-control-' + str.replace ( '-', '_' ); 
 				jQuery( hideGroup ).hide();
-			}	 
-			if ( 'email_address' == columnMap[inputColumn].field ) {
-				emailMapped = true;			
 			}
+			// check what fields are completed	
+			if ( 'address' == columnMap[inputColumn].entity ) {
+				addressMapped = true; // any address field			
+			} 
 			if ( 'phone_number' == columnMap[inputColumn].field ) {
 				phoneMapped = true;			
 			}
+			if ( 'email_address' == columnMap[inputColumn].field ) {
+				emailMapped = true;			
+			}
+			if ( 'activity' == columnMap[inputColumn].entity ) {
+				activityMapped = true; // any activity	field 		
+			} 
+			if ( 'issue' == columnMap[inputColumn].entity ) {
+				issueMapped = true; // any issue field 		
+			} 
 			if ( 'issue' == columnMap[inputColumn].field ) {
 				issueMapped = true;			
 			}
@@ -138,13 +166,64 @@
 				titleMapped = true;
 				issueTitleColumn = inputColumn;			
 			}
+			if ( 'post_content' == columnMap[inputColumn].field ) {
+				issueContentColumn = inputColumn;			
+			}
 		}
+
+		// addresses can be added entirely with defaults so we don't hide the address_type field
+		// just enforcing the required rules for address if some elements supplied either by mapping or default
+		if ( 	addressMapped 							|| // street address or any of the defaultable values could be mapped
+				jQuery ( "#address_type" ).val() > '' || 
+				jQuery ( "#city" ).val() > ''		||
+				jQuery ( "#state" ).val() > '' 	||	
+				jQuery ( "#zip" ).val() > '' 		
+			) { 
+			// error if address type blank and not hidden as previously mapped
+			if ( '' == jQuery( "#address_type" ).val() && jQuery( "#address_type" ).is(':visible') ) {
+				errorsArray.push ( 'Set an address type to upload address data.' )		
+			}	
+			// error if address city blank and not hidden as previously mapped
+			if ( '' == jQuery( "#city" ).val() && jQuery( "#city" ).is(':visible') ) {
+				errorsArray.push ( 'Set a city to upload address data.' )		
+			}
+		}
+		// if phone number number not mapped, hide phone type default
 		if ( ! phoneMapped ) {
-			jQuery ( "#wic-control-phone-type" ).hide();			
+			jQuery ( "#wic-control-phone-type" ).hide();		
+		// if phone number mapped, error if phone_type blank ( and not hidden previously as mapped )	
+		} else if ( '' == jQuery( "#phone_type" ).val() && jQuery( "#phone_type" ).is(':visible') ) {
+			errorsArray.push ( 'Set a phone type to upload phone numbers.' )		
 		}
+
+		// email . . . same as phone
 		if ( ! emailMapped ) {
 			jQuery ( "#wic-control-email-type" ).hide();			
+		} else if ( '' == jQuery( "#email_type" ).val() && jQuery( "#email_type" ).is(':visible') ) {
+			errorsArray.push ( 'Set an email type to upload email addresses.' )		
 		}
+		
+		if ( 	addressMapped 							|| // any activity field
+				issueMapped								|| // any issue field, since forces an activity
+				jQuery ( "#activity_date" ).val() > '' || 
+				jQuery ( "#activity_type" ).val() > ''	||
+				jQuery ( "#pro_con" ).val() > '' ||	
+				jQuery ( "#issue" ).val() > '' 	||		
+				jQuery ( "#post_title" ).val() > ''
+			) { 
+			if ( '' == jQuery( "#activity_date" ).val() && jQuery( "#activity_date" ).is(':visible') ) {
+				errorsArray.push ( 'Set an activity date to upload activity data.' )		
+			}	
+			if ( '' == jQuery( "#activity_type" ).val() && jQuery( "#activity_type" ).is(':visible') ) {
+				errorsArray.push ( 'Set an activity type to upload activity data.' )		
+			}	
+			// can supply either issue selection or offer a non-blank title
+			if (  '' == jQuery( "#post_title" ).val() && jQuery( "#post_title" ).is(':visible') &&
+				 	'' == jQuery( "#issue" ).val() && jQuery( "#issue" ).is(':visible') ) {
+				errorsArray.push ( 'Choose or title an issue to upload activity data.' )		
+			}
+		}				
+		
 		
 		// show/hide title elements in constituent default field group based on whether all group inputs are hidden
 		if ( 0 == jQuery( "#wic-field-group-constituent_default" ).find( ":input" ).not( ":button, :hidden" ).length ) {
@@ -177,11 +256,31 @@
 				titleMapped 
 				) {
 			jQuery ( "#wic-field-group-new_issue_creation" ).show();
-			addIssueTable( issueTitleColumn );		
+			addIssueTable( issueTitleColumn, issueContentColumn );		
 		} else { 
 			jQuery ( "#wic-field-group-new_issue_creation" ).hide();
 		}
+
+		// manage message box
+		if ( errorsArray.length > 0 ) { 
+			jQuery( "#post-form-message-box" ).append( '<ul id="upload-settings-need-attention"></ul>' );
+			for ( var i in errorsArray ) {
+				jQuery( "#upload-settings-need-attention" ).append( '<li>' +  errorsArray[i]  + '</li>' );
+			}
+			// if errors, bust back to status matched as if haven't been to default setting
+			wpIssuesCRMAjaxPost( 'upload', 'update_upload_status',  uploadID, 'matched',  function( response ) {});		
+		} else {
+			commentsArray.push('Good to go!');
+			jQuery( "#post-form-message-box" ).append( '<ul id="upload-settings-good-to-go"></ul>' );
+			for ( var i in commentsArray ) {
+				jQuery( "#upload-settings-good-to-go" ).append( '<li>' +  commentsArray[i]  + '</li>' );
+			}
+			// if no errors good to go to next stage 			
+			wpIssuesCRMAjaxPost( 'upload', 'update_upload_status',  uploadID, 'defaulted',  function( response ) {});
+		}		
+		
 	}	
+
 	
 	function recordDefaultDecisions() {
 
@@ -197,17 +296,17 @@
 			defaultDecisions[elementID] = elementValue;
 		});
 
-		jQuery ( "#post-form-message-box" ).text( saveHeaderMessage + " Saving . . . ")
+		jQuery ( "#post-form-message-base" ).text( saveHeaderMessage + " Saving . . . ")
 
 		// update column map in browser
 
 		// send column map on server
 		wpIssuesCRMAjaxPost( 'upload', 'update_default_decisions',  jQuery('#ID').val(), defaultDecisions, function( response ) {
-			jQuery ( "#post-form-message-box" ).text( saveHeaderMessage + " Saved.")
+			jQuery ( "#post-form-message-base" ).text( saveHeaderMessage + " Saved.")
 		});
 	}		
 
-	function addIssueTable( issueTitleColumn ) { 
+	function addIssueTable( issueTitleColumn, issueContentColumn ) { 
 		// if exist issue table return ( don't recreate on form refersh)
 		if ( 0 < jQuery ( "#new-issue-table" ).length ) {
 			return;
@@ -224,7 +323,8 @@
 		// set up AJAX call and go	
 		var data = {
 			staging_table : uploadParameters.staging_table_name,
-			issue_title_column : issueTitleColumn 		
+			issue_title_column : issueTitleColumn,
+			issue_content_column : issueContentColumn  		
 		}
 		wpIssuesCRMAjaxPost( 'upload', 'get_unmatched_issue_table',  jQuery('#ID').val(), data, function( response ) {
 			jQuery ( "#new-issue-table" ).html(response); // show table results

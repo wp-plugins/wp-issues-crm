@@ -21,6 +21,24 @@
 				array( 'constituent', 'ID', 0 ) // table, field, number of positions to match, 0 = all		
 			),
 		),
+		'lnfndobaddr' => array(
+			'label'			=>	'Last Name, First Name, Date of Birth, Street Address',
+			'link_fields'	=> array(
+				array( 'constituent', 'last_name', 0 ),
+				array( 'constituent', 'first_name', 0 ),
+				array( 'constituent', 'date_of_birth', 0 ),					
+				array( 'address', 'address_line', 0 ),			
+			),
+		),
+		'lnfndobcity' => array(
+			'label'			=>	'Last Name, First Name, Date of Birth, City/Town',
+			'link_fields'	=> array(
+				array( 'constituent', 'last_name', 0 ),
+				array( 'constituent', 'first_name', 0 ),
+				array( 'constituent', 'date_of_birth', 0 ),					
+				array( 'address', 'city', 0 ),			
+			),
+		),
 		'lnfndob' => array(
 			'label'			=>	'Last Name, First Name, Date of Birth',
 			'link_fields'	=> array(

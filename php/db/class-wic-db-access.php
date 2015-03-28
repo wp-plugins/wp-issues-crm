@@ -301,7 +301,7 @@ abstract class WIC_DB_Access {
 		if ( count ( $save_update_array ) > 0 ) {
 			if ( $doa['ID']->get_value() > 0 ) {
 				$this->db_update ( $save_update_array );		
-			} else {
+			} else { var_dump ( $save_update_array );
 				$this->db_save ( $save_update_array );
 			}
 		}
