@@ -1211,6 +1211,14 @@ ul.upload-status-summary {
 	height: auto;
 	overflow-y: auto;
 }
+
+#new-issue-progress-bar-legend {
+  font-size: 0.8em;
+}
+
+#new-issue-progress-bar {
+  height: 10px;
+}
 /* list element widths */
 .pl-constituent-first_name{ width:14%;}
 .pl-constituent-middle_name{ width:14%;}

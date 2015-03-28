@@ -53,6 +53,30 @@ class WIC_DB_Setup {
 			add_option( 'wp_issues_crm_db_version', $wp_issues_crm_db_version );
 		}
 		
+		/*
+		*
+		* if not present add a full text index to post_title on wp_post table
+		*
+		*/
+		$table = $wpdb->posts;		
+		$sql = "SHOW INDEXES IN $table";
+		$result = $wpdb->get_results ( $sql );
+		$ok_index = false;
+		// look for a full text index with post_title in first position
+		foreach ( $result as $index_component ) {
+			if ( 	'post_title' 	== $index_component->Column_name &&
+					'FULLTEXT' 		== $index_component->Index_type &&
+					1 					== $index_component->Seq_in_index	
+				) {
+					$ok_index = true;
+					break;				
+				}		
+		}
+		// if not found, create desired index
+		if ( ! $ok_index )  {
+			$sql = "CREATE FULLTEXT INDEX wp_issues_crm_post_title ON $table ( post_title )";		
+			$wpdb->query ( $sql );
+		}
 	}
 	
 	public static function update_db_check () { 

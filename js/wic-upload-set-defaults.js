@@ -30,7 +30,7 @@
 		// populate form with saved values or initialize
 		populateForm();	
 
-		// hide controls that don't make a difference and replace with messages	
+		// hide controls that don't make a difference or are misleading	
 		decideWhatToShow();	
 	
 		// listen to save all updates to default options
@@ -38,12 +38,10 @@
 			recordDefaultDecisions();
 			decideWhatToShow()		
 		});	
-	
 		
-		$( "#wic-upload-progress-bar" ).progressbar({
-			value: 0
-		});
-
+		// add zip code validation for default field
+		
+		//
 		$("#settings-test-button").click(function(){
 			jQuery ( "#post-form-message-box" ).removeClass ( "wic-form-errors-found" );	
 			// jQuery( "#settings-test-button" ).prop( "disabled", true );
@@ -73,7 +71,6 @@
 			jQuery ( "#update_matched" ).prop ( "checked", true );
 			jQuery ( "#add_unmatched" ).prop ( "checked", true );
 			jQuery ( "#protect_identity" ).prop ( "checked", true );
-			jQuery ( "#activity_date" ).val ( "2011-01-01" );
 		}
 	}
 	
@@ -115,9 +112,11 @@
 		// hide defaults for fields that have already been mapped		
 		// hide phone or email default type if phone or email not supplied.
 		// show logic unnecessary because nothing will cause them to show within the form
-		var phonePresent = false;
-		var emailPresent = false;
-		var issuePresent = false;
+		var phoneMapped = false;
+		var emailMapped = false;
+		var issueMapped = false;
+		var titleMapped = false;
+		var issueTitleColumn = '';
 		var str = '';
 		var hidegroup = ''; 
 		for ( var inputColumn in columnMap  ) {
@@ -127,23 +126,27 @@
 				jQuery( hideGroup ).hide();
 			}	 
 			if ( 'email_address' == columnMap[inputColumn].field ) {
-				emailPresent = true;			
+				emailMapped = true;			
 			}
 			if ( 'phone_number' == columnMap[inputColumn].field ) {
-				phonePresent = true;			
+				phoneMapped = true;			
 			}
 			if ( 'issue' == columnMap[inputColumn].field ) {
-				phonePresent = true;			
+				issueMapped = true;			
+			}
+			if ( 'post_title' == columnMap[inputColumn].field ) {
+				titleMapped = true;
+				issueTitleColumn = inputColumn;			
 			}
 		}
-		if ( ! phonePresent ) {
+		if ( ! phoneMapped ) {
 			jQuery ( "#wic-control-phone-type" ).hide();			
 		}
-		if ( ! emailPresent ) {
+		if ( ! emailMapped ) {
 			jQuery ( "#wic-control-email-type" ).hide();			
 		}
 		
-		// show/hide title elements in constituent default field group based on whether inputs are hidden
+		// show/hide title elements in constituent default field group based on whether all group inputs are hidden
 		if ( 0 == jQuery( "#wic-field-group-constituent_default" ).find( ":input" ).not( ":button, :hidden" ).length ) {
 			jQuery( "#wic-inner-field-group-constituent_default-toggle-button" ).hide();	
 			jQuery( "#wic-inner-field-group-constituent_default p" ).hide();			
@@ -151,11 +154,32 @@
 			jQuery( "#wic-inner-field-group-constituent_default-toggle-button" ).show();	
 			jQuery( "#wic-inner-field-group-constituent_default p" ).show();			
 		}
+
+		// if issue mapped or defaulted non-blank, hide default title option ( issue will be hidden from loop above )
+		// issue supersedes title whether mapped or defaulted, provided non-blank
+		if ( issueMapped ) {
+			jQuery( "#wic-control-post-title" ).hide()
+		// if issue not mapped, show default title option only when default issue is set to empty
+		} else {
+			if ( '' < jQuery( "#issue" ).val() ) { 
+				jQuery( "#wic-control-post-title" ).hide()
+			// issue not mapped and is empty, so show title, but test to make sure title isn't already mapped
+			} else if ( ! titleMapped ) {
+				jQuery( "#wic-control-post-title" ).show()
+			}
+		}
 		
-		if ( '' < jQuery( "#issue" ).val() ) {
-			jQuery( "#wic-control-post-title" ).hide() 		
-		} else if ( ! issuePresent ) {
-			jQuery( "#wic-control-post-title" ).show()
+		// show the issue creation option under following conditions:
+		// issue default showing and blank (i.e., not controlling), but title also mapped, so title default not showing
+		// in this condition, available title column will be controlling the update -- need to show results (is required in validation)
+		if ( !issueMapped &&
+				'' == jQuery( "#issue" ).val() &&
+				titleMapped 
+				) {
+			jQuery ( "#wic-field-group-new_issue_creation" ).show();
+			addIssueTable( issueTitleColumn );		
+		} else { 
+			jQuery ( "#wic-field-group-new_issue_creation" ).hide();
 		}
 	}	
 	
@@ -183,6 +207,30 @@
 		});
 	}		
 
-
+	function addIssueTable( issueTitleColumn ) { 
+		// if exist issue table return ( don't recreate on form refersh)
+		if ( 0 < jQuery ( "#new-issue-table" ).length ) {
+			return;
+		} 
+		
+		// create div to receive reults
+		jQuery ( "#wic-inner-field-group-new_issue_creation" ).append ( '<div id = "new-issue-progress-bar-legend"> . . . looking up issues . . . </div>' ); 
+		jQuery ( "#wic-inner-field-group-new_issue_creation" ).append ( '<div id = "new-issue-progress-bar"></div>' );			
+		jQuery ( "#wic-inner-field-group-new_issue_creation" ).append ( '<div id = "new-issue-table"></div>' );	
+		jQuery ( "#new-issue-progress-bar" ).progressbar({
+			value: false
+		});
+		 
+		// set up AJAX call and go	
+		var data = {
+			staging_table : uploadParameters.staging_table_name,
+			issue_title_column : issueTitleColumn 		
+		}
+		wpIssuesCRMAjaxPost( 'upload', 'get_unmatched_issue_table',  jQuery('#ID').val(), data, function( response ) {
+			jQuery ( "#new-issue-table" ).html(response); // show table results
+			jQuery ( "#new-issue-progress-bar-legend" ).remove();
+			jQuery ( "#new-issue-progress-bar" ).remove();
+		});
+	}
 
 })(); // end anonymous namespace enclosure

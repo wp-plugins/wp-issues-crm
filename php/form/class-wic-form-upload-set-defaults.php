@@ -112,7 +112,7 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 	// group screen
 	protected function group_screen( $group ) {
 		return (	
-			'summary_results' == $group->group_slug  ||
+			// 'summary_results' == $group->group_slug  ||
 			'constituent_match' == $group->group_slug  ||
 			'constituent_default' == $group->group_slug  ||
 			'activity_default' == $group->group_slug ||

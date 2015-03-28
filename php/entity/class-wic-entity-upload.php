@@ -26,7 +26,7 @@
 *			+ Only allow defaulting of unmapped fields -- if a column can be replaced in part with defaults, replace it entirely
 *		-- set defaults for activities ( in same tab as constituents )
 *			+ Only allow defaulting of unmapped fields -- if a column can be replaced in part with defaults, replace it entirely
-*			+ If issue number is present, it controls; otherwise look to title
+*			+ If issue number is mapped or is defaulted to non-blank, it controls; otherwise look to title
 *		-- possible errors/warnings for defaults
 *			+ errors: a data entity is included (mapped or defaulted), but required information is neither mapped nor defaulted ( e.g., if address, type and city )
 *			+ warning: both issue number and title are present, title will be disregarded 
@@ -45,6 +45,7 @@
 *				* use defaults consistent with these rules where fields unmapped, as if they were the original values
 *			+ for new records, EZ -- add all; use supplied default
 *
+*		
 *	Enforcement of proper staging sequence is as follows:
 *		-- maintain status field for upload	
 *			+ set to staged or mapped in initial db_save() -- mapped if default mappings are available
@@ -931,5 +932,24 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			// send errors not encoded, so will generate alert on return
 			wp_die ( __( 'Error recording default decisions', 'wp-issues-crm' ) );		
 		}
+	}
+	
+	public static function get_unmatched_issue_table ( $id, $data ) {
+		$data = json_decode( stripslashes ( $data ) );
+		$results = WIC_DB_Access_Upload::get_unmatched_issues( $data->staging_table, $data->issue_title_column );
+			$table = '<table id="wp-issues-crm-stats">' .
+			'<tr>' .
+				'<th class = "wic-statistic-text">' . __( 'Input file issue titles -- possible new issues', 'wp-issues-crm' ) . '</th>' .
+				'<th class = "wic-statistic">' . __( 'Records', 'wp-issues-crm' ) . '</th>' .
+			'</tr>';
+		foreach ( $results as $result ) {
+			$table .= '<tr>' .
+				'<td class = "wic-statistic-text">' . $result->new_issue_title . '</td>' .
+				'<td class = "wic-statistic" >' . $result->record_count  . '</td>' .
+			'</tr>'; 
+		}
+		$table .= '</table>';	
+		wp_die ( json_encode ( $table ) );
+					
 	}
 }

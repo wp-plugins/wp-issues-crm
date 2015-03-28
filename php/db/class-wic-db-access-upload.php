@@ -628,7 +628,40 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		return ( $result );
 	}	
 
+	public static function get_unmatched_issues ( $staging_table, $issue_title_column ) {
+		
+		global $wpdb;
+		// new staging table name				
+		$new_issue_table = $staging_table . '_new_issues';
+		// wordpress post table
+		$post_table = $wpdb->posts;
+		// drop table if it already exists (may have been remapped)
+		$sql = "DROP TABLE IF EXISTS $new_issue_table";
+		$result = $wpdb->query( $sql );		
+			
+		$sql = "CREATE TABLE $new_issue_table (
+			new_issue_title varchar(255) NOT NULL,
+			record_count bigint(20) unsigned NOT NULL,
+			inserted_post_id bigint(20) unsigned NOT NULL,
+			KEY new_issue_title (new_issue_title)
+			) ENGINE=MyISAM  DEFAULT CHARSET=utf8 ";
+		$result = $wpdb->query( $sql );				
+		
+		$sql = 	"INSERT INTO $new_issue_table ( new_issue_title, record_count )
+					SELECT new_issue_title, record_count 
+					FROM ( SELECT $issue_title_column as new_issue_title, count(STAGING_TABLE_ID) as record_count FROM $staging_table GROUP BY $issue_title_column ) as issues
+					LEFT JOIN $post_table ON new_issue_title = post_title
+						AND ( post_status = 'publish' or post_status = 'private' ) and post_type = 'post'
+					WHERE post_title is null
+						";
+		$result = $wpdb->query( $sql );	
+		
+		$sql = "SELECT new_issue_title, record_count FROM $new_issue_table ORDER BY new_issue_title";
 	
+		$results = $wpdb->get_results( $sql );
+		return ($results);
+	
+	}
 }
 
 
