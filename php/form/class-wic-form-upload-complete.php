@@ -22,7 +22,7 @@ class WIC_Form_Upload_Complete extends WIC_Form_Upload_Validate  {
 			
 			// file has not been mapped or has been remapped but not validated -- show error message		
 			if ( 'defaulted' != $upload_status ) {			
-				$message = __( 'You must complete all prior steps before you can complete the upload.', 'wp-issues-crm' );
+				$message = __( 'Complete all prior steps before completing upload.', 'wp-issues-crm' );
 				$message_level = 'error';
 				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
 			// file has been mapped and validated and ready for test matching -- needs to be matched/rematched

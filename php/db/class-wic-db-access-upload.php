@@ -111,7 +111,8 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 					'MATCHED_CONSTITUENT_ID bigint(20) unsigned NOT NULL, ' . // constituent id found in marked match pass
 					'MATCH_PASS varchar(50) NOT NULL, ' . 							// populated only if constituent id found; stops later pass attempts to find
 					'FIRST_NOT_FOUND_MATCH_PASS varchar(50) NOT NULL, ' .		// first match pass where values present if not found; may be found in later pass
-					'NOT_FOUND_VALUES varchar(65535) NOT NULL, ' .				// concatenated values from not found match pass  
+					'NOT_FOUND_VALUES varchar(65535) NOT NULL, ' .				// concatenated values from not found match pass
+					'INSERTED_NEW varchar(1) NOT NULL, ' .							// 'y' if inserted new (updated on insert)   
  					'PRIMARY KEY (STAGING_TABLE_ID) ) 
 					ENGINE=MyISAM  DEFAULT CHARSET=utf8;';
 
@@ -599,9 +600,11 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 				$sql .= ' ' . $field . ' varchar(65535) NOT NULL, ';
 			}
 	
-			$sql .=  'FIRST_NOT_FOUND_MATCH_PASS varchar(50) NOT NULL,
+			$sql .=  'STAGING_TABLE_ID bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+						FIRST_NOT_FOUND_MATCH_PASS varchar(50) NOT NULL,
 						INSERTED_CONSTITUENT_ID bigint(20) unsigned NOT NULL,
 						STAGING_TABLE_ID_STRING varchar(65535) NOT NULL,
+						PRIMARY KEY (STAGING_TABLE_ID), 
 						KEY MATCH_PASS (FIRST_NOT_FOUND_MATCH_PASS) ) 
 						ENGINE=MyISAM  DEFAULT CHARSET=utf8;';
 	
@@ -630,7 +633,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			}
 			
 			$sql = 	"INSERT $unmatched_staging_table
-						SELECT $select_column_list FIRST_NOT_FOUND_MATCH_PASS, 0, GROUP_CONCAT( STAGING_TABLE_ID )
+						SELECT $select_column_list NULL, FIRST_NOT_FOUND_MATCH_PASS, 0, GROUP_CONCAT( STAGING_TABLE_ID )
 						FROM $staging_table 
 						WHERE MATCH_PASS = '' AND FIRST_NOT_FOUND_MATCH_PASS > '' AND VALIDATION_STATUS = 'y'
 						GROUP BY FIRST_NOT_FOUND_MATCH_PASS, NOT_FOUND_VALUES
@@ -817,46 +820,175 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			$sql = "SELECT * FROM $table LIMIT $offset, $chunk_size";
 			$new_constituents = $wbdb->get_results( $sql );
 
-			// get array of columns of table, excluding an 'ID' column which we will be disregarding
+			// get array of columns of table mapped to constituent fields -- same array used in previous construction of $table 
 			$column_map = json_decode ( WIC_DB_Access_Upload::get_column_map ( $upload_id ) );
-			$constituent_field_array = array();
 			foreach ( $column_map as $column => $entity_field_object ) {
 				if ( '' < $entity_field_object ) { // unmapped columns have an empty entity_field_object
-					if ( 'constituent' == $entity_field_object->entity && 'ID' != $entity_field_object->field ) {
-						$field_rule = $wic_db_dictionary->get_field_rules ( $entity, $field_slug );					
-						$data_object_array[$field_rule->field_slug] = WIC_Control_Factory::make_a_control( $field->field_type );					
+					if ( 'constituent' == $entity_field_object->entity ) {
+						$field_rule = $wic_db_dictionary->get_field_rules ( 'constituent', $entity_field_object->field );					
+						$data_object_array[$field_rule->field_slug] = WIC_Control_Factory::make_a_control( $field_rule->field_type );	
+						$data_object_array[$field_rule->field_slug]->initialize_default_values(  'constituent', $field_rule->field_slug, '' );				
 					}
 				}		
 			}	
 			
-			$wic_query = WIC_DB_Access_Factory::make_a_db_access_object( 'constituent' );
+			// need ID in the array and also want to be sure to be adding it -- could have bad ID's in the field; set to zero
+			if ( ! isset ( $data_object_array['ID'] ) ) {
+				$field_rule = $wic_db_dictionary->get_field_rules ( 'constituent', 'ID' );					
+				$data_object_array[$field_rule->field_slug] = WIC_Control_Factory::make_a_control( $field_rule->field_type );	
+				$data_object_array[$field_rule->field_slug]->initialize_default_values(  'constituent', $field_rule->field_slug, '' );
+			}
+			$data_object_array['ID']->set_value ( 0 );
+			
+			$wic_access_object = WIC_DB_Access_Factory::make_a_db_access_object( 'constituent' );
 			
 			foreach ( $new_constituents as $new_constituent ) {
-				$save_update_array = array();			
-				foreach ( $data_object_array as $field => $control ) {
-					$control->set_value( $new_constituent->$field );
-				}
-				$wic_access_object->save_update( $data_object_array );
-				$new_constituents_saved++;
-				$id_to_save = $wic_query->insert_id;
-						
-				$staging_table_id_array = explode ( STAGING_TABLE_ID_STRING );
 				
-				// note that posting insert ID's back to the staging table, not to the unmatched table
-				foreach ( $staging_table_id_array as $staging_table_id ) {
-					$sql = "UPDATE $staging_table SET INSERTED_CONSTITUENT_ID = $id_to_save WHERE STAGING_TABLE_ID = $staging_table_id";
-					$input_records_associated_with_new_constituents_saved++;
+				// populate data_object_array with values from staging table (none allowed are multivalue)
+				foreach ( $data_object_array as $field => $control ) {
+					$control->set_value( $new_constituent->$field ); // should loop through all $new_constituent fields
+				}
+				
+				// use database object -- no search_logging or extra time stamps in this:  efficient
+				// also does prepare on all values, so this is as robust as form -- validated, sanitized, now escaped
+				$wic_access_object->save_update( $data_object_array ); 
+				if ( $wic_access_object->outcome ) {
+
+					$new_constituents_saved++;
+					$id_to_save = $wic_access_object->insert_id;
+					// $id_to_update = $new_constituent->STAGING_TABLE_ID;
+					// update the unmatched table for simple reversibility
+					// $sql = "UPDATE $table SET INSERTED_CONSTITUENT_ID = $id_to_save 
+					// 		WHERE STAGING_TABLE_ID =  $id_to_update";
+					// $result = $wpdb->query ( $sql ); 
+					// skip this update -- run backout routine off of primary staging table
+				
+					// now prepare to update the possibly multiple staging table records with the insert ID		
+					$staging_table_id_string =  $new_constituent->STAGING_TABLE_ID_STRING ;
+					$staging_table_id_array  =  explode ( ',', $staging_table_id_string );
+					// posting insert ID's back to the original staging table
+					$sql = "UPDATE $staging_table SET MATCHED_CONSTITUENT_ID = $id_to_save, INSERTED_NEW = 'y' 
+							WHERE STAGING_TABLE_ID IN  ( $staging_table_id_string )";
+					$result = $wpdb->query ( $sql );
+					if ( $result !== false ) {
+						$input_records_associated_with_new_constituents_saved += count ( $staging_table_id_array );
+					}
 				}	 
 			}
 		}
-		$final_results->new_constituents_saved = $new_constituents_saved;		
-		$final_results->input_records_associated_with_new_constituents_saved = $input_records_associated_with_new_constituents_saved;
+		$final_results->new_constituents_saved += $new_constituents_saved;		
+		$final_results->input_records_associated_with_new_constituents_saved += $input_records_associated_with_new_constituents_saved;
 		$final_results = json_encode ( $final_results );
 		self::update_final_results( $upload_id, $final_results );
 		return ( $final_results ) ;		
 	}
 	
-	public static function update_constituents	( $staging_table, $offset, $chunk_size ) {
+	/*
+	*
+	* it all builds to this! -- final update of constituents
+	*
+	*/
+	public static function update_constituents	( $upload_id, $staging_table, $offset, $chunk_size ) {
+
+		global $wpdb;
+		global $wic_db_dictionary;
+		
+		// have multiple entities to update
+		$data_object_array_array = array(
+			'constituent' 	=> array(),
+			'address'		=> array(),
+			'email'			=> array(),
+			'phone'			=> array(),		
+			'activity'		=> array(),
+			'issue'			=> array(),			
+		); 
+		
+		$final_results = json_decode ( self::get_final_results ( $upload_id ) );
+		
+		$constituent_updates_applied = 0;
+		$activities_added = 0;
+
+		// get array of array of columns of table mapped to entity fields 
+		$column_map = json_decode ( WIC_DB_Access_Upload::get_column_map ( $upload_id ) );
+		$used_columns = array();
+		foreach ( $column_map as $column => $entity_field_object ) {
+			if ( '' < $entity_field_object ) { // unmapped columns have an empty entity_field_object
+				$used_columns[] = $column;
+				$field_rule = $wic_db_dictionary->get_field_rules (  $entity_field_object->entity, $entity_field_object->field );					
+				$data_object_array_array[ $entity_field_object->entity ][$field_rule->field_slug] = WIC_Control_Factory::make_a_control( $field_rule->field_type );	
+				$data_object_array_array[ $entity_field_object->entity ][$field_rule->field_slug]->initialize_default_values(  $entity_field_object->entity, $field_rule->field_slug, '' );				
+			} 	
+		}	
+		
+		// need ID in the array and also want to be sure to be adding it -- could have bad ID's in the field; set to zero
+		// in same loop, populate an array of data access objects
+		$wic_access_object_array = array();
+		foreach ( $data_object_array_array as $entity=>$data_object_array ) {		
+			// add ID to each array
+			if ( ! isset ( $data_object_array['ID'] ) ) {
+				$field_rule = $wic_db_dictionary->get_field_rules ( $entity, 'ID' );					
+				$data_object_array[$field_rule->field_slug] = WIC_Control_Factory::make_a_control( $field_rule->field_type );	
+				$data_object_array[$field_rule->field_slug]->initialize_default_values( $entity, $field_rule->field_slug, '' );
+			}
+			$data_object_array['ID']->set_value ( 0 );
+			// set up corresponding access object
+			$wic_access_object_array[] = WIC_DB_Access_Factory::make_a_db_access_object( $entity );
+			// supplement array with default fields set (will not be overlayed by values from staging record since by def are not mapped )
+			// for each entity, loop through fields and if set, add them into array with value set
+		}
+		
+
+
+		// get staging records
+		$used_columns_string = implode ( ',', $used_columns );
+		$sql = "SELECT $used_columns_string, VALIDATION_STATUS, MATCHED_CONSTITUENT_ID, INSERTED_NEW
+				  FROM $table LIMIT $offset, $chunk_size";
+		$staging_records = $wbdb->get_results( $sql );
+
+	
+		foreach ( $staging_records as $staging_record ) {
+			
+			// each array with values mapped
+			foreach ( $staging_record as $column => $value ) {
+				$data_object_array_array[$column_map[$column]->entity][$column_map[$column]->field]->set_value( $value ); // should loop through all $new_constituent fields
+			}
+			
+			// now go through array of arrays, 
+				// for constituent, test if already added, SET ID FROM MATCHED
+				// for all test length > 1
+				// for phone, email, address, test existing record by type and update data object array with id if found
+				// for activity, do update			
+			
+			// use database object -- no search_logging or extra time stamps in this:  efficient
+			// also does prepare on all values, so this is as robust as form -- validated, sanitized, now escaped
+			$wic_access_object->save_update( $data_object_array ); 
+			if ( $wic_access_object->outcome ) {
+
+				$new_constituents_saved++;
+				// $id_to_save = $wic_access_object->insert_id;
+				$id_to_update = $new_constituent->STAGING_TABLE_ID;
+				// update the unmatched table for simple reversibility
+				// $sql = "UPDATE $table SET INSERTED_CONSTITUENT_ID = $id_to_save 
+				// 		WHERE STAGING_TABLE_ID =  $id_to_update";
+				// $result = $wpdb->query ( $sql ); skip this update -- run reverse off of primary staging table
+			
+				// now prepare to update the possibly multiple staging table records with the insert ID		
+				$staging_table_id_string =  $new_constituent->STAGING_TABLE_ID_STRING ;
+				$staging_table_id_array  =  explode ( ',', $staging_table_id_string );
+				// posting insert ID's back to the original staging table
+				$sql = "UPDATE $staging_table SET MATCHED_CONSTITUENT_ID = $id_to_save, INSERTED_NEW = 'y' 
+						WHERE STAGING_TABLE_ID IN  ( $staging_table_id_string )";
+				$result = $wpdb->query ( $sql );
+				if ( $result !== false ) {
+					$input_records_associated_with_new_constituents_saved += count ( $staging_table_id_array );
+				}
+			}	 
+		}
+		$final_results->new_constituents_saved += $new_constituents_saved;		
+		$final_results->input_records_associated_with_new_constituents_saved += $input_records_associated_with_new_constituents_saved;
+		$final_results = json_encode ( $final_results );
+		self::update_final_results( $upload_id, $final_results );
+		return ( $final_results ) ;		
 			
 	}	
 	
