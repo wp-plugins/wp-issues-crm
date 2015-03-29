@@ -41,6 +41,11 @@ class WIC_Admin_Ajax {
 			$required_capability = 'activate_plugins';		
 		}
 		self::ajax_check_capability( $required_capability ); 
+		
+		// load dictionary for use in AJAX calls -- basic_setup (hooked to '_admin_menu' ) is not fired in AJAX calls		
+	 	global $wic_db_dictionary;
+	 	$wic_db_dictionary = new WIC_DB_Dictionary;		
+		
 		$class = 'WIC_Entity_' . $_POST['entity'];
 		$class::{$_POST['sub_action']}(  $_POST['id_requested'], $_POST['wic_data'] );	
 						

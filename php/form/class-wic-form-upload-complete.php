@@ -5,10 +5,10 @@
 *
 */
 
-class WIC_Form_Upload_Complete extends WIC_Form_Upload_Validate  {
-
+class WIC_Form_Upload_Complete extends WIC_Form_Upload_Validate  {  			
+	
 	public function layout_form ( &$data_array, $message, $message_level, $sql = '' ) {
-		
+
 		global $wic_db_dictionary;		
 		
 		echo $this->format_tab_titles( $data_array );		

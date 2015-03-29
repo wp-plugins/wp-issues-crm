@@ -559,5 +559,6 @@ abstract class WIC_Entity_Parent {
 	public function were_changes_made () {
 		return ( $this->made_changes );	
 	}
+	
 }
 

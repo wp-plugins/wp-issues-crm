@@ -51,7 +51,7 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 						'</div>';					// wic-upload-default-form-body
 			echo '<div class = "horbar-clear-fix"></div>';
 	  		// file has already been completed
-			} elseif ( 'completed' == $upload_status) { // needs work here
+			} elseif ( 'completed' == $upload_status || 'started' == $upload_status ) { // needs work here
 						$message =  sprintf ( __( 'Records previouly matched for %s. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() )  . $message;
 				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
 				
@@ -95,8 +95,12 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 		return (	
 			// 'summary_results' == $group->group_slug  ||
 			'constituent_match' == $group->group_slug  ||
-			'constituent_default' == $group->group_slug  ||
-			'activity_default' == $group->group_slug ||
+			'constituent' == $group->group_slug  ||
+			'address' == $group->group_slug ||
+			'phone' == $group->group_slug ||
+			'email' == $group->group_slug ||
+			'activity' == $group->group_slug ||
+			'issue' == $group->group_slug ||
 			'new_issue_creation' == $group->group_slug									
 		  ) ;	
 	}

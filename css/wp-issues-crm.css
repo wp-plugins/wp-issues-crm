@@ -1114,6 +1114,7 @@ ul#upload-tips {
 
 #wic-upload-progress-bar {
 	display: none;
+	height: 15px;
 	margin: 0 7.1111111% 20px 7.1111111%;
 }
 
@@ -1218,6 +1219,13 @@ ul.upload-status-summary {
 
 #new-issue-progress-bar {
   height: 10px;
+}
+
+#wic-form-upload-set-defaults button#wic-inner-field-group-issue-toggle-button,
+#wic-form-upload-set-defaults button#wic-inner-field-group-address-toggle-button,
+#wic-form-upload-set-defaults button#wic-inner-field-group-phone-toggle-button,
+#wic-form-upload-set-defaults button#wic-inner-field-group-email-toggle-button {
+	display: none;
 }
 
 #upload-settings-need-attention {

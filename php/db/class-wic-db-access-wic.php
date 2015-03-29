@@ -131,7 +131,7 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 		$join = '';
 		$values = array();
 		// explode the meta_query_array into where string and array ready for wpdb->prepare
-		foreach ( $meta_query_array as $where_item ) {
+		foreach ( $meta_query_array as $where_item ) { 
 
 			// pull out tables for join clause		
 			if( ! in_array( $where_item['table'], $table_array ) ) {
@@ -160,7 +160,7 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 				$values[] = $where_item['value'][0];
 				$values[] = $where_item['value'][1];
 			} else {
-				WIC_Function_Utilities::wic_error ( sprintf( 'Incorrect compare settings for field %1$s.', $this->field->field_slug  ), __FILE__, __LINE__, __METHOD__, true );
+				WIC_Function_Utilities::wic_error ( sprintf( 'Incorrect compare settings for field %1$s.',  $where_item['key']  ), __FILE__, __LINE__, __METHOD__, true );
 			}	 
 		}
 		// prepare a join clause		

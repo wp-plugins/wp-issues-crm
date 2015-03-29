@@ -27,32 +27,38 @@
 			JSON.parse ( jQuery( "#serialized_default_decisions" ).val() ) : {};	
 		finalResults	= 		jQuery( "#serialized_final_results" ).val() > '' ? 
 			JSON.parse ( jQuery( "#serialized_final_results" ).val() ) : {};					
-		currentPhasePointer = 0;
-		currentPhaseArray = [ 'save_new_issues', 'save_new_constituents', 'update_constituents' ];
 		uploadInProgress = 0;
+		
+		// set up work phase array based on defaultDecisions
+		currentPhaseArray = []
+		if ( defaultDecisions.create_issues ) { currentPhaseArray.push( 'save_new_issues' ); }		
+		if ( defaultDecisions.add_unmatched ) { currentPhaseArray.push( 'save_new_constituents' ); }
+		currentPhaseArray.push( 'update_constituents' ); // always do updates to complete saves; logic excludes non-saves
+		currentPhasePointer = 0;
+
 
 		// get totals for later use
-		var totalMatched = 0;
-		var totalUnmatched = 0;
-		var insertCount = uploadParameters->insert_count;
+		totalMatched = 0;
+		totalUnmatched = 0;
+		var insertCount = uploadParameters.insert_count;
 		for ( var phase in matchResults ) {
-			totalMatched += matchResults[phase].matched_with_these_components;
-			totalUnmatched += matchResults[phase].unmatched_unique_values_of_components;					
+			totalMatched += Number( matchResults[phase].matched_with_these_components );
+			totalUnmatched += Number( matchResults[phase].unmatched_unique_values_of_components );
 		}
 
-
-	
 		$( "#wic-upload-progress-bar" ).progressbar({
 			value: 0
 		});
 
 		$("#upload-button").click(function(){
 			jQuery( "#upload-button" ).prop( "disabled", true );
+			// wpIssuesCRMAjaxPost( 'upload', 'update_upload_status',  uploadID, 'started',  function( response ) {});
 			uploadInProgress = 1;
 			$( "#upload-button" ).text( "Uploading . . ." );
 			$( "#upload-game-plan").remove();
 	  		$( "#wic-upload-progress-bar" ).show();
 			jQuery( "#upload-results-table-wrapper" ).html( "<h3>Starting upload . . . </h3>" );
+			doUpload();
 		}); 
 		
     $(window).on('beforeunload', function() {
@@ -63,30 +69,34 @@
 	});
 
 
-	function doUpload() {
+	function doUpload() { 
+
 		currentPhase = currentPhaseArray[currentPhasePointer];
+
 		if ( undefined != currentPhase ) {
 			// reset chunk count
 			switch ( currentPhase ) {
 				case "save_new_issues":
-					$( "#wic-upload-progress-bar" ).progressbar ( "value", false );
+					jQuery( "#wic-upload-progress-bar" ).progressbar ( "value", false );
 					break;
 				case "save_new_constituents":
-					$( "#wic-upload-progress-bar" ).progressbar ( "value", 0 );			
+					jQuery( "#wic-upload-progress-bar" ).progressbar ( "value", 0 );	
 					resetChunkParms ( totalUnmatched );
 					break;
-				case "update_constituents":	 			
-					$( "#wic-upload-progress-bar" ).progressbar ( "value", 0 );
-					resetChunkParms ( totalMatched + finalResults.matched_to_new_inserts );
+				case "update_constituents":	
+					jQuery( "#wic-upload-progress-bar" ).progressbar ( "value", 0 );
+					resetChunkParms ( totalMatched + finalResults.input_records_associated_with_new_constituents_saved );
 					break;					
 			}
 			// initiate the recursion
 			finalUploadPhase ( 0 );
 		} else { 
 			// wrap up!
-			jQuery( "#wic-upload-progress-bar" ).hide();
-			jQuery( "#upload-button" ).text( "Done" );	
-			uploadInProgress = 0;
+			wpIssuesCRMAjaxPost( 'upload', 'update_upload_status',  uploadID, 'completed',  function( response ) {
+				jQuery( "#wic-upload-progress-bar" ).hide();
+				jQuery( "#upload-button" ).text( "Done" );	
+				uploadInProgress = 0;
+			});
 		}
 	}
 
@@ -101,9 +111,10 @@
 			"chunk_size" : chunkSize,
 			"phase" : 	currentPhase // always defined in this function	
 		}
+
 		var progressLegend = '';
-		var totalToShow = '';
-		
+		var totalToShow = 0;
+
 		wpIssuesCRMAjaxPost( 'upload', 'complete_upload',  uploadID, completeParameters,  function( response ) {
 			// calling parameters are: entity, action_requested, id_requested, data object, callback
 			// update global final results object			
@@ -119,7 +130,8 @@
 				case "update_constituents":	 			
 					chunkCount++;
 					jQuery( "#wic-upload-progress-bar" ).progressbar ( "value", 100 * chunkCount / chunkPlan );
-					totalToShow = ( currentPhase == 'save_new_constituents' ) ? totalUnmatched : finalResults.matched_to_new_inserts ;
+					totalToShow = ( currentPhase == 'save_new_constituents' ) ? totalUnmatched : 
+						totalMatched + finalResults.input_records_associated_with_new_constituents_saved;
 					progressLegend = '<h3> . . . processed ' + ( chunkCount * chunkSize ).toLocaleString( 'en-US' )  
 						+ ' of ' + totalToShow.toLocaleString( 'en-US' ) + ' records in ' + currentPhase + ' phase.</h3>'; 
 					jQuery( "#upload-results-table-wrapper" ).html( progressLegend + layoutFinalResults() ); 
@@ -127,7 +139,7 @@
 						finalUploadPhase ( chunkCount * chunkSize );
 					} else {
 						// move to next phase
-						currentPassPointer++;
+						currentPhasePointer++;
 						doUpload();
 					}
 					break;

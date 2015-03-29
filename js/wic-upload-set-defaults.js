@@ -131,6 +131,7 @@
 		var issueMapped 	= false;
 		var titleMapped 	= false;
 		var activityMapped = false;
+		var activityIssueMapped = false;
 		var issueMapped	= false;
 		var issueTitleColumn = '';
 		var issueContentColumn = '';
@@ -138,9 +139,9 @@
 		var hidegroup = ''; 
 		for ( var inputColumn in columnMap  ) {
 			// don't show defaults for fields that have already been mapped
-			str = columnMap[inputColumn].field;
-			if ( undefined != str ) { 
-				hideGroup =  '#wic-control-' + str.replace ( '-', '_' ); 
+			var mappedField = columnMap[inputColumn].field; 
+			if ( undefined != mappedField ) { 
+				hideGroup =  '#wic-control-' + mappedField.replace ( '_', '-' ); 
 				jQuery( hideGroup ).hide();
 			}
 			// check what fields are completed	
@@ -160,10 +161,10 @@
 				issueMapped = true; // any issue field 		
 			} 
 			if ( 'issue' == columnMap[inputColumn].field ) {
-				issueMapped = true;			
+				activityIssueMapped = true;			
 			}
 			if ( 'post_title' == columnMap[inputColumn].field ) {
-				titleMapped = true;
+				titleMapped = true; 
 				issueTitleColumn = inputColumn;			
 			}
 			if ( 'post_content' == columnMap[inputColumn].field ) {
@@ -203,13 +204,12 @@
 			errorsArray.push ( 'Set an email type to upload email addresses.' )		
 		}
 		
-		if ( 	addressMapped 							|| // any activity field
-				issueMapped								|| // any issue field, since forces an activity
+		if ( 	activityMapped 							|| // any activity field
+				titleMapped								||    // content alone will not force additions, just warning
 				jQuery ( "#activity_date" ).val() > '' || 
 				jQuery ( "#activity_type" ).val() > ''	||
 				jQuery ( "#pro_con" ).val() > '' ||	
-				jQuery ( "#issue" ).val() > '' 	||		
-				jQuery ( "#post_title" ).val() > ''
+				jQuery ( "#issue" ).val() > '' 			
 			) { 
 			if ( '' == jQuery( "#activity_date" ).val() && jQuery( "#activity_date" ).is(':visible') ) {
 				errorsArray.push ( 'Set an activity date to upload activity data.' )		
@@ -218,40 +218,38 @@
 				errorsArray.push ( 'Set an activity type to upload activity data.' )		
 			}	
 			// can supply either issue selection or offer a non-blank title
-			if (  '' == jQuery( "#post_title" ).val() && jQuery( "#post_title" ).is(':visible') &&
-				 	'' == jQuery( "#issue" ).val() && jQuery( "#issue" ).is(':visible') ) {
-				errorsArray.push ( 'Choose or title an issue to upload activity data.' )		
+			if (  ! titleMapped && ! activityIssueMapped &&
+				 	'' == jQuery( "#issue" ).val() ) {
+				errorsArray.push ( 'Choose an issue to upload activity data.' )		
 			}
+			// if have mapped title and not overwritten, must consent to additions
+			if (  titleMapped && ! activityIssueMapped &&
+				 	'' == jQuery( "#issue" ).val() && 	
+					! jQuery ( "#create_issues" ).prop ( "checked" )				 	
+				 	) {			// not overriden by mapped issue choice
+				errorsArray.push ( 'You must affirmatively accept New Issue Titles or change other settings.' )	;		
+			}			
 		}				
+
+		// warning about ignoring content without titles
+		if ( issueMapped && ! titleMapped ) {
+			commentsArray.push( 'You have mapped issue content without mapping issue title.  The issue content column will be ignored.')			
+		}
 		
 		
 		// show/hide title elements in constituent default field group based on whether all group inputs are hidden
-		if ( 0 == jQuery( "#wic-field-group-constituent_default" ).find( ":input" ).not( ":button, :hidden" ).length ) {
-			jQuery( "#wic-inner-field-group-constituent_default-toggle-button" ).hide();	
-			jQuery( "#wic-inner-field-group-constituent_default p" ).hide();			
+		if ( 0 == jQuery( "#wic-field-group-constituent, #wic-field-group-address, #wic-field-group-email, #wic-field-group-phone" ).find( ":input" ).not( ":button, :hidden" ).length ) {
+			jQuery( "#wic-inner-field-group-constituent-toggle-button" ).hide();	
+			jQuery( "#wic-inner-field-group-constituent p" ).hide();			
 		} else {
-			jQuery( "#wic-inner-field-group-constituent_default-toggle-button" ).show();	
-			jQuery( "#wic-inner-field-group-constituent_default p" ).show();			
-		}
-
-		// if issue mapped or defaulted non-blank, hide default title option ( issue will be hidden from loop above )
-		// issue supersedes title whether mapped or defaulted, provided non-blank
-		if ( issueMapped ) {
-			jQuery( "#wic-control-post-title" ).hide()
-		// if issue not mapped, show default title option only when default issue is set to empty
-		} else {
-			if ( '' < jQuery( "#issue" ).val() ) { 
-				jQuery( "#wic-control-post-title" ).hide()
-			// issue not mapped and is empty, so show title, but test to make sure title isn't already mapped
-			} else if ( ! titleMapped ) {
-				jQuery( "#wic-control-post-title" ).show()
-			}
+			jQuery( "#wic-inner-field-group-constituent-toggle-button" ).show();	
+			jQuery( "#wic-inner-field-group-constituent p" ).show();			
 		}
 		
 		// show the issue creation option under following conditions:
-		// issue default showing and blank (i.e., not controlling), but title also mapped, so title default not showing
+		// activity_issue default showing and blank (i.e., not mapped and controlling), but title also mapped, so title default not showing
 		// in this condition, available title column will be controlling the update -- need to show results (is required in validation)
-		if ( !issueMapped &&
+		if ( !activityIssueMapped &&
 				'' == jQuery( "#issue" ).val() &&
 				titleMapped 
 				) {
@@ -259,6 +257,7 @@
 			addIssueTable( issueTitleColumn, issueContentColumn );		
 		} else { 
 			jQuery ( "#wic-field-group-new_issue_creation" ).hide();
+			jQuery ( "#create_issues" ).prop ( "checked", false );
 		}
 
 		// manage message box

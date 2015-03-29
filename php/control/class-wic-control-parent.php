@@ -60,7 +60,7 @@ abstract class WIC_Control_Parent {
 
 	/*********************************************************************************
 	*
-	* methods for control creation for different types of forms -- new, search, save, update
+	* setters_getters
 	*
 	***********************************************************************************/
 	
@@ -87,6 +87,11 @@ abstract class WIC_Control_Parent {
 	public function get_control_type() {
 		return ( $this->field->field_type );	
 	}	
+
+	public function is_upload_dedup(){
+		return ( 1 == $this->field->upload_dedup );	
+	}
+
 
 	/**********************************************************************************
 	*

@@ -965,13 +965,14 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		*  chunk_size
 		*/
 		$data = json_decode ( stripslashes ( $data ) );
+
 		$method_to_call = 'complete_upload_' . $data->phase; 	
 		// call underlying function for phase
 		$result = WIC_DB_Access_Upload::$method_to_call( $upload_id, $data->staging_table, $data->offset, $data->chunk_size );
 
 		// report results or report error
 		if ( $result !== false ) {		
-			wp_die ( json_encode ( $result ) );
+			wp_die ( $result );
 		} else {
 			wp_die ( sprintf ( __('Error in upload completion -- phase %s.' , 'wp-issues-crm' ), $data->phase ) );		
 		}
