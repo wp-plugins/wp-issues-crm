@@ -7,19 +7,19 @@
 *  Upload of files managed by this entity.
 *
 *  File upload is handled in tabbed stages
-*		-- do raw upload, validating only csv format with consistent columnt count
+*		-- do raw upload, validating only csv/txt format with consistent column count
 *		-- map fields (fully flexible)
 *		-- validate data
 *			+ IF the field is mapped, all form edits are applied -- sanitization, validation and individual required check; 
-*			+ If mapped select field must have good values (validation implicit in form context)  
+*			+ If mapped, a select field must have good values (validation implicit in form context)  
 *			+ Additionally, IF the constituent identity field is mapped it is validated as a good ID
-*			+ Enforcing required at this stage makes sense because if user is not supplying other data that makes it required, can always unmap field
+*			+ Enforcing required rules at this stage makes sense because if user is not supplying other data that makes it required, can always unmap field
 *				(example, has matched address-type; missing values generate errors, but these are good errors if street address is supplied and
 *					silence the errors by unmapping address-type and relying on default)
 *		-- matching
-*			+ user can select match of input to existing records from valid identity specifying combinations or custom fields
+*			+ user can select match of input to existing records from valid identity-specifying combinations or custom fields
 *			+ hierarchy of matching order is suggested to user, but user can override
-*			+ apart from constituent ID and any custom fields, all permitted matching modes include group required identify fields ( fn/ln/email ) 
+*			+ apart from constituent ID and any custom fields, all permitted matching modes include at least one of group-required identify fields ( fn/ln/email ) 
 *		-- set defaults for constituent	
 *			+ Determine basic add/update behavior for matched records
 *			+ All option to not overwrite good names and addresses with possibly sloppy names and addresses -- set default do not overwrite

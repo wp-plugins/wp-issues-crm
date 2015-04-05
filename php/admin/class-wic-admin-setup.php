@@ -98,6 +98,14 @@ class WIC_Admin_Setup {
 			
 			// load script for upload mapping only on upload page.
 			if ( isset ( $_GET['action'] ) ) {
+				if ( 'details' == $_GET['action'] ) {
+					wp_register_script(
+						'wic-upload-details',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-details.js' , __FILE__ ),
+						array ( 'jquery-ui-selectmenu') 
+					);
+					wp_enqueue_script('wic-upload-details');
+				}
 				if ( 'map' == $_GET['action'] ) {
 					wp_register_script(
 						'wic-upload-map',

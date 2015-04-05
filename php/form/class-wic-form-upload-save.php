@@ -34,51 +34,28 @@ class WIC_Form_Upload_Save extends WIC_Form_Upload_Update  {
 		// upload parameters is the post upload results report, not the upload parameters settings
 		return ( 'save_options' == $group->group_slug ||   
 					'initial' == $group->group_slug ||
-					'upload_tips' == $group->group_slug  
+					'upload_tips' == $group->group_slug || 
+				   'upload_settings' == $group->group_slug  
 					);
 	}	
 
 	// special group handling for the comment group
 	protected function group_special ( $group ) {
-			return ( 'upload_tips' == $group );
+			return ( 'upload_tips' == $group || 'upload_settings' == $group );
 	}	
 	
 	protected function group_special_upload_tips ( &$doa ) {
-		$output = '<ul id = "upload-tips" >' .
-			'<li>' . __( 'WP Issues CRM expects upload files to be in .csv or .txt format or a similar format 
-					that includes rows of values separated by a delimiter.', 'wp-issues-crm' ) . '</li>' .
-			'<li>' . __( 'With .csv files, you probably will have smooth sailing without touching any settings.', 'wp-issues-crm' ) . '</li>' .
-			'<li>' . __( 'Set the delimiter to "Tab" for a .txt file.', 'wp-issues-crm' ) . '</li>' .
-			'<li>' . __( 'In this initial upload step, you should not need to worry about any field formatting issues.  WP Issues CRM
-					load all data to an initial staging file in which all fields are treated as plain text with a maximum length of 65,535.', 'wp-issues-crm' ) . '</li>' .
-			'<li>' . __( 'In case of doubt, view your file in any text reader to identify the delimiter (character between fields) and 
-					enclosure (character surrounding some multi-word fields).', 'wp-issues-crm' ) . '</li>' . 
-			'<li>' . __( 'You will rarely need to change the escape character.  That is the character used to indicate that 
-					a character that would otherwise be taken as an enclosure should be read as literal.  Back-slash is standard.  An example would be when
-					the delimiter is a single quote and a name has an apostrophe in it (also represented by a single quote).', 'wp-issues-crm' ) . '</li>' .					
-			'<li>' . __( 'You will rarely need to change the line length setting.  Increase it to accommodate large text fields (for example the body of an email).', 'wp-issues-crm' ) . '</li>' .
-			'<li>' . __( 'Check the systems settings inventory further below if an upload is crashing.  Larger uploads
-					can exceed several different system settings and you may need help from an administrator to change your system settings.', 'wp-issues-crm' ) . '</li>' .
-			'<li>' . __( 'WP Issues CRM is economical in the use of memory for uploads, so your most likely problems 
-					are upload_max_filesize and post_max_size (which must exceed upload_max_filesize ).', 'wp-issues-crm' ) . '</li>' .
-			'<li>' . __( 'WP Issues CRM sets the maximum execution time to 20 minutes (1200 seconds) -- only a huge file or a very weak server will approach this limit.
-					Files up to 100 megabytes in size should load in under 3 minutes (plus transmission time if over a remote connection).', 'wp-issues-crm' ) . '</li>'	.
-		'<ul>';			
-		
+		$output = __( 'For tips, go to ', 'wp-issues-crm' ) . 
+			'<a href="http://wp-issues-crm.com/?page_id=2" target = "_blank">WPissuesCRM.com</a>.';
+
 		return ( $output ); 					
 	}	
 	
 		// legends
-	protected function get_the_legends( $sql = '' ) {
+	protected function group_special_upload_settings ( &$doa ) { 
 		// report configuration settings related to upload capacity;
-		$legend = '<p>' . __( 'The system settings below can be adjusted with the assistance of your hosting provider.  To upload 
-				successfully, file_uploads must be "on" and size parameters must exceed your file size.
-				Input time relates to your connection speed.  Execution time relates to the work done in storing
-				the uploaded file to a temporary staging table within your database. WP Issues
-				CRM is able to alter max_execution_time dynamically in many installations. Generally, you should not have 
-				problems with your memory_limit while uploading files with WP Issues CRM. Your system settings are shown below:', 
-				'wp-issues-crm' ) . '</p>' .
-			'<ul>' .
+		$output = 
+			'<ul id = "system-settings-list">' .
 				'<li>' . 'file_uploads: ' 				. ( 1 == ini_get ( 'file_uploads' ) ? 'on' : 'off' ) 	. '</li>' .	
 				'<li>' . 'upload_max_filesize: ' 	. ini_get ( 'upload_max_filesize' ) 			. '</li>' .			
 				'<li>' . 'post_max_size: ' 			. ini_get ( 'post_max_size' ) 					. '</li>' .
@@ -88,7 +65,7 @@ class WIC_Form_Upload_Save extends WIC_Form_Upload_Update  {
 				'<li>' . 'session.gc_maxlifetime: ' . ini_get ( 'session.gc_maxlifetime' ) . 'seconds' . '</li>' .
 
 			'<ul>';
-		$legend = '<div class = "wic-upload-legend">' . $legend . '</div>';					
+					
 		/*** 
 		*	ini_system can only be set in php.ini or httpd.conf -- the others can be set in  php.ini, .htaccess, httpd.conf or .user.ini  	
 		*
@@ -107,12 +84,18 @@ class WIC_Form_Upload_Save extends WIC_Form_Upload_Update  {
 		*
 		* see short hand http://php.net/manual/en/faq.using.php#faq.using.shorthandbytes
 		***********/	
+		return $output;
+	}
+		
+	protected function get_the_legends( $sql = '' ) {
+		$legend = '';	
+		$legend = '<div class = "wic-upload-legend">' . $legend . '</div>';	
 		return ( $legend );
 	}
 
 	// message
 	protected function format_message ( &$data_array, $message ) {
-		$formatted_message =  __('Upload a file. ' , 'wp-issues-crm') . $message;
+		$formatted_message =  __('Upload a .csv or .txt file of constituent and/or activity data. ' , 'wp-issues-crm') . $message;
 		return $formatted_message; 
 	}
 

@@ -19,9 +19,10 @@
 			revert: "invalid", 					// revert to start column if not dropped; change to false on dropped, so no revert back to droppable 
 			stack: ".wic-draggable", 			// keep the moving item on top
 			start: function ( event, ui ) { 	// restore original message -- drop any "saved" notation from previous drags
-				jQuery ( "#post-form-message-box" ).text( wicSaveMapMessage );		
+				jQuery ( "#post-form-message-box" ).text( wicSaveMapMessage );	
+				$( this ).addClass ( 'moving-draggable' );	
 			},
-			stop: function ( even, ui ) {		// effect revert to starting column for dropped items that are undropped
+			stop: function ( event, ui ) {		// effect revert to starting column for dropped items that are undropped
 				// if not dropped ( i.e., in an invalid position ) and also net set to revert anyway, 
 				// animate it slowly back to top of column of pending items 
 				// note that revert is true only when starting from initial position in column of pending items			
@@ -40,6 +41,7 @@
 						left: 0
 					});
 				} 		
+				$( this ).removeClass ( 'moving-draggable' );
 			}
 		});
 		
@@ -119,7 +121,7 @@
 	function wicUpdateColumnMap ( upload_field, entity_field_object ) {
 		// in possible excess of caution, disable draggable during update process; it does not disable the moving item
 		// this should be blindingly fast, but in server outage, this might let user know of problem 		
-		jQuery ( "#post-form-message-box" ).text( wicSaveMapMessage + " Saving . . . ")
+		jQuery ( "#post-form-message-box" ).text( wicSaveMapMessage + " Saving field map . . . ")
 		jQuery( ".wic-draggable" ).draggable( "disable" );	
 		// update column map in browser
 		wicColumnMap[upload_field] = entity_field_object;
@@ -127,7 +129,7 @@
 		wpIssuesCRMAjaxPost( 'upload', 'update_column_map',  jQuery('#ID').val(), wicColumnMap, function( response ) {
 			// reenable draggables after update complete -		
 			jQuery( ".wic-draggable" ).draggable( "enable" );
-			jQuery ( "#post-form-message-box" ).text( wicSaveMapMessage + " Saved.")
+			jQuery ( "#post-form-message-box" ).text( wicSaveMapMessage + " Field map saved.")
 		});
 		// also send the particular map update to the server for learning purposes, but only for non-generic column titles
 		if ( upload_field.slice( 0 , 7 ) != 'COLUMN_' || upload_field.length < 7 ) {

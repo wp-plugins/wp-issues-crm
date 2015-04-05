@@ -103,9 +103,8 @@ class WIC_Form_Upload_Validate extends WIC_Form_Parent  {
 
 	// legends
 	protected function get_the_legends( $sql = '' ) {
-		// report configuration settings related to upload capacity;
-		$legend = '';
-			
+		$legend = '<p>' .  __( 'For tips on field mapping and validation, go to ', 'wp-issues-crm' ) . 
+			'<a href="http://wp-issues-crm.com/?page_id=51" target = "_blank">WPissuesCRM.com</a>.' . '</p>';
 		$legend = '<div class = "wic-upload-legend">' . $legend . '</div>';		
 		return $legend;
 		

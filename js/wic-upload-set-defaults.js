@@ -30,8 +30,10 @@
 		// populate form with saved values or initialize
 		populateForm();	
 
-		// hide controls that don't make a difference or are misleading	
-		decideWhatToShow();	
+		// hide controls that don't make a difference or are misleading
+		if ( ! $( "#post-form-message-box" ).hasClass( "wic-form-errors-found" ) ) {	
+			decideWhatToShow();
+		}	
 		
 		// listen to save all updates to default options
 		controlsArray.change ( function() {

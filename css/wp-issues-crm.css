@@ -1007,42 +1007,90 @@ li.nav-tab-active  {
 	width: 80%;
 }
 
+#upload_status-button span.ui-selectmenu-text, 
+#upload_by-button span.ui-selectmenu-text {
+	font-size: 1em;
+	font-weight: 400;
+	font-family: "Open Sans",​sans-serif;
+	background: #eeeeee;
+	color: #333333;
+	padding: 3px 5px;
+}
+
+.wic-input.upload-by,
+.wic-input.upload-status {
+	padding: 0;
+	width: 193.333px;
+}
+
+#wic-form-upload-update #wic-form-sidebar-groups {
+	border: none;
+}
+
+#upload_by-button span.ui-icon.ui-icon-triangle-1-s,
+#upload_status-button span.ui-icon.ui-icon-triangle-1-s {
+	display: none;
+}
+
+
 #wic-field-group-initial .wic-form-field-group-legend,
 #wic-inner-field-group-initial-toggle-button {
 	margin-left: 11.11111%;
 	margin-right: 11.1111%;
 }
-
+#wic-field-group-save_options,
 #wic-field-group-upload_tips {
 	margin: 30px 11.1111%;
 }	
+
+#wic-field-group-save_options .wic-input {
+	margin: 0;
+	width: 100%;
+}
+
+#wic-field-group-save_options .wic-label {
+	display: block;
+	margin: 0;
+	padding: 0;
+	text-align: left;
+}
+
 
 #wic-field-group-upload_parameters {
 	margin-left: 11.11111%;
 }
 
 ul#upload-tips {
-	list-style-type: disc;
+	list-style-type: square;
 	list-style-position: inside;
+	font-size: 0.8em;
 }
+
+ul#system-settings-list{
+	list-style-type: square;
+	list-style-position: inside;
+	font-size: 0.8em;
+}
+
 
 .wic-upload-legend {
 	margin: 10px 7.11111% 10px 7.11111%;
 	font-size: .8em;
 }
-#wic-inner-field-group-save_options-toggle-button,
+#wic-inner-field-group-initial-toggle-button,
+#wic-inner-field-group-upload_tips-toggle-button,
 #wic-inner-field-group-upload_parameters-toggle-button {
 	display: none;
 }
 
 .wic-draggable {
-	width: 150px;
+	width: 130px;
 	height: 20px;
 	cursor: move;
-	background: #eef;
-	border: 1px solid #33f;
+	background: #ffffff;
+	border: 1px solid #aaa;
 	border-radius: 3px;
-	margin: 5px 0; 
+	margin: 2px 0; 
 	text-align: center;
 }
 
@@ -1050,8 +1098,8 @@ ul#upload-tips {
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
-	background: #f4fff4;
-	border: 1px solid #3f3;
+	background: #f4f4f4;
+	border: 1px solid #aaa;
 	border-radius: 3px;
 	float: left;  
 	height: 50px;
@@ -1060,22 +1108,20 @@ ul#upload-tips {
 	width: 31.333%;
 }
 
+.wic-draggable.moving-draggable {
+	border: 2px solid #0099d5;
+	background: #ffffff;
+}
 
 .wic-droppable.wic-droppable-highlight.wic-droppable-hover {
-	background: #dfd;
-	border: 2px solid #0f0;
+	border: 2px solid #0099d5;
 	font-weight: bold;
 }
 
 .wic-droppable.wic-droppable-highlight {
-	background: #efe;
-	border: 1px solid #3f3;
-
 }
+
 .wic-droppable.wic-state-dropped {
-	background: #fff4f4;
-	border: 1px solid #999;
-	font-weight: bold;
 }
 
 .upload-validation-perfect {
@@ -1096,7 +1142,7 @@ ul#upload-tips {
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
-	border-left: 1px solid #aaa;
+	border-left: none;
 	display: inline-block;
 	height: initial;
 	overflow-y: initial;
@@ -1110,6 +1156,10 @@ ul#upload-tips {
 	display: inline-block;
 	overflow-x: initial;
 	width: 64%; 
+}
+
+#wic-inner-field-group-mappable-toggle-button {
+	display: none;
 }
 
 #wic-upload-progress-bar {
@@ -1126,8 +1176,8 @@ ul.wic-sortable {
 	width: 96%;
 	height: 30px;
 	cursor: move;
-	background: #eef;
-	border: 1px solid #33f;
+	background: #ffffff;
+	border: 1px solid #aaa;
 	border-radius: 3px;
 	margin: 10px 0 0 0; 
 	line-height: 30px;
@@ -1143,8 +1193,8 @@ ul.wic-sortable {
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
-	background: #f4fff4;
-	border: 1px solid #3f3;
+	background: #f4f4f4;
+	border: 1px solid #aaa;
 	border-radius: 3px;
 	float: left;  
 	font-weight: bold;
@@ -1159,8 +1209,8 @@ ul.wic-sortable {
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
-	background: #fff4f4;
-	border: 1px solid #f33;
+	background: #f4f4f4;
+	border: 1px solid #aaa;
 	border-radius: 3px;
 	float: left;  
 	padding: 0 2%;
@@ -1294,8 +1344,9 @@ li.pl-search_log-serialized_search_parameters{ display: none;}
 .pl-trend-category-count { width: 60%; }
 
 .pl-upload-upload_time { width: 15%; }
-.pl-upload-upload_by { width: 20%; }
-.pl-upload-upload_description { width: 55%; }
+.pl-upload-upload_by { width: 15%; }
+.pl-upload-upload_file { width: 25%; }
+.pl-upload-upload_description { width: 35%; }
 .pl-upload-upload_status { width: 10%; }
 .wic-list-legend {
 	margin: 10px 7.11111%;

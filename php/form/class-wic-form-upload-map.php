@@ -27,7 +27,7 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 	
 	// define the form message (return a message)
 	protected function format_message ( &$data_array, $message ) {
-		$formatted_message =  sprintf ( __( 'Map fields for %s. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() )  . $message;
+		$formatted_message =  sprintf ( __( 'Map fields from %s to WP Issues CRM fields. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() )  . $message;
 		return ( $formatted_message );
 	}
 
@@ -39,18 +39,8 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 	// legends
 	protected function get_the_legends( $sql = '' ) {
 		// report configuration settings related to upload capacity;
-		$legend = '<p>' . __( '* See below for guidance on what WP Issues CRM expects in each target database field.', 
-				'wp-issues-crm' ) . '</p>' .
-				 '<table id="wp-issues-crm-stats">' .
-				 '<tr><td class = "wic-statistic-table-name">' . 'ID: ' . '</td><td>' .  __( 'WP Issues CRM Internal ID -- you will only have this if you started with export from WP Issues CRM.', 'wp-issues-crm' ) 	 . '</td><tr>' . 
-				 '<tr><td class = "wic-statistic-table-name">' . 'address_line: ' . '</td><td>' .  __( 'Single field like so: 123 Main St, Apt 1. Do not worry about exactly how you refer to street (ST, st, str) or apartment.', 'wp-issues-crm' ) . '</td><tr>' . 		
-				 '<tr><td class = "wic-statistic-table-name">' . 'state: ' . '</td><td>' .  __( 'WP Issues CRM does not care how you abbreviate or do not abbreviate state -- 
-				 		you can define your state abbreviations like any other option field under Options.', 'wp-issues-crm' ) 	 . '</td><tr>' . 
-				 '<tr><td class = "wic-statistic-table-name">' . 'dates: ' . '</td><td>' .  __( 'WP Issues CRM accepts all standard date formats and date formats can vary within a column.', 'wp-issues-crm' ) 	 . '</td><tr>' .
-				 '<tr><td class = "wic-statistic-table-name">' . 'address, email and phone types: ' . '</td><td>' .  __( 'You will be able to use any existing codes you have by setting options and/or you can accept default settings for these fields.', 'wp-issues-crm' ) 	 . '</td><tr>' .
-				 '<tr><td class = "wic-statistic-table-name">' . 'Issue: ' . '</td><td>' .  __( 'This field must be a valid numeric issue/post ID (if you specify it).', 'wp-issues-crm' ) 	 . '</td><tr>' .
-				 '<tr><td class = "wic-statistic-table-name">' . 'Issue Title: ' . '</td><td>' .  __( 'If you specify issue titles that do not exist, you will have the option of automatically creating new issues -- see Validation Settings.', 'wp-issues-crm' ) 	 . '</td><tr>' .
-			'</table>';
+		$legend = '<p>' .  __( '* For tips on field mapping and validation, go to ', 'wp-issues-crm' ) . 
+			'<a href="http://wp-issues-crm.com/?page_id=51" target = "_blank">WPissuesCRM.com</a>.' . '</p>';
 			
 		$legend = '<div class = "wic-upload-legend">' . $legend . '</div>';		
 		return $legend;
@@ -58,12 +48,12 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 	}
 	// group screen
 	protected function group_screen( $group ) { 
-		return ( 'upload_parameters' == $group->group_slug  || 'save_options' == $group->group_slug ) ;	
+		return ( 'upload_parameters' == $group->group_slug  || 'mappable' == $group->group_slug ) ;	
 	}
 	
 	// special use existing groups as special within this form
 	protected function group_special ( $group ) { 
-			return ( 'upload_parameters' == $group || 'save_options' == $group );
+			return ( 'upload_parameters' == $group || 'mappable' == $group );
 	}
 	
 	// function to be called for special group
@@ -93,7 +83,7 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 		
 		// assemble output
 		$output .= '<div id = "wic-droppable-column">';
-		$output .= '<h3>' . __( 'Target database fields -- drag and drop upload fields into these targets*', 'wp-issue-crm' ) . '</h3>';
+		$output .= '<h3>' . __( 'Drag/drop upload fields to map them to these WP Issues CRM fields*', 'wp-issue-crm' ) . '</h3>';
 		$output .= '<div id = "constituent-targets"><h4>' . __( 'Constituent fields' , 'wp-issues-crm' ) . '</h4>' . $output_constituent . '</div>';		
 		$output .= '<div class = "horbar-clear-fix"></div>';
 		$output .= '<div id = "activity-targets"><h4>' . __( 'Activity fields' , 'wp-issues-crm' ) . '</h4>'. $output_activity . '</div>';
@@ -107,13 +97,13 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 		return $output; 					
 	}
 	
-	protected function group_special_save_options ( &$doa ) {
+	protected function group_special_mappable ( &$doa ) {
 		
 		$output = ''; 
 		
 				// list fields from upload file to be matched
 		$output .= '<div id = "wic-draggable-column-wrapper">';
-		$output .= '<h3>' . __( 'Upload fields to be dropped', 'wp-issue-crm' ) . '</h3>';
+		$output .= '<h3>' . __( 'Upload fields to be mapped.', 'wp-issue-crm' ) . '</h3>';
 		$output .= '<div id = "wic-draggable-column">';
 		
 		// get the column map array				
