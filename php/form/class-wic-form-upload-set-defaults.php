@@ -52,7 +52,7 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 			echo '<div class = "horbar-clear-fix"></div>';
 	  		// file has already been completed
 			} elseif ( 'completed' == $upload_status || 'started' == $upload_status ) { // needs work here
-						$message =  sprintf ( __( 'Records previouly matched for %s. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() )  . $message;
+						$message =  sprintf ( __( 'Upload already attempted for %s. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() )  . $message;
 				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
 				
 				// show button as disabled				
@@ -60,7 +60,7 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 					'entity_requested'			=> 'upload',
 					'action_requested'			=> 'form_update',
 					'button_class'					=> 'button button-primary wic-form-button',
-					'button_label'					=> __('Matched', 'wp-issues-crm'),
+					'button_label'					=> __('Values set', 'wp-issues-crm'),
 					'type'							=> 'button',
 					'id'								=> 'match-button',
 					'disabled'						=> true,

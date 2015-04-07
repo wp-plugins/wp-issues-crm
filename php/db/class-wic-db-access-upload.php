@@ -999,9 +999,13 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		$search_parameters = array(
 			'log_search' => false,
 		);
+		// set dup_check to true forces = comparison for all; match_level = 0 does the same, . . . 
+		// but dup_check makes range control do a single value = comparison ( which is what we want for date fields )
+		// note that in the form context, dedup property of field controls whether gets polled in assemble_meta_query_array when dup_check = true,
+		// but since not using assemble_meta_query_array to assemble array, setting dup_check true does not lose any fields
 		$search_clause_args = array(
 			'match_level' => '0',
-			'dup_check' => false,
+			'dup_check' => true, 
 			'category_search_mode' => '',
 			);
 
@@ -1015,8 +1019,6 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		} else {
 			$use_title = false;		
 		}
-
-
 
 		// will be used to determine if add to counts at bottom of loop
 		$constituent_update_applied = false;
@@ -1074,8 +1076,8 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 					$data_object_array['constituent_id']->set_value ( $staging_record->MATCHED_CONSTITUENT_ID );
 					// prepare a query array for those fields used in upload match/dedup checking for multi-value fields 
 					$query_array = array();
-					foreach ( $data_object_array as $field_slug => $control ) {
-						if ( $control->is_upload_dedup() ) {					
+					foreach ( $data_object_array as $field_slug => $control ) { 
+						if ( $control->is_upload_dedup() ) {
 							$query_array = array_merge ( $query_array, $control->create_search_clause ( $search_clause_args ) );
 						}
 					} 

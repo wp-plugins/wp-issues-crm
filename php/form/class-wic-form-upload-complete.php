@@ -26,7 +26,7 @@ class WIC_Form_Upload_Complete extends WIC_Form_Upload_Validate  {
 				$message_level = 'error';
 				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
 			// file has been mapped and validated and ready for test matching -- needs to be matched/rematched
-			} else { 
+			} elseif ( 'completed' != $upload_status ) { 
 				// show message inviting match/rematch
 				$message =  sprintf ( __( 'Ready to complete upload from %s.' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() );
 				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
@@ -118,16 +118,16 @@ class WIC_Form_Upload_Complete extends WIC_Form_Upload_Validate  {
 		} else {
 			if ( $default_decisions->add_unmatched ) {
 				$add_message = sprintf( __( 'WP Issues CRM will store %d new constituent records.	These new constituents may include some with multiple 
-					activities or other updates in your input file.', 'wp-issues-crm' ), $valid_matched ); 		
+					activities or other updates in your input file.', 'wp-issues-crm' ), $valid_unique ); 		
 			} else {
 				$add_message = sprintf( __( 'WP Issues CRM will bypass %d possible new constituent additions.	
 					%d possible additions in your input file will be ignored.', 'wp-issues-crm' ), $valid_unique, $valid_unique ) ;		
 			}		
 		}
-		
+
 		if ( 0 < $valid_dups ) {
-			$dup_messsage = sprintf( __( '%d records with valid data will not be uploaded because they match to more than one constituent.', 
-				'wp-issues-crm' ), $valid_dups );		
+			$dup_message = sprintf( __( '%d records with valid data will not be uploaded because they match to more than one constituent.', 
+				 'wp-issues-crm' ), $valid_dups );
 		} else {
 			$dup_message = __( 'There are no instances where WP Issues CRM will bypass a record because it matches to more than one constituent.' );		
 		}
@@ -144,7 +144,7 @@ class WIC_Form_Upload_Complete extends WIC_Form_Upload_Validate  {
 						__( 'You will make <em>irreversible database changes</em> -- so far you have only tested upload plans and settings.', 'wp-issues-crm' ) .
 					'</li>' .
 					'<li>' .
-						__( 'You will not be able to go back and alter upload plans or settings.', 'wp-issues-crm' ) .
+						__( 'You will not be able to go back and alter mapping, matching or defaults.', 'wp-issues-crm' ) .
 					'</li>' .
 					'<li>' .
 						sprintf( __( 'Your original %d input records -- now mapped, validated and matched -- will be finally processed.', 'wp-issues-crm' ), $total_input ) .

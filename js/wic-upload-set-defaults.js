@@ -262,24 +262,26 @@
 			jQuery ( "#create_issues" ).prop ( "checked", false );
 		}
 
-		// manage message box
-		if ( errorsArray.length > 0 ) { 
-			jQuery( "#post-form-message-box" ).append( '<ul id="upload-settings-need-attention"></ul>' );
-			for ( var i in errorsArray ) {
-				jQuery( "#upload-settings-need-attention" ).append( '<li>' +  errorsArray[i]  + '</li>' );
-			}
-			// if errors, bust back to status matched as if haven't been to default setting
-			wpIssuesCRMAjaxPost( 'upload', 'update_upload_status',  uploadID, 'matched',  function( response ) {});		
-		} else {
-			commentsArray.push('Good to go!');
-			jQuery( "#post-form-message-box" ).append( '<ul id="upload-settings-good-to-go"></ul>' );
-			for ( var i in commentsArray ) {
-				jQuery( "#upload-settings-good-to-go" ).append( '<li>' +  commentsArray[i]  + '</li>' );
-			}
-			// if no errors good to go to next stage 			
-			wpIssuesCRMAjaxPost( 'upload', 'update_upload_status',  uploadID, 'defaulted',  function( response ) {});
-		}		
-		
+		// manage message box and set status consistently, but only if didn't kill form in first step
+		if ( ! jQuery ( ":input" ).prop ( "disabled" ) ) { 		
+			
+			if ( errorsArray.length > 0 ) { 
+				jQuery( "#post-form-message-box" ).append( '<ul id="upload-settings-need-attention"></ul>' );
+				for ( var i in errorsArray ) {
+					jQuery( "#upload-settings-need-attention" ).append( '<li>' +  errorsArray[i]  + '</li>' );
+				}
+				// if errors, bust back to status matched as if haven't been to default setting
+				wpIssuesCRMAjaxPost( 'upload', 'update_upload_status',  uploadID, 'matched',  function( response ) {});		
+			} else {
+				commentsArray.push('Good to go!');
+				jQuery( "#post-form-message-box" ).append( '<ul id="upload-settings-good-to-go"></ul>' );
+				for ( var i in commentsArray ) {
+					jQuery( "#upload-settings-good-to-go" ).append( '<li>' +  commentsArray[i]  + '</li>' );
+				}
+				// if no errors good to go to next stage 			
+				wpIssuesCRMAjaxPost( 'upload', 'update_upload_status',  uploadID, 'defaulted',  function( response ) {});
+			}		
+		}
 	}	
 
 	
