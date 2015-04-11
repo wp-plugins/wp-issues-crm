@@ -556,7 +556,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	*  
 	*/	
    public static function create_unique_unmatched_table ( $upload_id, $staging_table ) {		
-		// create parallel lists of constituent fields and related fields in the upload -- working directly from column map
+		// create parallel arrays of WIC constituent fields and associated fields in the upload -- working directly from column map
 		$column_map = json_decode ( WIC_DB_Access_Upload::get_column_map ( $upload_id ) );
 		$constituent_field_array = array();
 		$staging_table_column_array = array();	
@@ -599,7 +599,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			foreach ( $constituent_field_array as $field ) {
 				$sql .= ' ' . $field . ' varchar(65535) NOT NULL, ';
 			}
-	
+			// . . . include standardized tracking columns in the table too
 			$sql .=  'STAGING_TABLE_ID bigint(20) unsigned NOT NULL AUTO_INCREMENT,
 						FIRST_NOT_FOUND_MATCH_PASS varchar(50) NOT NULL,
 						INSERTED_CONSTITUENT_ID bigint(20) unsigned NOT NULL,
@@ -639,7 +639,8 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 						GROUP BY FIRST_NOT_FOUND_MATCH_PASS, NOT_FOUND_VALUES
 						$having_clause						
 						";
-			// MATCH_PASS = '' means never matched.  Might have FIRST_NOT_FOUND_MATCH_PASS = '' if lacked fields for all passes
+
+			// MATCH_PASS = '' means never matched.  Might have FIRST_NOT_FOUND_MATCH_PASS = '' if lacked values for all passes
 			$insert_count = $wpdb->query ( $sql );
 			if ( false === $insert_count ) {
 				return ( false );		
@@ -685,10 +686,14 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		return ( $result[0]->serialized_default_decisions );
 	}
 
-	// for issue titles that don't exist on wp_post, create a table for later insertion
-	// makes no sense to default tags or cats -- in normal usage, these should vary across records 
-	// also, they are unlikely to be included in input sources -- if they are, user knows how to do
-	// preprocessing, so can probably do a different way
+	/*
+	* for issue titles in upload that don't exist on wp_post, create a table for later possible post creation
+	* table will also be used to show user what will be created
+	*
+	* note: makes no sense to default tags or cats -- in normal usage, these should vary across records 
+	* also, they are unlikely to be included in input sources -- if they are, user knows how to do
+	* backend processing and can solve own problems
+	*/ 
 	public static function get_unmatched_issues ( $staging_table, $issue_title_column, $issue_content_column ) {
 		
 		global $wpdb;
@@ -736,11 +741,18 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	
 	/*	
 	*
-	* function to support final completion
+	* functions to support final completion of upload
+	* completion is a three phase process:
+	*	- add new issues if any
+	*	- add new constituents if any
+	*	- apply updates to old and new constituents
+	*		in the case of the new constituents, the updates are additions of address, email, phone or activity records
+	*		in case of old, same and/or updates to the base constituent record
+	*	- results are retained serialized_final_results field on the upload table record
 	*
 	*/
 	
-	// quick look up
+	// quick look up -- includes initial construction of value if not already there
 	public static function get_final_results ( $upload_id ) {
 
 		global $wpdb;
@@ -750,7 +762,8 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 
 		if ( $result[0]->serialized_final_results > '' )
 			return ( $result[0]->serialized_final_results );
-		else {
+		// if still blank, then this is first pass -- return starting json string with 0 values
+		else { 
 			$stub = '{
 				"new_constituents_saved":0, 
 				"input_records_associated_with_new_constituents_saved":0, 
@@ -771,22 +784,45 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		return ( $result );
 	}	
 	
+	// first phase of upload completion
 	public static function complete_upload_save_new_issues ( $upload_id, $staging_table, $offset, $chunk_size ) {
+		// note that this function does not actually use $offset and $chunk-size -- does single save process, unphased.
+
+		// set globals
 		global $wpdb;
 		$table = $staging_table . '_new_issues';
 		
+		// get result count object -- get will create blank object, since this is first phase of uplod
 		$final_results = json_decode ( self::get_final_results ( $upload_id ) );
-		// is there a new issues table at all -- not created if no titles mapped
+
+		/*
+		* is there a new issues table at all -- not created if no titles mapped
+		* belt and suspenders -- check that new issues table exists -- shouldn't be calling this if it doesn't
+		* see wic-upload-complete.js:  this workphase is not invoked unless option to create new issues is selected and
+		*  . . . see wic-upload-set-defaults.js . . . that option is not offered unless title table is created
+		* -- title table is created in wic-upload-set-defaults.js to show user what titles will be created
+		* -- see get_unmatched_issues above, the method invoked from this class
+		*/ 
 		$sql = "SHOW TABLES LIKE '$table'";
 		$result = $wpdb->get_results ( $sql );
 
-		$new_issues_saved = 0;
-		// if table not found, $new_issues_saved stays 0		
-		if ( 0 < count ( $result ) ) {
-			$sql = "SELECT * FROM $table";
-			$new_issues = $wbdb->get_results( $sql );
+		$post_table = $wpdb->posts;
 
+		$new_issues_saved = 0;
+		// if table was not found, $new_issues_saved stays 0		
+		if ( 0 < count ( $result ) ) {
+			
+			// select new issues that are still not inserted to assure rerunnability
+			// if have already added them inserted_post_id will have been set > 0
+			$sql = "SELECT * FROM $table 
+						WHERE inserted_post_id = 0
+						";
+			$new_issues = $wpdb->get_results( $sql );
+
+			// create a WIC WP query object for repeated use
 			$wic_query = WIC_DB_Access_Factory::make_a_db_access_object( 'issue' );
+			
+			// create a template to spoof a form submission
 			$save_array_template = array (
 				array( 'key' 	=> 'ID', 
 				 'value'	=> '', 
@@ -801,45 +837,72 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 				 'wp_query_parameter' => 'post_content', 
 				), 
 			); 
+			
+			// submit each record in the issue table for saving as new post 
 			foreach ( $new_issues as $new_issue ) {
+				// populate the template with title and content
 				$save_array_template[1]['value'] = $new_issue->new_issue_title;
 				$save_array_template[2]['value'] = $new_issue->new_issue_content;
 
+				// invoke query object save function directly 
 				$wic_query->db_save ( $save_array_template );
 				$id_to_save = $wic_query->insert_id;
-				$new_issue_id = $new_issue->new_issue_id;				
+				$new_issue_id = $new_issue->new_issue_ID;				
 				
+				// update issue staging table with new post ID 
 				$sql = "UPDATE $table SET inserted_post_id = $id_to_save WHERE new_issue_ID = $new_issue_id";
 				$wpdb->query ( $sql );
 				$new_issues_saved++;
 			}				
-		} 	
+		} 
+		
+		// save issue count and return the final results object as updated	
 		$final_results->new_issues_saved = $new_issues_saved;		
 		$final_results = json_encode ( $final_results );
 		self::update_final_results( $upload_id, $final_results );
 		return ( $final_results ) ;		
 	}
 	
-	public static function complete_upload_save_new_constituents	( $upload_id, $staging_table, $offset, $chunk_size ) { 
+	/*
+	*
+	* Save the new constituents that have been identified through the matching process
+	*
+	*/
+	public static function complete_upload_save_new_constituents	( $upload_id, $staging_table, $offset, $chunk_size ) {
+		
+		// set globals
 		global $wpdb;
 		global $wic_db_dictionary;
-		$data_object_array = array(); // construct this with only the controls we need
+		
+		// construct data object array with only the controls we need to spoof form data entry
+		$data_object_array = array(); 
 		
 		$table = $staging_table . '_unmatched';
 		
+		// get the current counts -- from prior phase or pass
 		$final_results = json_decode ( self::get_final_results ( $upload_id ) );
 		
-		// is there a new issues table at all -- not created if no titles mapped
+		/*
+		* is there a new constituent table at all -- not created if no constituents unmatched
+		* belt and suspenders -- again, shouldn't be calling this if it doesn't exist
+		* see wic-upload-complete.js:  this phase is not invoked unless option to create new constituent is selected and
+		*  . . . see wic-upload-set-defaults.js . . . that option is not offered to set unless there are new constituents to save
+		*/ 
 		$sql = "SHOW TABLES LIKE '$table'";
 		$result = $wpdb->get_results ( $sql );
 
+		// initialize count variables
 		$new_constituents_saved = 0;
-		$input_records_associated_with_new_constituents_saved = 0;
+		$input_records_associated_with_new_constituents_saved = 0; // multiple input records can group to a single new constituent
+		
+		// skip processing if no unmatched table found
 		if ( 0 < count ( $result ) ) {
 			$sql = "SELECT * FROM $table LIMIT $offset, $chunk_size";
 			$new_constituents = $wpdb->get_results( $sql );
 
-			// get array of columns of table mapped to constituent fields -- same array used in previous construction of $table 
+			// get array of columns in table that are mapped to constituent fields -- 
+			// same selection of columns used in previous construction of $table 
+			// see method above -- create_unique_unmatched_table
 			$column_map = json_decode ( WIC_DB_Access_Upload::get_column_map ( $upload_id ) );
 			foreach ( $column_map as $column => $entity_field_object ) {
 				if ( '' < $entity_field_object ) { // unmapped columns have an empty entity_field_object
@@ -851,7 +914,18 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 				}		
 			}	
 			
-			// need ID in the array and also want to be sure to be adding it -- could have bad ID's in the field; set to zero
+			/*
+			*	need ID in the array for updates through the query object
+			*	note that the possible situations here are as follows:
+			*		a) ID is not in the object array, so not also not on the staging table -- clean; just create new id's
+			*			staging table records will be sent to method db_save with ID = 0 and get new ID in save process
+			*		b) ID is in the object array so also on the staging table and, by logic enforced in upload_match_strategies, the only match field
+			*			-- if 0, is not valid, not in unmatched table
+			*			-- if empty, not matchable, so not capable of being not found, so not in the unmatched table
+			*			-- if non-empty valid, then matched (b/c must be validation for ID is match) , not in the unmatched table
+			*			-- if non-empty not valid, not in unmatched table
+			*	In other words, if ID is mapped, unmatched table will be created, but is always empty.
+			*/
 			if ( ! isset ( $data_object_array['ID'] ) ) {
 				$field_rule = $wic_db_dictionary->get_field_rules ( 'constituent', 'ID' );					
 				$data_object_array[$field_rule->field_slug] = WIC_Control_Factory::make_a_control( $field_rule->field_type );	
@@ -859,44 +933,54 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			}
 			$data_object_array['ID']->set_value ( 0 );
 			
+			// create a db access object to which will spoof partial forms			
 			$wic_access_object = WIC_DB_Access_Factory::make_a_db_access_object( 'constituent' );
 			
+			// process the unmatched file
 			foreach ( $new_constituents as $new_constituent ) { 
-				
-				// populate data_object_array with values from staging table (none allowed are multivalue)
-				foreach ( $data_object_array as $field => $control ) {
-					if ( isset ( $new_constituent->$field ) ) {				// don't have ID or constituent ID on many input records
-						$control->set_value( $new_constituent->$field ); 	// should loop through all $new_constituent fields
+	
+				// first test to see if this job might have already been done -- assuring rerunnability
+				// just skip the record if already processed
+				if ( 0 == $new_constituent->INSERTED_CONSTITUENT_ID ) { 	
+					
+					// populate data_object_array with values from staging table (none allowed are multivalue)
+					foreach ( $data_object_array as $field => $control ) {
+						if ( isset ( $new_constituent->$field ) ) {				// test isset b/c may not have ID among fields
+							$control->set_value( $new_constituent->$field ); 	// should loop through all $new_constituent fields
+						}
 					}
-				}
-				
-				// use database object -- no search_logging or extra time stamps in this:  efficient
-				// also does prepare on all values, so this is as robust as form -- validated, sanitized, now escaped
-				$wic_access_object->save_update( $data_object_array ); 
-				if ( $wic_access_object->outcome ) {
-
-					$new_constituents_saved++;
-					$id_to_save = $wic_access_object->insert_id;
-					// $id_to_update = $new_constituent->STAGING_TABLE_ID;
-					// update the unmatched table for simple reversibility
-					// $sql = "UPDATE $table SET INSERTED_CONSTITUENT_ID = $id_to_save 
-					// 		WHERE STAGING_TABLE_ID =  $id_to_update";
-					// $result = $wpdb->query ( $sql ); 
-					// skip this update -- run backout routine off of primary staging table
-				
-					// now prepare to update the possibly multiple staging table records with the insert ID		
-					$staging_table_id_string =  $new_constituent->STAGING_TABLE_ID_STRING ;
-					$staging_table_id_array  =  explode ( ',', $staging_table_id_string );
-					// posting insert ID's back to the original staging table
-					$sql = "UPDATE $staging_table SET MATCHED_CONSTITUENT_ID = $id_to_save, INSERTED_NEW = 'y' 
-							WHERE STAGING_TABLE_ID IN  ( $staging_table_id_string )";
-					$result = $wpdb->query ( $sql );
-					if ( $result !== false ) {
-						$input_records_associated_with_new_constituents_saved += count ( $staging_table_id_array );
-					}
-				}	 
-			}
-		}
+					
+	
+					// use database object -- no search_logging or extra time stamps in this:  efficient
+					// also does prepare on all values, so this is as robust as form -- validated, sanitized, now escaped
+					$wic_access_object->save_update( $data_object_array );
+					// if save successful, log save in several ways 
+					if ( $wic_access_object->outcome ) {
+						
+						// do count for the final results 
+						$new_constituents_saved++;
+						
+						// update the unmatched table -- this is to assure rerunnability
+						$id_to_save = $wic_access_object->insert_id;
+						$id_to_update = $new_constituent->STAGING_TABLE_ID;
+						$sql = "UPDATE $table SET INSERTED_CONSTITUENT_ID = $id_to_save 
+							WHERE STAGING_TABLE_ID =  $id_to_update";
+						$result = $wpdb->query ( $sql ); 
+					
+						// now prepare to update the possibly multiple staging table records with the insert ID		
+						$staging_table_id_string =  $new_constituent->STAGING_TABLE_ID_STRING ;
+						$staging_table_id_array  =  explode ( ',', $staging_table_id_string );
+						// posting insert ID's back to the original staging table
+						$sql = "UPDATE $staging_table SET MATCHED_CONSTITUENT_ID = $id_to_save, INSERTED_NEW = 'y' 
+								WHERE STAGING_TABLE_ID IN  ( $staging_table_id_string )";
+						$result = $wpdb->query ( $sql );
+						if ( $result !== false ) {
+							$input_records_associated_with_new_constituents_saved += count ( $staging_table_id_array );
+						} 
+					}  // close did successful save?
+				}	// close test for already processed 
+			}	// close loop through unmatched table
+		}	// close unmatched table found
 
 		$final_results->new_constituents_saved += $new_constituents_saved;
 		$final_results->input_records_associated_with_new_constituents_saved += $input_records_associated_with_new_constituents_saved;
@@ -915,7 +999,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		global $wpdb;
 		global $wic_db_dictionary;
 		
-		// have multiple entities to update
+		// have multiple entities to update -- create array of data object arrays for each
 		$data_object_array_array = array(
 			'constituent' 	=> array(),
 			'address'		=> array(),
@@ -947,12 +1031,12 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		// get the serialized default decisions 		
 		$default_decisions = json_decode ( WIC_DB_Access_Upload::get_default_decisions ( $upload_id ) );		
 		
-		// need ID in the array and also want to be sure to be adding it -- could have bad ID's in the field; set to zero
+		// need ID in the array if not there
 		// in same loop, populate an array of data access objects
 		// in same loop, add default decisions into array
 		// in same loop, add constituent_id into the multivalue entities
 		$wic_access_object_array = array();
-		foreach ( $data_object_array_array as $entity=>&$data_object_array ) {	
+		foreach ( $data_object_array_array as $entity=>&$data_object_array ) {	// looping on pointer, so altering underlying object
 			
 			// add ID to each array
 			if ( ! isset ( $data_object_array['ID'] ) ) {
@@ -1052,23 +1136,22 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 					// if have post_title through mapping or default and have assured that all post_titles exist on database				
 					if ( ! $use_title ) {
 						continue; // continue to next entity					
-					} else {
-						$query_array = array(
-							$data_object_array['post_title']->create_search_clause ( $search_clause_args ),					
-						);
+					} else { 	
+						$query_array =	$data_object_array['post_title']->create_search_clause ( $search_clause_args );
 						// execute a search
 						$wic_access_object_array[$entity]->search ( $query_array, $search_parameters );
+
 						// if matches found, take the first for update purposes 
 						if ( $wic_access_object_array[$entity]->found_count > 0 ) {
 							$data_object_array_array['activity']['issue']->set_value( $wic_access_object_array[$entity]->result[0]->ID );					
 						} else {
 							WIC_Function_Utilities::wic_error ( 
-								sprintf ( 'Data base corrupted for postTitle: %1$s in id_search_generic.' , $data_object_array['post_title']->get_value() ), 
+								sprintf ( 'Data base corrupted for post title: %1$s in update constituent phase.' , $data_object_array['post_title']->get_value() ), 
 								__FILE__, __LINE__, __METHOD__, true );
 						} 					
 					}
 				} elseif ( 'issue' != $entity ) { // so not constituent and not issue, in other words is any of the multivalue entities
-					if ( 3 > count ( $data_object_array ) ) { // multivals always ID and constituent ID, if that's all, nothing to update
+					if ( 3 > count ( $data_object_array ) ) { // multivals always have ID and constituent ID, if that's all, nothing to update
 						continue;				
 					} 	
 		
@@ -1081,7 +1164,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 							$query_array = array_merge ( $query_array, $control->create_search_clause ( $search_clause_args ) );
 						}
 					} 
-					// execute a search 
+					// execute a search for the multivalue entity -- treating it as a top level entity, but query object is OK with that
 					$wic_access_object_array[$entity]->search ( $query_array, $search_parameters );
 					// if matches found, take the first for update purposes 
 					if ( $wic_access_object_array[$entity]->found_count > 0 ) {
@@ -1091,21 +1174,22 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 					} 					
 					$data_object_array['ID']->set_value ( $id_to_update );
 
+					// now, either update found record ( email,phone, address or activity ) or save new one
 					$result = $wic_access_object_array[$entity]->save_update ( $data_object_array ) ;
 					$constituent_update_applied = true;
 					if ( 'activity' == $entity && 0 == $id_to_update ) {
 						$activity_added = true;					
 					}
 				} 
-				
-				// increment counters		
-				if ( $constituent_update_applied ) {
-					$constituent_updates_applied++;
-				}
-				if ( $activity_added ) {
-					$activities_added++;
-				}
 			} // close loop for entities
+				
+			// increment counters at most once for each staging table record 		
+			if ( $constituent_update_applied ) {
+				$constituent_updates_applied++;
+			}
+			if ( $activity_added ) {
+				$activities_added++;
+			}
 		} // close for loop for staging table
 
 		// save tallies		

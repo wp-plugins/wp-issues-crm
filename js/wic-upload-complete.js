@@ -76,12 +76,14 @@
 	function doUpload() { 
 
 		currentPhase = currentPhaseArray[currentPhasePointer];
-		console.log ( 'ehllo' + currentPhase );
+
 		if ( undefined != currentPhase ) {
 			// reset chunk count
 			switch ( currentPhase ) {
 				case "save_new_issues":
 					jQuery( "#wic-upload-progress-bar" ).progressbar ( "value", false );
+					// resetting chunk parms arbitrarily just so variables are defined -- these values are ignored in this phase, not chunked
+					resetChunkParms ( 1000 );
 					break;
 				case "save_new_constituents":
 					jQuery( "#wic-upload-progress-bar" ).progressbar ( "value", 0 );	
@@ -96,6 +98,7 @@
 					break;					
 			}
 			// initiate the recursion
+			console.log ( 'doUpload initiating phase: ' + currentPhase );
 			finalUploadPhase ( 0 );
 		} else { 
 			// wrap up!
@@ -133,7 +136,7 @@
 					progressLegend = '<h3>Completed new issue insertion phase.</h3>'; 
 					jQuery( "#upload-results-table-wrapper" ).html( progressLegend + layoutFinalResults()  ); 
 					// new issues is single pass process, so move pointer to next phase when done
-					currentPassPointer++;
+					currentPhasePointer++;
 					doUpload();
 					break;
 				case "save_new_constituents":

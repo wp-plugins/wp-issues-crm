@@ -122,7 +122,9 @@
 		// get column map for this upload 
 		$column_map =  json_decode( WIC_DB_Access_Upload::get_column_map( $upload_id ) ) ;		
 		
-		// invert column map to give array of database fields that are mapped to
+		// invert column map to give array of database fields that are mapped to from the staging table
+		// note that if constituent ID is among mapped fields, invert_column_map will only return ID
+		// if ID is in the staging table, match only by that -- no need to handle a mixed case for that
 		$targeted_database_fields = self::invert_column_map ( $column_map );
 				
 		// filter match array by available columns
@@ -207,18 +209,33 @@
 		return ( $output );
 	}
 
+		/* 
+		* 	function to invert column map
+		*  also tests for mapping of ID
+		*/
 		public static function invert_column_map ( $column_map ) {
+
 			$targeted_database_fields = array();
+
+			$id_mapped = false;			
 			foreach ( $column_map as $column => $entity_field_object ) {
 				if ( '' < $entity_field_object ) { // unmapped columns have an empty entity_field_object
 					$targeted_database_fields[] = array( $entity_field_object->entity, $entity_field_object->field );
+					if ( 'constituent' == $entity_field_object->entity && 'ID' == $entity_field_object->field ) {
+						$id_mapped = true;
+						break;					
+					}
 				}		
+			}
+
+			// if ID is mapped ignore all other fields for matching purposes -- only present that match option
+			if ( $id_mapped ) {
+				$targeted_database_fields = array ( array ( 'constituent', 'ID' ) );			
 			}	
+			
 			return ( $targeted_database_fields );	
+
 		}
-
-
-
 
 }
 

@@ -138,7 +138,7 @@ INSERT INTO `wp_wic_data_dictionary` (`ID`, `entity_slug`, `group_slug`, `field_
 (NULL, 'upload', 'address', 'zip', 'text', 'Postal code ', 60, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'email', 'email_type', 'select', 'Email type ', 70, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', 'email_type_options', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'phone', 'phone_type', 'select', 'Phone type ', 80, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', 'phone_type_options', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
-(NULL, 'upload', 'new_issue_creation', 'create_issues', 'checked', 'Create new issues from unmatched non-blank titles (check to accept or unmap titles or override titles):', 60, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00');
+(NULL, 'upload', 'new_issue_creation', 'create_issues', 'checked', 'Create new issues from unmatched non-blank titles (check to accept or go back and unmap titles):', 60, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00');
 INSERT INTO wp_wic_form_field_groups (ID, entity_slug, group_slug, group_label, group_legend, group_order, initial_open, sidebar_location, last_updated_time, last_updated_by) VALUES
 (1, 'constituent', 'contact', 'Contact', '', 10, 1, 0, '0000-00-00 00:00:00', 0),
 (5, 'constituent', 'case', 'Case Management', '', 30, 1, 1, '0000-00-00 00:00:00', 0),
