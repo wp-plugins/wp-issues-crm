@@ -645,6 +645,22 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			if ( false === $insert_count ) {
 				return ( false );		
 			} 
+
+			// calculate updateable records remaining unmatched from each match pass (after all matches done )
+			$sql = "
+					SELECT FIRST_NOT_FOUND_MATCH_PASS as pass_slug, COUNT(FIRST_NOT_FOUND_MATCH_PASS) AS pass_count
+					FROM $staging_table 
+					WHERE MATCH_PASS = '' AND FIRST_NOT_FOUND_MATCH_PASS > '' AND VALIDATION_STATUS = 'y'
+					GROUP BY FIRST_NOT_FOUND_MATCH_PASS
+					";
+			$result_array = $wpdb->get_results ( $sql );
+			if ( false !== $result_array ) {
+				if ( 0 != count ( $result_array ) ) { 
+					foreach ( $result_array as $result ) { 
+						$match_results->{$result->pass_slug}->unmatched_records_with_valid_components = $result->pass_count;		
+					}
+				}	
+			}
 			
 			// calculate unique counts from each match pass
 			$sql = "SELECT FIRST_NOT_FOUND_MATCH_PASS as pass_slug, COUNT(FIRST_NOT_FOUND_MATCH_PASS) AS pass_count
@@ -765,10 +781,11 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		// if still blank, then this is first pass -- return starting json string with 0 values
 		else { 
 			$stub = '{
+				"new_issues_saved":0,
 				"new_constituents_saved":0, 
 				"input_records_associated_with_new_constituents_saved":0, 
 				"constituent_updates_applied":0, 
-				"activities_added":0
+				"total_valid_records_processed":0
 				}';
 			return ( $stub );				
 		}
@@ -1011,8 +1028,9 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		
 		$final_results = json_decode ( self::get_final_results ( $upload_id ) );
 		
-		$constituent_updates_applied = 0;
-		$activities_added = 0;
+		// set counters of activity for this pass
+		$constituent_updates_applied 		= 0; // counts non-new valid records (i.e., matched records)
+		$total_valid_records_processed 	= 0; // counts all valid records (matched and unmatched, possible multiple records for each new unmatched)
 
 		// get array of array of columns of table mapped to entity fields 
 		$column_map = json_decode ( WIC_DB_Access_Upload::get_column_map ( $upload_id ) );
@@ -1075,9 +1093,10 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		// get staging records
 		$used_columns_string = implode ( ',', $used_columns );
 		$sql = "SELECT $used_columns_string, VALIDATION_STATUS, MATCHED_CONSTITUENT_ID, INSERTED_NEW
-				  FROM $staging_table LIMIT $offset, $chunk_size";
+				  FROM $staging_table LIMIT $offset, $chunk_size
+				  ";
 		$staging_records = $wpdb->get_results( $sql );
-
+		
 
 		// set up search parms for use within loop
 		$search_parameters = array(
@@ -1104,9 +1123,6 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			$use_title = false;		
 		}
 
-		// will be used to determine if add to counts at bottom of loop
-		$constituent_update_applied = false;
-		$activity_added = false;
 		foreach ( $staging_records as $staging_record ) {
 			
 			// populate the data object arrays with values from mapped columns (omitting the control columns on the staging record)
@@ -1114,24 +1130,23 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 				$data_object_array_array[$column_map->$column->entity][$column_map->$column->field]->set_value( $staging_record->$column );
 			}
 			
-			// apply switches to record values to determine whether to do updates
-			if ( 0 == $staging_record->MATCHED_CONSTITUENT_ID || // never matched, so not inserted b/c add_unmatched switch set false OR is invalid, 
+			// apply switches to determine whether to skip updates
+			if ( 0 == $staging_record->MATCHED_CONSTITUENT_ID || // never matched -- invalid OR matched to dups on db OR unmatched, but unmatched save off   
 				  ( ! $default_decisions->update_matched && '' ==  $staging_record->INSERTED_NEW ) )// update_matched is false && this record not new
 				  { 
 				  continue; // go to next staging file record without doing an update
 			}
 			// now go through array of arrays, and do updates
 			foreach ( $data_object_array_array as $entity => $data_object_array ) {
-				// if constituent and just added it, don't reupdate the top entity record
-				// if only have ID control, nothing to update on the top entity record
 				if ( 'constituent' == $entity ) {
-					if ( 'y' == $staging_record->INSERTED_NEW ||  2 > count ( $data_object_array ) ) { 
-						continue; // continue to next entity 
+					// if constituent and just added it, don't reupdate the top entity record
+					// also, if only have ID control, nothing to update on the top entity record
+					// assuming not either of those go ahead and update (even without, will count as valid record processed) 
+					if ( 'y' != $staging_record->INSERTED_NEW &&  1 < count ( $data_object_array ) ) { 
+						$data_object_array['ID']->set_value ( $staging_record->MATCHED_CONSTITUENT_ID );
+						// do the update
+						$wic_access_object_array[$entity]->save_update( $data_object_array );
 					} 
-					$data_object_array['ID']->set_value ( $staging_record->MATCHED_CONSTITUENT_ID );
-					// do the update
-					$wic_access_object_array[$entity]->save_update( $data_object_array );
-					$constituent_update_applied = true;	
 				} elseif ( 'issue' == $entity ) {
 					// if have post_title through mapping or default and have assured that all post_titles exist on database				
 					if ( ! $use_title ) {
@@ -1176,25 +1191,21 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 
 					// now, either update found record ( email,phone, address or activity ) or save new one
 					$result = $wic_access_object_array[$entity]->save_update ( $data_object_array ) ;
-					$constituent_update_applied = true;
-					if ( 'activity' == $entity && 0 == $id_to_update ) {
-						$activity_added = true;					
-					}
+
+
 				} 
 			} // close loop for entities
-				
-			// increment counters at most once for each staging table record 		
-			if ( $constituent_update_applied ) {
+
+			// increment counters 		
+			if ( 'y' != $staging_record->INSERTED_NEW ) { // non-new updates 
 				$constituent_updates_applied++;
 			}
-			if ( $activity_added ) {
-				$activities_added++;
-			}
+			$total_valid_records_processed++;
 		} // close for loop for staging table
 
 		// save tallies		
 		$final_results->constituent_updates_applied += $constituent_updates_applied;		
-		$final_results->activities_added += $activities_added;
+		$final_results->total_valid_records_processed += $total_valid_records_processed;
 		$final_results = json_encode ( $final_results );
 		self::update_final_results( $upload_id, $final_results );
 		return ( $final_results ) ;		

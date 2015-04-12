@@ -61,7 +61,7 @@
 			$( "#upload-button" ).text( "Uploading . . ." );
 			$( "#upload-game-plan").remove();
 	  		$( "#wic-upload-progress-bar" ).show();
-			jQuery( "#upload-results-table-wrapper" ).html( "<h3>Starting upload . . . </h3>" );
+			jQuery( "#upload-progress-legend" ).html( "<h3>Starting upload . . . </h3>" );
 			doUpload();
 		}); 
 		
@@ -129,12 +129,18 @@
 		wpIssuesCRMAjaxPost( 'upload', 'complete_upload',  uploadID, completeParameters,  function( response ) {
 			// update final results object with response			
 			finalResults = response;
+			
+			// post results to display table			
+			for ( var finalResult in finalResults  ) { // the global final results array
+				jQuery ( "#" + finalResult ).text( finalResults[finalResult] );	
+			}
+
 			// essentially doing three different flavors of the call back function, one for each phase; 
 			switch ( currentPhase ) {
 				case "save_new_issues":
 					// update progress legend and partial results
 					progressLegend = '<h3>Completed new issue insertion phase.</h3>'; 
-					jQuery( "#upload-results-table-wrapper" ).html( progressLegend + layoutFinalResults()  ); 
+					jQuery( "#upload-progress-legend" ).html( progressLegend ); 
 					// new issues is single pass process, so move pointer to next phase when done
 					currentPhasePointer++;
 					doUpload();
@@ -147,12 +153,12 @@
 					if ( chunkCount < chunkPlan ) {
 						progressLegend = '<h3> . . . added ' + ( chunkCount * chunkSize ).toLocaleString( 'en-US' )  
 							+ ' of ' + totalUnmatched.toLocaleString( 'en-US' ) + ' unique records in add new constituents phase.</h3>'; 
-						jQuery( "#upload-results-table-wrapper" ).html( progressLegend + layoutFinalResults() ); 
+						jQuery( "#upload-progress-legend" ).html( progressLegend ); 
 						finalUploadPhase ( chunkCount * chunkSize );
 					// otherwise show done legend and go to next phase
 					} else {
 						progressLegend = '<h3> Completed add of ' + totalUnmatched.toLocaleString( 'en-US' ) + ' unique records in add new constituents phase.</h3>'; 
-						jQuery( "#upload-results-table-wrapper" ).html( progressLegend + layoutFinalResults() ); 
+						jQuery( "#upload-progress-legend" ).html( progressLegend ); 
 						// move to next phase
 						currentPhasePointer++;
 						doUpload();
@@ -166,12 +172,12 @@
 					if ( chunkCount < chunkPlan ) {
 						progressLegend = '<h3> . . . processed ' + ( chunkCount * chunkSize ).toLocaleString( 'en-US' )  
 							+ ' of ' + insertCount.toLocaleString( 'en-US' ) + ' records in staging table for possible updates.</h3>'; 
-						jQuery( "#upload-results-table-wrapper" ).html( progressLegend + layoutFinalResults() );
+						jQuery( "#upload-progress-legend" ).html( progressLegend );
 						finalUploadPhase ( chunkCount * chunkSize );
 					// otherwise show done legend and go to next phase						
 					} else {
 						progressLegend = '<h3>Completed all upload processing.</h3>'; 
-						jQuery( "#upload-results-table-wrapper" ).html( progressLegend + layoutFinalResults() );
+						jQuery( "#upload-progress-legend" ).html( progressLegend );
 						// move to next phase
 						currentPhasePointer++;
 						doUpload();
@@ -194,16 +200,5 @@
 		// set a counter for number of times chunks called in recursion
 		chunkCount			 = 	0;
 	}
-	
-	
-	function layoutFinalResults () {
-		var finalResultTable = '<table>';		
-		for ( var finalResult in finalResults  ) { // the global final results array
-			finalResultTable += '<tr><td class="wic-statistic-text">' + finalResult + '</td><td class = "wic-statistic">' + finalResults[finalResult] + ' </td></tr>'; 		
-		}
-		finalResultTable += '</table>';
-		return ( finalResultTable );	
-	}
-
 
 })(); // end anonymous namespace enclosure

@@ -10,8 +10,11 @@
 
 	var wicColumnMap; // master object synched to screen and database
 	var wicSaveMapMessage; // save slot for the welcome message so it can be restored easily after save information shown
+	var initialUploadStatus; // loaded to form at outset
 
 	jQuery(document).ready(function($) {
+		
+		initialUploadStatus = $( "#initial-upload-status" ).text();
 		
 		// make field labels draggable
 		$( ".wic-draggable" ).draggable({
@@ -109,12 +112,16 @@
 					wicDropEventDetails ( draggableID, droppableID ) ;
 				}
 			}	
-			// enable the draggables
-			jQuery( ".wic-draggable" ).draggable( "enable" );
+			// enable the draggables, but only if haven't already started the upload
+			if ( initialUploadStatus != 'completed' && initialUploadStatus != 'started' ) {
+				jQuery( ".wic-draggable" ).draggable( "enable" );
+			}
 		});
 	
-		wicSaveMapMessage = jQuery ( "#post-form-message-box" ).text()
-	
+		wicSaveMapMessage = jQuery ( "#post-form-message-box" ).text();
+		if ( 'completed' == initialUploadStatus || 'started' == initialUploadStatus ) { 
+			jQuery ( "#post-form-message-box" ).text( wicSaveMapMessage + 'Cannot be altered because final upload has been ' + initialUploadStatus + '.' );
+		} 
 	}
 	
 	// based on a drag action, update column map, both in browser and on server

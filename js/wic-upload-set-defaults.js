@@ -7,9 +7,11 @@
 // self-executing anonymous namespace
 ( function() {
 	
-	var uploadID, uploadParameters, columnMap, matchResults, defaultDecisions, saveHeaderMessage;
+	var columnMap, defaultDecisions, initialUploadStatus, matchResults, saveHeaderMessage, uploadID, uploadParameters;
 
 	jQuery(document).ready(function($) {
+		
+		initialUploadStatus = $( "#initial-upload-status" ).text();
 
 		// uploadID, upload parameters and column map populated on upload
 		uploadID	 			= 		jQuery( "#ID" ).val();
@@ -50,7 +52,7 @@
 			$( "#wic-upload-progress-bar" ).progressbar ( "value", false );
 	  		$( "#wic-upload-progress-bar" ).show();
 		}); 
-		
+
     $(window).on('beforeunload', function() {
       });
 	});
@@ -262,8 +264,14 @@
 			jQuery ( "#create_issues" ).prop ( "checked", false );
 		}
 
-		// manage message box and set status consistently, but only if didn't kill form in first step
-		if ( ! jQuery ( ":input" ).prop ( "disabled" ) ) { 		
+		// having set up form appropriately, decide whether to allow updates and what messages to show
+		// if have already started or completed upload, disable all input
+		if ( 'completed' == initialUploadStatus || 'started' == initialUploadStatus ) { 
+			jQuery ( "#wic-form-upload-set-defaults :input" ).prop( "disabled", true ); 
+			jQuery ( "#upload-settings-good-to-go" ).hide();
+			jQuery ( "#upload-settings-need-attention" ).hide();
+		// elseif didn't kill form for record count reasons, show messages and set status accordingly
+		} 	else if ( ! jQuery ( ":input" ).prop ( "disabled" ) ) { 		
 			
 			if ( errorsArray.length > 0 ) { 
 				jQuery( "#post-form-message-box" ).append( '<ul id="upload-settings-need-attention"></ul>' );
@@ -299,11 +307,13 @@
 			defaultDecisions[elementID] = elementValue;
 		});
 
+		// add new issue count to object 	
+		defaultDecisions['new_issue_count'] = jQuery( "#new-issue-table tr" ).length - 1 ;
+	
+		// set saving message
 		jQuery ( "#post-form-message-base" ).text( saveHeaderMessage + " Saving . . . ")
 
-		// update column map in browser
-
-		// send column map on server
+		// send object to server
 		wpIssuesCRMAjaxPost( 'upload', 'update_default_decisions',  jQuery('#ID').val(), defaultDecisions, function( response ) {
 			jQuery ( "#post-form-message-base" ).text( saveHeaderMessage + " Saved.")
 		});
@@ -333,6 +343,7 @@
 			jQuery ( "#new-issue-table" ).html(response); // show table results
 			jQuery ( "#new-issue-progress-bar-legend" ).remove();
 			jQuery ( "#new-issue-progress-bar" ).remove();
+			recordDefaultDecisions();  // need to set the number of new issues among the default decisions
 		});
 	}
 

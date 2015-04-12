@@ -95,10 +95,10 @@ class WIC_Admin_Setup {
             	'wic_ajax_nonce' 	=> wp_create_nonce ( 'wic_ajax_nonce' ),  
             ) 
 			);	
-			
-			// load script for upload mapping only on upload page.
-			if ( isset ( $_GET['action'] ) ) {
-				if ( 'details' == $_GET['action'] ) {
+
+			// load script for uploadsdetails page based on doing uploads at all -- $_get['action'] may not yet be set 
+			if ( isset ( $_GET['page'] ) ) {
+				if ( 'wp-issues-crm-uploads' == $_GET['page'] ) {
 					wp_register_script(
 						'wic-upload-details',
 						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-details.js' , __FILE__ ),
@@ -106,6 +106,9 @@ class WIC_Admin_Setup {
 					);
 					wp_enqueue_script('wic-upload-details');
 				}
+			}
+			// load script for upload subpages only if required
+			if ( isset ( $_GET['action'] ) ) {
 				if ( 'map' == $_GET['action'] ) {
 					wp_register_script(
 						'wic-upload-map',

@@ -20,15 +20,19 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 			<?php // form layout driven by upload status 
 			$upload_status = $data_array['upload_status']->get_value();
 			
-			// file has not been defaulted or has been remapped  but not revalidated or not not rematched -- show error message		
+			// file has not been matched or rematched	
 			if ( 'staged' == $upload_status || 'mapped' == $upload_status  || 'validated' == $upload_status ) {			
 				$message = __( 'You must map fields, validate data and match records before you can set defaults.', 'wp-issues-crm' );
 				$message_level = 'error';
 				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
-			// file has been mapped and validated and ready for test matching -- needs to be matched/rematched
-			} elseif ( 'matched' == $upload_status || 'defaulted' == $upload_status ) { 
-				$message = 	sprintf ( __( '%s -- database update settings. ', 'wp-issues-crm' ), $data_array['upload_file']->get_value() );
-				// note: manage message class in js
+			// file has all previous steps done; if started or completed upload show form here, but disable input in js 
+			} else {
+				if ( 'matched' == $upload_status || 'defaulted' == $upload_status ) { 
+					$message = 	sprintf ( __( '%s -- database update settings. ', 'wp-issues-crm' ), $data_array['upload_file']->get_value() );
+					// note: manage message class in js
+				} else {
+					$message =  sprintf ( __( 'Upload already started and/or completed for %s. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() )  . $message;
+				}
 				?><div id="post-form-message-box"><span id="post-form-message-base"><?php echo esc_html( $message ); ?></span></div><?php
 
 				// no button -- all AJAX on change
@@ -50,27 +54,10 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 							'</div>' . 
 						'</div>';					// wic-upload-default-form-body
 			echo '<div class = "horbar-clear-fix"></div>';
+					// put the upload status in here for reference (could be anywhere)
+			echo '<div id="initial-upload-status">' . $data_array['upload_status']->get_value() . '</div>';
 	  		// file has already been completed
-			} elseif ( 'completed' == $upload_status || 'started' == $upload_status ) { // needs work here
-						$message =  sprintf ( __( 'Upload already attempted for %s. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() )  . $message;
-				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
-				
-				// show button as disabled				
-				$button_args_main = array(
-					'entity_requested'			=> 'upload',
-					'action_requested'			=> 'form_update',
-					'button_class'					=> 'button button-primary wic-form-button',
-					'button_label'					=> __('Values set', 'wp-issues-crm'),
-					'type'							=> 'button',
-					'id'								=> 'match-button',
-					'disabled'						=> true,
-				);	
-				$button = $this->create_wic_form_button ( $button_args_main );
-				echo $button;
-	  			echo '<div id = "upload-results-table-wrapper">' . 
-					// 	  			
-	  			'</div>';			
-			} 
+			}
 	   
 		   // in all cases, echo ID, serialized working fields, nonce
 			echo $data_array['ID']->update_control();	

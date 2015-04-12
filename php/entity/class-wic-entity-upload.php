@@ -860,19 +860,19 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		ksort ( $active_match_rules );
 						
 		$table =  '<table id="wp-issues-crm-stats">' .
-		'<tr><td></td>	<th class = "wic-statistic-text" colspan="4">' . __( 'Pass input', 'wp-issues-crm' ) . '</th>' .
-							'<th class = "wic-statistic-text" colspan="3">' . __( 'Pass results', 'wp-issues-crm' ) . '</th>' .	
-							'<th class = "wic-statistic-text" >Unmatched</th></tr>' .
+		'<tr><td></td>	<th class = "wic-statistic-text" colspan="4">' . __( 'Upload records in match pass input', 'wp-issues-crm' ) . '</th>' .
+							'<th class = "wic-statistic-text" colspan="4">' . __( 'Match pass results', 'wp-issues-crm' ) . '</th>' .	
+							'</tr>' .
 		'<tr>' .
 			'<th class = "wic-statistic-text wic-statistic-long">' . __( 'Match Pass', 'wp-issues-crm' ) . '</th>' .
-			'<th class = "wic-statistic">' . __( 'Records', 'wp-issues-crm' ) . '</th>' .
-			'<th class = "wic-statistic">' . __( 'With data', 'wp-issues-crm' ) . '</th>' .
-			'<th class = "wic-statistic">' . __( ' ... also valid', 'wp-issues-crm' ) . '</th>' .
-			'<th class = "wic-statistic">' . __( ' ... also not matched', 'wp-issues-crm' ) . '</th>' .
-			'<th class = "wic-statistic">' . __( 'Matched unique', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Total records', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'With match data', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( ' ... also with no errors', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( ' ... also not already matched', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Matched single', 'wp-issues-crm' ) . '</th>' .
 			'<th class = "wic-statistic">' . __( 'Not found', 'wp-issues-crm' ) . '</th>' .
-			'<th class = "wic-statistic">' . __( 'Not unique', 'wp-issues-crm' ) . '</th>' .
-			'<th class = "wic-statistic">' . __( 'Viable unique values', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Matched multiple', 'wp-issues-crm' ) . '</th>' .
+			'<th class = "wic-statistic">' . __( 'Unmatched unique value combos', 'wp-issues-crm' ) . '</th>' .
 		'</tr>';
 
 		$total_matched = 0;

@@ -18,6 +18,7 @@ class WIC_DB_Upload_Match_Object {
 	public $not_found;
 	public $not_unique;						
 	public $unmatched_unique_values_of_components;
+	public $unmatched_records_with_valid_components;
 	
 	public function __construct (
 		$label,
@@ -30,7 +31,8 @@ class WIC_DB_Upload_Match_Object {
 	 	$matched_with_these_components = 0,
 	 	$not_found = 0,
 	 	$not_unique = 0,						
-	 	$unmatched_unique_values_of_components = '?'
+	 	$unmatched_unique_values_of_components = '?',
+	 	$unmatched_records_with_valid_components = 0
 	) 
 	 {
 		$this->label = $label;
@@ -44,6 +46,7 @@ class WIC_DB_Upload_Match_Object {
 	 	$this->not_found = $not_found;
 	 	$this->not_unique = $not_unique;						
 	 	$this->unmatched_unique_values_of_components = $unmatched_unique_values_of_components;
+	 	$this->unmatched_records_with_valid_components = $unmatched_records_with_valid_components;
 	}
 
 }

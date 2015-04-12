@@ -119,6 +119,10 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 			$output .= '<div id = "wic-draggable___' . $key . '" class="wic-draggable" title = "' . $column_titles_as_samples[$key] . '">' . $key . '</div>'; // column names are already unique
 		}
 		$output .= '</div></div>';
+		
+		// put the upload status in here for reference (could be anywhere)
+		$output .= '<div id="initial-upload-status">' . $doa['upload_status']->get_value() . '</div>';
+		
 		return $output;
 		
 	}

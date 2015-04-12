@@ -374,7 +374,23 @@ select.wic-input.email-type {
 	width: 23.4375%;
 } 
 
-/* make these a little smaller on update/save forms 
+
+/* hide unnecessary labels */
+.wic-label.pro-con,
+.wic-label.state,
+.wic-label.phone-number,
+.wic-label.zip,
+.wic-label.extension,
+.wic-label.activity-type,
+.wic-label.activity-note,
+.wic-label.address-type,
+.wic-label.phone-type, 
+.wic-label.email-type {
+	display: none;
+} 
+
+/* 
+* make these a little smaller on update/save forms 
 * to allow room for delete button (27px) 
 */
 #wic-form-constituent-save .wic-input.phone-type,
@@ -947,9 +963,12 @@ button.wic-post-list-button {
 * upload form styling 
 *
 ******************************************************************/
+#initial-upload-status,
 #ajax-loader {
 	display: none;
 }
+
+
 
 #upload-tabs-headers {
 	margin: 20px 0;
@@ -1038,17 +1057,17 @@ li.nav-tab-active  {
 	margin-left: 11.11111%;
 	margin-right: 11.1111%;
 }
-#wic-field-group-save_options,
+#wic-form-upload-save #wic-field-group-save_options,
 #wic-field-group-upload_tips {
 	margin: 30px 11.1111%;
 }	
 
-#wic-field-group-save_options .wic-input {
+#wic-form-upload-save #wic-field-group-save_options .wic-input {
 	margin: 0;
 	width: 100%;
 }
 
-#wic-field-group-save_options .wic-label {
+#wic-form-upload-save #wic-field-group-save_options .wic-label {
 	display: block;
 	margin: 0;
 	padding: 0;
@@ -1293,6 +1312,11 @@ ul.upload-status-summary {
 	padding: 10px 20px;
 	list-style: none;
 	list-style-position: inside;
+}
+
+#dup-note-to-stats {
+	font-size: 0.9em;
+	margin-top: -15px;
 }
 
 #upload-game-plan {
