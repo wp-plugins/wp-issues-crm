@@ -99,8 +99,9 @@ class WIC_Entity_Issue extends WIC_Entity_Parent {
 		
 		// retrieve ID's of constituents referencing this issue in activities or comments
 		$args = array(
-			'id_array' => array ( $post_id ),
-			'search_id' => $wic_query->search_id,
+			'id_array' 			=> array ( $post_id ),
+			'search_id' 		=> $wic_query->search_id,
+			'retrieve_mode' 	=> 'list',
 			); 
 		// WIC_Entity_Comment is a psuedo entity that mixes constituent and issue data
 		$wic_comment_query = new WIC_Entity_Comment ( 'get_constituents_by_issue_id', $args ) ;

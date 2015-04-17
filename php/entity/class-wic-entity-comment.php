@@ -152,8 +152,11 @@ class WIC_Entity_Comment extends WIC_Entity_Multivalue {
 		
 		// designed to mimic return from a constituent search so it can be fed to constituent list
 		// called by entity-issue to list constituents after and by list-constituent-export to list constituents for array of issues 
+		// also called by export routines
 		$id_array = array();
 		$search_id = 0;
+		$retrieve_mode = 'list'; // alt value is 'download'
+		$retrieve_limit = 100; // setting this permanent default -- user can export all
 		extract ( $args );
 
 		// test incoming values	
@@ -174,31 +177,45 @@ class WIC_Entity_Comment extends WIC_Entity_Multivalue {
 
  		// make wp query object available
 		global $wpdb;
+		
+		// set up temporary table
+		$temp_table = $wpdb->prefix . 'wic_temporary_id_list';
+		$sql = "CREATE TEMPORARY TABLE $temp_table ( ID bigint(20) unsigned NOT NULL ) "; 
+		$temp_result = $wpdb->query ( $sql ); 
+		if ( false === $temp_result ) {
+			WIC_Function_Utilities::wic_error ( sprintf( 'Error in search for constituents -- likely permission error.' ), __FILE__, __LINE__, __METHOD__, true );
+		}
 
 		// prepare ID array for use in search		
 		$id_string = implode ( ',', $id_array );		
 
 		// get unique constituents with activities
 		$table =  $wpdb->prefix . 'wic_' . 'activity';
-		$sql1 = 	"
+		$sql1 = 	" 
+			INSERT INTO $temp_table
 			SELECT constituent_id 
 			FROM $table
 			WHERE	issue IN ( $id_string )
 			GROUP BY constituent_id 
 			";
-		$first_array_of_constituent_ids = $wpdb->get_results ( $sql1 );
-		 
+		$partial_result = $wpdb->query ( $sql1 );
+		if ( false === $partial_result ) {
+			WIC_Function_Utilities::wic_error ( sprintf( 'Error in search for constituents with issue activities.' ), __FILE__, __LINE__, __METHOD__, true );
+		} 
 	 	
 		// now get unique constituents with comments
 		$table =  $wpdb->prefix . 'wic_' . 'email';
-		$sql2 = 	"		
+		$sql2 = 	"	
+			INSERT INTO $temp_table	
 			SELECT constituent_id  
 			FROM wp_comments inner join $table email on comment_author_email = email_address
 			WHERE comment_post_ID in ( $id_string )
 			GROUP BY constituent_id
 			";
-		$second_array_of_constituent_ids = $wpdb->get_results ( $sql2 );
-		
+		$partial_result = $wpdb->query ( $sql2 );
+		if ( false === $partial_result ) {
+			WIC_Function_Utilities::wic_error ( sprintf( 'Error in search for constituents with issue comments.' ), __FILE__, __LINE__, __METHOD__, true );
+		} 
 		// now pick up the authors of the posts in several steps:
 		$third_array_of_constituent_ids = array();
 
@@ -241,6 +258,7 @@ class WIC_Entity_Comment extends WIC_Entity_Multivalue {
 			
 			$table =  $wpdb->prefix . 'wic_' . 'email';
 			$sql3 = $wpdb->prepare( "
+				INSERT INTO $temp_table
 				SELECT constituent_id 
 				FROM $table
 				WHERE email_address = $where_string
@@ -248,44 +266,34 @@ class WIC_Entity_Comment extends WIC_Entity_Multivalue {
 				",
 				$clean_email_array );
 
-			$third_array_of_constituent_ids = $wpdb->get_results( $sql3 );
+			$partial_result = $wpdb->query( $sql3 );
+			if ( false === $partial_result ) {
+				WIC_Function_Utilities::wic_error ( sprintf( 'Error in search for constituents authoring posts.' ), __FILE__, __LINE__, __METHOD__, true );
+			} 
 		}  			
 
-		// merge arrays of constituent IDs from the three different sources
-		$simple_combined_array_of_ids = array();
-		foreach ( $first_array_of_constituent_ids as $id ) {
-			$simple_combined_array_of_ids[] = $id->constituent_id;		
-		}		
-		foreach ( $second_array_of_constituent_ids as $id ) {
-			$simple_combined_array_of_ids[] = $id->constituent_id;		
-		}
-		foreach ( $third_array_of_constituent_ids as $id ) {
-			$simple_combined_array_of_ids[] = $id->constituent_id;		
-		}				
-		
-		$unique_ids = array_unique ( $simple_combined_array_of_ids );
+		// if in list mode, want to set properties consist with all other lists
+		if ( 'list' == $retrieve_mode ) {
+			// create array of ID objects consolidating the three arrays
+			$sql4 = "SELECT SQL_CALC_FOUND_ROWS ID FROM $temp_table GROUP BY ID LIMIT 0, $retrieve_limit";
+			$this->result = $wpdb->get_results ( $sql4 );
+			$this->search_id = $search_id; // just a pass through from primary searches for issues
+			$this->entity = 'constituent';
+			
+			// get found count (final unique count of all constituents)			
+			$sql_found = "SELECT FOUND_ROWS() as found_count";
+			$found_count_object_array = $wpdb->get_results( $sql_found );
+			$this->found_count = $found_count_object_array[0]->found_count; 
+						
+			$this->retrieve_limit = $retrieve_limit; 
+			$this->showing_count = count ( $this->result ); 
+			$this->found_count_real = true;
 
-		// returning combined results as an array of objects with ID as property (for compatibility with WP_Query results)
-		foreach ( $unique_ids as $id ) {
-			$this->result[] = new WIC_Constituent_ID_Item ( $id );		
+			$this->sql = '(1) ' . $sql1 . '; (2) ' . $sql2 . '; (3) ' . $sql3 . ';';
+		// if in download mode, nothing necessary to return, nor to set as properties, since values passed through $temp_table in download mode	 
+		} elseif ( 'download' == $retrieve_mode ) {
+			return ( '' ); 
 		}
-
-		$this->search_id = $search_id; // just a pass through from primary searches for issues
-		$this->entity = 'constituent';
-		$this->retrieve_limit = 9999999999; // had not retrieve limits in this process
-		$this->found_count = count ( $unique_ids ); // final unique count of constituents
-		$this->found_count_real = true;
-		$this->showing_count = $this->found_count;
-		$this->sql = '(1) ' . $sql1 . '; (2) ' . $sql2 . '; (3) ' . $sql3 . ';'; 
 	} 
 }
 
-class WIC_Constituent_ID_Item {
-	// this class just helps mimic the wpdb result return
-	public $constituent_id;
-	
-	public function __construct ( $id ) {
-		$this->ID = $id;	
-	}
-
-}

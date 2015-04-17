@@ -111,7 +111,7 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 
 		// implement search parameters
 		$top_entity = $this->entity;
-		if ( 'id' == $select_mode) {
+		if ( 'id' == $select_mode || 'download' == $select_mode ) {
 			$select_list = $top_entity . '.' . 'ID ';	
 		} else {
 			$select_list = $top_entity . '.' . '* '; 
@@ -199,19 +199,29 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 		$sql_found = "SELECT FOUND_ROWS() as found_count";
 		$this->sql = $sql; 
 		
-		// do search
-		$this->result = $wpdb->get_results ( $sql );
-	 	$this->showing_count = count ( $this->result );
-		// only do sql_calc_found_rows on id searches; in other searches, found count will always equal showing count
-		$found_count_object_array = $wpdb->get_results( $sql_found );
-		$this->found_count = $found_count_object_array[0]->found_count;
-		// set value to say whether found_count is known
-		$this->found_count_real = $compute_total;
-		$this->retrieve_limit = $retrieve_limit;
-		$this->outcome = true;  // wpdb get_results does not return errors for searches, so assume zero return is just a none found condition (not an error)
-										// codex.wordpress.org/Class_Reference/wpdb#SELECT_Generic_Results 
-		$this->explanation = ''; 
 
+		if ( 'download' == $select_mode ) {
+			$temp_table = $wpdb->prefix . 'wic_temporary_id_list';			
+			$sql = "CREATE temporary table $temp_table " . $sql;
+			$temp_result = $wpdb->query  ( $sql );
+			if ( false === $temp_result ) {
+				WIC_Function_Utilities::wic_error ( sprintf( 'Error in download, likely permission error.' ), __FILE__, __LINE__, __METHOD__, true );
+			}			
+		
+		} else {
+			// do search
+			$this->result = $wpdb->get_results ( $sql );
+		 	$this->showing_count = count ( $this->result );
+			// only do sql_calc_found_rows on id searches; in other searches, found count will always equal showing count
+			$found_count_object_array = $wpdb->get_results( $sql_found );
+			$this->found_count = $found_count_object_array[0]->found_count;
+			// set value to say whether found_count is known
+			$this->found_count_real = $compute_total;
+			$this->retrieve_limit = $retrieve_limit;
+			$this->outcome = true;  // wpdb get_results does not return errors for searches, so assume zero return is just a none found condition (not an error)
+											// codex.wordpress.org/Class_Reference/wpdb#SELECT_Generic_Results 
+			$this->explanation = ''; 
+		}
 
 	}	
 	

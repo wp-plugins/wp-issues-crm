@@ -10,40 +10,83 @@ class WIC_List_Constituent_Export {
 	*
 	*
 	*/
-	public static function assemble_list_for_export ( &$wic_query ) {
-				// convert the array objects from $wic_query into a string
+	
+	public static function get_export_file_name () {
 
-  		$id_list = '(';
+		return ( $temp_file ); 
+	}	
 
-		foreach ( $wic_query->result as $result ) {
-			$id_list .= $result->ID . ',';		
-		} 	
-  		$id_list = trim($id_list, ',') . ')';
-
-		$current_user = wp_get_current_user();	
-		$file_name = 'wic-export-' . $current_user->user_firstname . '-' .  current_time( 'Y-m-d-H-i-s' )  .  '.csv' ; 
-		$temp_file = sys_get_temp_dir() . DIRECTORY_SEPARATOR  . $file_name; 
+	/*
+	*	Runs off of temporary table created early in transaction
+	*  Write directly to temp file in full permissions tmp subdirectory
+	*	The full permissions tmp subdirectory operates to make the temp file unlinkable by php although owned by mysql 
+	*/
+	public static function assemble_list_for_export () { 
 		
+		// reference global wp query object	
 		global $wpdb;	
+		$prefix = $wpdb->prefix . 'wic_';
+		
+		$constituent 	= $prefix . 'constituent';
+		$email 			= $prefix . 'email';
+		$phone			= $prefix . 'phone';
+		$address			= $prefix . 'address';
+		
+		// id list passed through user's temporary file wp_wic_temporary_id_list, lasts only through the server transaction (multiple db transactions)
+		$temp_table = $wpdb->prefix . 'wic_temporary_id_list';
 
+		// naming the outfile
+		$current_user = wp_get_current_user();	
+		$file_name = 'wic-export-' . $current_user->user_firstname . '-' .  current_time( 'Y-m-d-H-i-s' )  .  '.csv' ;
+		$temp_dir =  sys_get_temp_dir() . DIRECTORY_SEPARATOR  . 'wp_wic_temp_files'; 
+		$temp_file = $temp_dir . DIRECTORY_SEPARATOR . $file_name;
+
+		// make sure that full permission temp directory exists and if not, create it.
+		if ( ! file_exists (  $temp_dir ) ) {
+			mkdir ( $temp_dir ); 		
+		} 
+		// default permission is 0777,but umask is likely 0022, yielding permissions of 0755, not adequate
+		// so do chmod which is not limited by umask
+		chmod ( $temp_dir, 0777 );
+
+		// column headers for the output -- not available directly in outfile mode, so:
+		// first, get the list of constituent columns as a string
+		$sql = "SHOW COLUMNS IN $constituent";
+		$column_list_lookup = $wpdb->get_results ( $sql );
+		if ( false === $column_list_lookup ) {
+			WIC_Function_Utilities::wic_error ( 'Error accessing columns for constituent table -- probable database or configuration error.', __FILE__, __LINE__, __METHOD__, true );		
+		} else {
+			$column_list_array = array();
+			foreach ( $column_list_lookup as $column ) {
+				$column_list_array[] = $column->Field;
+			}
+			$column_list = "'" . implode( "','", $column_list_array ) . "'";		
+		}		
+		// now set up select with the column headers fully specified
+		$sql = "SELECT 'first_name', 'last_name', 
+			'email_address', 
+			'city', 
+			'phone_number', 
+			'address_line_1' ,
+			'address_line_2', 
+			'zip', " . 
+			$column_list . 
+			" UNION ALL ";
+	
    	// go direct to database and do customized search
-   	// create a new WIC access object and search for the id's
-
-
-		$sql = 	"SELECT  first_name, last_name,  
-						max( email_address ) as emails, 
-						max( city ) as city, 
-						max( phone_number ) as phones,
+		$sql .= 	"SELECT  first_name, last_name,  
+						max( email_address ), 
+						max( city ), 
+						max( phone_number ),
 						max( address_line ) as address_line_1,
 						max( concat ( city, ', ', state, ' ',  zip ) ) as address_line_2,
 						max( zip ), 
 						c.* 
-					FROM wp_wic_constituent c
-					left join wp_wic_email e on e.constituent_id = c.ID
-					left join wp_wic_phone p on p.constituent_id = c.ID
-					left join wp_wic_address a on a.constituent_id = c.ID	
-					WHERE c.ID IN $id_list
-					AND ( address_type = '0' or address_type is null )
+					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
+					left join $email e on e.constituent_id = c.ID
+					left join $phone p on p.constituent_id = c.ID
+					left join $address a on a.constituent_id = c.ID	
+					WHERE ( address_type = '0' or address_type is null )
 					GROUP BY c.ID
 					INTO OUTFILE '$temp_file'
 					FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '\"' ESCAPED BY '\\\\'
@@ -66,7 +109,7 @@ class WIC_List_Constituent_Export {
 			$wic_query = WIC_DB_Access_Factory::make_a_db_access_object( $search['entity'] );
 			
 			$search_parameters = array (		
-				'select_mode' 		=> 'id',
+				'select_mode' 		=> 'download', // with this setting, object will create the temp table that export assembler is looking for
 				'sort_order' 		=> true,
 				'compute_total' 	=> false,
 				'retrieve_limit' 	=> 999999999,
@@ -76,9 +119,11 @@ class WIC_List_Constituent_Export {
 	
 			$wic_query->search ( $search['meta_query_array'], $search_parameters );
 	
-			if ( 'constituent' == $search['entity'] ) { // done if constituents only
-				$file_name = self::assemble_list_for_export( $wic_query ); 
-			} elseif ( 'issue' ==  $search['entity'] ) { // need to run issues through 'Comment' logic to get constituents 
+			// one step if constituent export
+			if ( 'constituent' == $search['entity'] ) { 			
+				$file_name = self::assemble_list_for_export(); // runs off temp table
+			// two steps if getting constituents from issue list
+			} elseif ( 'issue' ==  $search['entity'] ) {  
 				$issue_array = array();
 				foreach ( $wic_query->result as $issue ) {
 					$issue_array[] = $issue->ID;
@@ -86,9 +131,10 @@ class WIC_List_Constituent_Export {
 				$args = array (			
 					'id_array' => $issue_array,
 					'search_id' => $id,
+					'retrieve_mode' => 'download',
 					);
 				$comment_query = new WIC_Entity_Comment ( 'get_constituents_by_issue_id', $args );
-				$file_name = self::assemble_list_for_export( $comment_query ); 
+				$file_name = self::assemble_list_for_export(); // values passed through $temp_table from comment query
 			} 
 			
 			self::do_the_export( $file_name );
@@ -117,7 +163,7 @@ class WIC_List_Constituent_Export {
 			// initiate a query with those activity search parameters and issue category as an additional criterion
 			$wic_query->search_activities_with_category_slice( $search['meta_query_array'], $category_contributors );
 			// pass the retrieved constituent ID's to assembly function for details	
-			$file_name = self::assemble_list_for_export ( $wic_query ); 
+			$file_name = self::assemble_list_for_export ( ); 
 			// send the file
 			self::do_the_export ( $file_name );
 			// mark the whole search as downloaded (no mechanism to mark slice)	
@@ -146,7 +192,7 @@ class WIC_List_Constituent_Export {
 
 	private static function do_the_export ( $file_name ) {
 
-		$temp_file = sys_get_temp_dir() . DIRECTORY_SEPARATOR  . $file_name; 
+		$temp_file =  sys_get_temp_dir() . DIRECTORY_SEPARATOR  . 'wp_wic_temp_files'  . DIRECTORY_SEPARATOR . $file_name; 
 		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 		header('Content-Description: File Transfer');
 		header("Content-type: text/csv");
@@ -154,9 +200,10 @@ class WIC_List_Constituent_Export {
 		header("Expires: 0");
 		header("Pragma: public");
 
-
+	
 		// $fh = @fopen( 'php://output', 'wb' ); // see notes on fopen -- open for write binary mode for portability
-		copy ( $temp_file, 'php://output' ); 
+		copy ( $temp_file, 'php://output' );
+		// able to unlink since stored in full permissions temp subdirectory owned by user
 		unlink ( $temp_file );
 	
 	}

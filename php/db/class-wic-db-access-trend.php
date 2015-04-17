@@ -84,6 +84,7 @@ class WIC_DB_Access_Trend Extends WIC_DB_Access {
 
 	} 	
 
+	// function set up only for download (could convert to list, by adding a list mode setting object properties )
 	public function search_activities_with_category_slice ( $meta_query_array, $category_contributors ) { 
 		// category_contributors is comma separated string of term id's
 		
@@ -105,8 +106,11 @@ class WIC_DB_Access_Trend Extends WIC_DB_Access {
 					$wpdb->term_relationships . ' tr on activity.issue = tr.object_id inner join ' .
 					$wpdb->term_taxonomy . ' tt on tt.term_taxonomy_id = tr.term_taxonomy_id';
 
+		// temporary table will pass to download routine		
+		$temp_table = $wpdb->prefix . 'wic_temporary_id_list';	
 		// prepare SQL
 		$activity_sql = "
+					CREATE TEMPORARY TABLE $temp_table 
 					SELECT constituent_id as ID
 					FROM 	$join
 					WHERE 1=1 $deleted_clause $where AND tt.term_id IN ( $category_contributors )
