@@ -47,7 +47,8 @@ class WIC_Admin_Ajax {
 	 	$wic_db_dictionary = new WIC_DB_Dictionary;		
 		
 		$class = 'WIC_Entity_' . $_POST['entity'];
-		$class::{$_POST['sub_action']}(  $_POST['id_requested'], $_POST['wic_data'] );	
+		$method = $_POST['sub_action'];
+		$class::$method(  $_POST['id_requested'], $_POST['wic_data'] );	
 						
 	}	
 

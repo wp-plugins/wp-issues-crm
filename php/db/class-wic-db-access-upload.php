@@ -1211,7 +1211,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		return ( $final_results ) ;		
 
 	} // close  update constituents	
-	
+
 }
 
 

@@ -171,6 +171,8 @@ class WIC_Admin_Setup {
 			WIC_List_Constituent_Export::do_constituent_download( $_POST['wic-post-export-button'] );	
 		} elseif ( isset( $_POST['wic-category-export-button'] ) ) { 
 			WIC_List_Constituent_Export::do_constituent_category_download( $_POST['wic-category-export-button'] );	
+		} elseif ( isset ( $_POST['wic-staging-table-download-button'] ) ) {
+			WIC_List_Constituent_Export::do_staging_table_download( $_POST['wic-staging-table-download-button'] );
 		}		
  	}
 

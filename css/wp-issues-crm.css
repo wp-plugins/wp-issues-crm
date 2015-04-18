@@ -1322,6 +1322,10 @@ ul.upload-status-summary {
 #upload-game-plan {
 	margin: 0 7.1111%;
 }
+
+.download-button-legend {
+	margin: -10px 0 30px 7.1111%;
+}
 /* list element widths */
 .pl-constituent-first_name{ width:14%;}
 .pl-constituent-middle_name{ width:14%;}

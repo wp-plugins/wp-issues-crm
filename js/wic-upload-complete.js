@@ -56,7 +56,7 @@
 
 		$("#upload-button").click(function(){
 			jQuery( "#upload-button" ).prop( "disabled", true );
-			// wpIssuesCRMAjaxPost( 'upload', 'update_upload_status',  uploadID, 'started',  function( response ) {});
+			wpIssuesCRMAjaxPost( 'upload', 'update_upload_status',  uploadID, 'started',  function( response ) {});
 			uploadInProgress = 1;
 			$( "#upload-button" ).text( "Uploading . . ." );
 			$( "#upload-game-plan").remove();

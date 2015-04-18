@@ -111,12 +111,13 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	public static function format_tab_titles ( $upload_id ) {
 		
 		$tab_titles_array = array (
-			'Describe' 	=> 'details', 		
-			'Map Fields'		=> 'map',
-			'Validate Data'		=> 'validate',
-			'Define Matching'	=>	'match',
-			'Set Defaults'	=>	'set_defaults',			
-			'Complete Upload'	=>	'complete',
+			__( 'Describe', 'wp-issues-crm' ) 			=> 'details', 		
+			__( 'Map Fields', 'wp-issues-crm' )			=> 'map',
+			__( 'Validate Data', 'wp-issues-crm' )		=> 'validate',
+			__( 'Define Matching', 'wp-issues-crm' )	=>	'match',
+			__( 'Set Defaults', 'wp-issues-crm' )		=>	'set_defaults',			
+			__( 'Complete Upload', 'wp-issues-crm' )	=>	'complete',
+			__( 'Download Records', 'wp-issues-crm' )		=>	'download',
 		);			
 		
 		$active_tab = isset( $_GET[ 'action' ] )  ? $_GET[ 'action' ] : 'details';		
@@ -200,7 +201,11 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		$id = $args['id_requested']; 
 		$this->id_search_generic ( $id, 'WIC_Form_Upload_Complete', '' , false, false );
 	}
-			
+	
+	protected function download ( $args ) {
+		$id = $args['id_requested']; 
+		$this->id_search_generic ( $id, 'WIC_Form_Upload_Download', '' , false, false );
+	}		
 	
 	// function from parent needs to be overridden to set name value from $_FILES array
 	protected function populate_data_object_array_from_submitted_form() {
@@ -977,10 +982,5 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			wp_die ( sprintf ( __('Error in upload completion -- phase %s.' , 'wp-issues-crm' ), $data->phase ) );		
 		}
 	}
-
-
-
-
-	
 	
 }
