@@ -68,15 +68,16 @@
 *					SO: set reset default object when match is reset -- a new match is required iff any prior remap or rematch 
 *
 *
-*  Enforcement of Field Required rules is as follows
+*  Enforcement of Field Required rules is as follows (summarizing))
 *		-- At mapping stage (initial on upload and on form), run method is_column_mapping_valid -- tests for missing phone number, email address or
 *			post title but only if other fields are mapped for the corresponding entities -- enforces rules by keeping status at 'staged'
 *		-- At validation stage, no required checking -- just sanitization and validation of values supplied
 *		--	At matching stage, enforcing identity group required by showing only options that include one of fn/ln/email; HOWEVER, since also offers
-*		 	custom matching, USER CAN BYPASS fn/ln/email REQUIREMENT ON UPLOAD IF MATCHING ON A CUSTOM FIELD -- ACCEPT THIS 
+*		 	custom matching, USER CAN BYPASS fn/ln/email REQUIREMENT ON UPLOAD IF MATCHING ON A CUSTOM FIELD -- BUT WILL BE CAUGHT AT INSERT STAGE
 *		-- At set default stage, cover address and activity required logic -- do here, not at mapping, because can offer defaults to complete
 *			fields missing in mapping -- e.g., can default City for address. Does require type for phone, email and address even though these
 *			not required on form entry.  Can work around by defining Unknown option and defaulting types to Unknown. 
+*		-- When doing inserts of constituents, require that at least one of email, fn or ln have been mapped and at least one is present.
 *		-- At constituent update stage, test for presence of required fields before saving.  Mapping and Default steps force required fields to be 
 *			mapped, but still need to test that values actually present on a given record before saving a blank address, email, phone or activity.
 *
@@ -134,6 +135,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			__( 'Set Defaults', 'wp-issues-crm' )		=>	'set_defaults',			
 			__( 'Complete Upload', 'wp-issues-crm' )	=>	'complete',
 			__( 'Download Records', 'wp-issues-crm' )		=>	'download',
+			__( 'Regrets', 'wp-issues-crm' )				=>	'regrets',			
 		);			
 		
 		$active_tab = isset( $_GET[ 'action' ] )  ? $_GET[ 'action' ] : 'details';		
@@ -221,6 +223,11 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	protected function download ( $args ) {
 		$id = $args['id_requested']; 
 		$this->id_search_generic ( $id, 'WIC_Form_Upload_Download', '' , false, false );
+	}	
+	
+	protected function regrets ( $args ) {
+		$id = $args['id_requested']; 
+		$this->id_search_generic ( $id, 'WIC_Form_Upload_Regrets', '' , false, false );
 	}		
 	
 	// function from parent needs to be overridden to set name value from $_FILES array
@@ -1050,5 +1057,19 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			wp_die ( sprintf ( __('Error in upload completion -- phase %s.' , 'wp-issues-crm' ), $data->phase ) );		
 		}
 	}
-	
+		/*
+  *
+  * functions supporting backout completion
+  *
+  */
+	public static function backout_new_constituents( $upload_id, $data ) {
+		$data = json_decode ( stripslashes ( $data ) );
+		$result = WIC_DB_Access_Upload::backout_new_constituents( $upload_id, $data->table );
+				// report results or report error
+		if ( $result !== false ) {		
+			wp_die ( json_encode ( $result ) );
+		} else {
+			wp_die ( sprintf ( __( 'Error in backout process.', 'wp-issues-crm' ), $data->phase ) );		
+		}	  
+	}	
 }

@@ -113,8 +113,9 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 					'FIRST_NOT_FOUND_MATCH_PASS varchar(50) NOT NULL, ' .		// first match pass where values present if not found; may be found in later pass
 					'NOT_FOUND_VALUES varchar(65535) NOT NULL, ' .				// concatenated values from not found match pass
 					'INSERTED_NEW varchar(1) NOT NULL, ' .							// 'y' if inserted new (updated on insert)   
- 					'PRIMARY KEY (STAGING_TABLE_ID) ) 
-					ENGINE=MyISAM  DEFAULT CHARSET=utf8;';
+ 					'PRIMARY KEY (STAGING_TABLE_ID), ' . 
+ 					'KEY MATCHED_CONSTITUENT_ID (MATCHED_CONSTITUENT_ID) ' . 
+					') ENGINE=MyISAM  DEFAULT CHARSET=utf8;';
 
 		$result = $wpdb->query ( $sql );
 
@@ -1243,6 +1244,37 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		return ( $final_results ) ;		
 
 	} // close  update constituents	
+
+	public static function backout_new_constituents( $upload_id, $staging_table) {
+		
+		global $wpdb;
+		$wic_prefix = $wpdb->prefix . 'wic_';
+		$entity_array = array ( 'constituent', 'activity', 'phone', 'email', 'address' );
+
+		$return_result = true;
+		foreach ( $entity_array as $entity ) {
+			$id = ( 'constituent' == $entity ) ? 'ID' : 'constituent_id';	
+			$table = $wic_prefix . $entity;		
+			$sql = "DELETE d FROM $table d INNER JOIN $staging_table s ON s.MATCHED_CONSTITUENT_ID = d.$id WHERE 'y' = s.INSERTED_NEW ";
+			$result = $wpdb->query ( $sql );
+			if ( false === $result ) {
+				$return_result = false;			
+			}
+		}
+		
+		$return = $return_result ? __( 'Backout of added constituents successful.', 'WP_Issues_CRM' ) : false;
+
+		// on successful completion, set final results for new constituents saved to zero		
+		if ( $return_result ) {
+			$final_results = json_decode ( self::get_final_results ( $upload_id ) );
+			$final_results->new_constituents_saved = 0;
+			$final_results = json_encode ( $final_results );	
+			self::update_final_results( $upload_id, $final_results );					
+		}
+
+
+		return ( $return_result );
+	}
 
 }
 

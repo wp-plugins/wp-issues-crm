@@ -156,7 +156,15 @@ class WIC_Admin_Setup {
 						array ( 'jquery-ui-progressbar' ) 
 					);
 					wp_enqueue_script('wic-upload-complete');
-				}	
+				}
+				if ( 'regrets' == $_GET['action'] ) { 
+					wp_register_script(
+						'wic-upload-regrets',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-regrets.js' , __FILE__ ),
+						array ( 'jquery-ui-progressbar' ) 
+					);
+					wp_enqueue_script('wic-upload-regrets');
+				}						
 			}
 			wp_register_style(
 				'wp-issues-crm-styles',
