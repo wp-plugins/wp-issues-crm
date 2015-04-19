@@ -138,7 +138,15 @@ INSERT INTO `wp_wic_data_dictionary` (`ID`, `entity_slug`, `group_slug`, `field_
 (NULL, 'upload', 'address', 'zip', 'text', 'Postal code ', 60, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'email', 'email_type', 'select', 'Email type ', 70, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', 'email_type_options', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'phone', 'phone_type', 'select', 'Phone type ', 80, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', 'phone_type_options', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
-(NULL, 'upload', 'new_issue_creation', 'create_issues', 'checked', 'Create new issues from unmatched non-blank titles (check to accept or go back and unmap titles):', 60, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00');
+(NULL, 'upload', 'new_issue_creation', 'create_issues', 'checked', 'Create new issues from unmatched non-blank titles (check to accept or go back and unmap titles):', 60, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'manage_storage', 'staging', 'keep_staging', 'checked', 'Keep temporary upload files', 20, 0, 0, '', 0, 0, 0, '1', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'manage_storage', 'search', 'keep_search', 'checked', 'Keep search log', 10, 0, 0, '', 0, 0, 0, '1', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'manage_storage', 'constituent', 'keep_activity', 'checked', 'Keep if activity', 30, 0, 0, '', 0, 0, 0, '1', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'manage_storage', 'constituent', 'keep_email', 'checked', 'Keep if email address', 40, 0, 0, '', 0, 0, 0, '1', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'manage_storage', 'constituent', 'keep_phone', 'checked', 'Keep if phone number', 50, 0, 0, '', 0, 0, 0, '1', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'manage_storage', 'constituent', 'keep_address', 'checked', 'Keep if physical address', 60, 0, 0, '', 0, 0, 0, '1', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'manage_storage', 'constituent', 'keep_all', 'checked', 'Keep all constituents', 65, 0, 0, '', 0, 0, 0, '1', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'manage_storage', 'constituent', 'confirm', 'text', 'Type PURGE CONSTITUENT DATA in all caps to confirm constituent purge.', 70, 0, 0, '', 0, 0, 0, '', 0, 1, '', 'enter exactly as shown', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00');
 INSERT INTO wp_wic_form_field_groups (ID, entity_slug, group_slug, group_label, group_legend, group_order, initial_open, sidebar_location, last_updated_time, last_updated_by) VALUES
 (1, 'constituent', 'contact', 'Contact', '', 10, 1, 0, '0000-00-00 00:00:00', 0),
 (5, 'constituent', 'case', 'Case Management', '', 30, 1, 1, '0000-00-00 00:00:00', 0),
@@ -194,7 +202,13 @@ If any activity fields are mapped or defaulted, an activity record will be creat
 (NULL, 'upload', 'new_issue_creation', 'New Issue Titles ', 'You have mapped an issue title field and you have not mapped an Activity Issue field or set a default Activity Issue. 
 If you wish, WP Issues CRM will create new posts/issues, using the titles and content that you have mapped.  Each constituent record will also
 get an activity created under the corresponding new issue. You must either check to accept this or change other mapping or default settings
-to make the use of the titles to create issues unnecessary.', 50, 1, 1, '0000-00-00 00:00:00', 0);
+to make the use of the titles to create issues unnecessary.', 50, 1, 1, '0000-00-00 00:00:00', 0),
+(NULL, 'manage_storage', 'statistics', 'Storage Statistics', '', 10, 1, 0, '0000-00-00 00:00:00', 0),
+(NULL, 'manage_storage', 'staging', 'Purge Upload Files', 'Purge temporary upload files -- interim staging tables and history for uploads.  Will NOT backout uploaded data.', 20, 1, 1, '0000-00-00 00:00:00', 0),
+(NULL, 'manage_storage', 'search', 'Purge Search Log', 'Purge records of previous search activity.', 25, 1, 1, '0000-00-00 00:00:00', 0),
+(NULL, 'manage_storage', 'constituent', 'Purge Constituents', 'Purge constituent data -- check to keep constituents with specified data categories. 
+	All other constituents will be purged.  For example, if you check \"Keep if activity\" and \"Keep if email address\", then only constituents that have either an activity or an email address will be retained.
+	All lacking both activity or email address be purged.  Uncheck \"Keep all constituents\" and enter confirmation phrase to confirm constituent purge.', 30, 1, 1, '0000-00-00 00:00:00', 0);
 INSERT INTO wp_wic_option_group (ID, option_group_slug, option_group_desc, enabled, last_updated_time, last_updated_by, mark_deleted, is_system_reserved) VALUES
 (1, 'activity_type_options', 'Activity Types', 1, '2015-02-02 11:55:19', 15, '', 0),
 (2, 'address_type_options', 'Address Types', 1, '2015-01-26 00:00:00', 15, '', 0),

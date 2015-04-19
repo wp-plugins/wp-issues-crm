@@ -1446,7 +1446,6 @@ button#wic-inner-field-group-startup-toggle-button {
 }
 
 td.wic-statistic  {
-	width: 12%;
 	text-align: right;
 }
 
@@ -1458,7 +1457,35 @@ td.wic-statistic  {
 	font-weight: bold;
 }
 
+#wic-form-manage-storage #wp-issues-crm-stats td.wic-statistic-table-name  {
+	font-weight: bold;
+	width: 64%;
+}
 
+#wic-field-group-statistics {
+	margin: 0 20px 0 11.1111%;
+}
+
+#wic-form-manage-storage #wic-inner-field-group-constituent-show-hide-legend,
+#wic-form-manage-storage #wic-inner-field-group-staging-show-hide-legend,
+#wic-form-manage-storage #wic-inner-field-group-search-show-hide-legend,
+#wic-inner-field-group-statistics-toggle-button {
+	display: none;
+}
+#wic-form-manage-storage #wp-issues-crm-stats td,
+#wic-form-manage-storage #wp-issues-crm-stats th {
+	width: 16%;
+}
+
+
+#wic-purge-progress-bar {
+	display: none;
+}
+
+#wic-form-manage-storage #wic-form-sidebar-groups {
+	height: initial;	
+	max-height: initial;
+}
 
 @media only screen and (max-width: 960px) {
 	#wic-form-main-groups, 

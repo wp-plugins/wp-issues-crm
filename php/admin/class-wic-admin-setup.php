@@ -96,8 +96,16 @@ class WIC_Admin_Setup {
             ) 
 			);	
 
-			// load script for uploadsdetails page based on doing uploads at all -- $_get['action'] may not yet be set 
 			if ( isset ( $_GET['page'] ) ) {
+				if ( 'wp-issues-crm-storage' == $_GET['page'] ) {
+					wp_register_script(
+						'wic-manage-storage',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-manage-storage.js' , __FILE__ ),
+						array ( 'jquery-ui-progressbar') 
+					);
+					wp_enqueue_script('wic-manage-storage');				
+				}
+				// load script for uploadsdetails page based on doing uploads at all -- $_get['action'] may not yet be set 
 				if ( 'wp-issues-crm-uploads' == $_GET['page'] ) {
 					wp_register_script(
 						'wic-upload-details',
