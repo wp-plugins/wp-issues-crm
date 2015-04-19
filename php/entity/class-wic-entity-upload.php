@@ -66,6 +66,22 @@
 *				-- dilemma: AJAX form updates defaults immediately, but doesn't validate immediately. Don't want to say status 'defaulted' until happy.
 *					at same time, don't want to lose partial updates to defaults if leave form
 *					SO: set reset default object when match is reset -- a new match is required iff any prior remap or rematch 
+*
+*
+*  Enforcement of Field Required rules is as follows
+*		-- At mapping stage (initial on upload and on form), run method is_column_mapping_valid -- tests for missing phone number, email address or
+*			post title but only if other fields are mapped for the corresponding entities -- enforces rules by keeping status at 'staged'
+*		-- At validation stage, no required checking -- just sanitization and validation of values supplied
+*		--	At matching stage, enforcing identity group required by showing only options that include one of fn/ln/email; HOWEVER, since also offers
+*		 	custom matching, USER CAN BYPASS fn/ln/email REQUIREMENT ON UPLOAD IF MATCHING ON A CUSTOM FIELD -- ACCEPT THIS 
+*		-- At set default stage, cover address and activity required logic -- do here, not at mapping, because can offer defaults to complete
+*			fields missing in mapping -- e.g., can default City for address. Does require type for phone, email and address even though these
+*			not required on form entry.  Can work around by defining Unknown option and defaulting types to Unknown. 
+*		-- At constituent update stage, test for presence of required fields before saving.  Mapping and Default steps force required fields to be 
+*			mapped, but still need to test that values actually present on a given record before saving a blank address, email, phone or activity.
+*
+*
+*
 */
 
 
@@ -382,14 +398,19 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		$column_map = stripslashes ( $column_map ) ;
 		// strip slashes and save it in the database
 		$outcome = WIC_DB_Access_Upload::update_column_map( $upload_id , $column_map ) ;
-		// check whether any columns mapped after latest changes
-		// upload status is degraded to staged if nothing mapped; set to mapped if something mapped (which may be an upgrade from staged or a downgrade from later step)
-		$upload_status = self::are_any_columns_mapped ( json_decode( $column_map ) ) ? 'mapped' : 'staged'; 
-	
-		WIC_DB_Access_Upload::update_upload_status( $upload_id, $upload_status );		
-				
-		if ( false !== $outcome ) {
-			echo json_encode ( __( 'AJAX update_column_map successful on server side.', 'wp_issues_crm')  );
+		// check whether any columns mapped after latest changes and whether mapping valid
+		// upload status is degraded to staged if nothing mapped or invalid; set to mapped if something mapped 
+		// got to this stage when changed a mapping (which may be an upgrade from staged or a downgrade from later step)
+		$mapping_errors = self::is_column_mapping_valid( json_decode( $column_map )  ); 
+		$upload_status = ( '' == $mapping_errors ) ? 'mapped' : 'staged'; 
+		$outcome2 = WIC_DB_Access_Upload::update_upload_status( $upload_id, $upload_status );		
+
+		// if both database accesses OK, return any mapping validation errors				
+		if ( false !== $outcome && false !== $outcome2 ) {
+			echo '{
+				"mapping_errors":"' . __( $mapping_errors, 'wp_issues_crm' ) . '"
+				}';
+		// otherwise flag the database error
 		} else {
 			// non json reponse generates console log error entry			
 			echo __( 'AJAX update_column_map ERROR on server side.', 'wp_issues_crm') ;
@@ -408,19 +429,66 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		wp_die();	
 	}	
 	
-	
-	public static function are_any_columns_mapped ( $column_map ) {
+	/*
+	* is_column_mapping_valid enforces some required logic for non-defaultable columns
+	* does it in hard_coded way -- complements wic-set-defaults.js which does required logic for defaultable columns
+	*
+	* note address and activity fields are defaultable, so no required rules here -- see js
+	* group required for fn/ln/email is enforced implicitly in  matching specification and also explicitly at upload stage b/c can match by custom ID field 
+	*
+	*/
+	public static function is_column_mapping_valid ( $column_map ) {
+
 		$columns_mapped = false;
+		$phone_mapped = false;
+		$phone_number_mapped = false;
+		$email_mapped = false;
+		$email_address_mapped = false;						
+		$issue_mapped = false;
+		$issue_title_mapped = false;						
+
+		$mapping_errors = '';
 		
 		foreach ( $column_map as $column => $entity_field_array ) {
 			if ( $entity_field_array  > '' ) { 
 				if ( $entity_field_array->entity > '' && $entity_field_array->field > '' ) {
 					$columns_mapped = true;
-					break;			
 				}
+				if ( 'phone' == $entity_field_array->entity ) {
+					$phone_mapped = true;
+					if ( 'phone_number' == $entity_field_array->field ) {
+						$phone_number_mapped = true;					
+					}				
+				}
+				if ( 'email' == $entity_field_array->entity ) {
+					$email_mapped = true;
+					if ( 'email_address' == $entity_field_array->field ) {
+						$email_address_mapped = true;					
+					}				
+				}												
+				if ( 'issue' == $entity_field_array->entity ) {
+					$issue_mapped = true;
+					if ( 'post_title' == $entity_field_array->field ) {
+						$issue_title_mapped = true;					
+					}				
+				}												
 			}
 		}
-		return $columns_mapped;
+		
+		if ( false == $columns_mapped ) {
+			$mapping_errors = __( 'No columns mapped.', 'wp-issues-crm' );
+		} else {
+			if ( true == $phone_mapped && false == $phone_number_mapped )	{
+				$mapping_errors .= __( 'Cannot map phone type or extension without mapping phone number.', 'wp-issues-crm' );			
+			}
+			if ( true == $email_mapped && false == $email_address_mapped ) {
+				$mapping_errors .= __( 'Cannot map email type without email address.', 'wp-issues-crm' );							
+			}	
+			if ( true == $issue_mapped && false == $issue_title_mapped ) {
+				$mapping_errors .= __( 'Cannot map issue content without mapping issue title.', 'wp-issues-crm' );							
+			}	
+		}
+		return (	$mapping_errors );
 	} 	
 
 	/*
@@ -865,7 +933,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		ksort ( $active_match_rules );
 						
 		$table =  '<table id="wp-issues-crm-stats">' .
-		'<tr><td></td>	<th class = "wic-statistic-text" colspan="4">' . __( 'Upload records in match pass input', 'wp-issues-crm' ) . '</th>' .
+		'<tr><td></td>	<th class = "wic-statistic-text" colspan="4">' . __( 'Match pass input', 'wp-issues-crm' ) . '</th>' .
 							'<th class = "wic-statistic-text" colspan="4">' . __( 'Match pass results', 'wp-issues-crm' ) . '</th>' .	
 							'</tr>' .
 		'<tr>' .

@@ -2,6 +2,8 @@
 *
 * wic-upload-set-defaults.js
 *
+* note that this routine plays role in enforcement 
+*
 */
 
 // self-executing anonymous namespace
@@ -80,7 +82,9 @@
 	
 	function decideWhatToShow() { 
 
-		// first compute totals relevant for add/update fields
+		/*
+		* first compute totals relevant for add/update fields
+		*/
 		var validMatched = 0;
 		var validUnique  = 0;
 		// 
@@ -89,6 +93,10 @@
 			validUnique  +=  Number( matchResults[matchSlug].unmatched_unique_values_of_components ) ;
 				// this field has type string because of ancestry as a literal ? for display purposes
 		}	
+		
+		/*
+		* next enable/set defaults for add update choices
+		*/
 		// the null case -- kill the form
 		if ( 0 == validMatched && 0 == validUnique ) {
 			jQuery ( "#post-form-message-box" ).text ( "No new or matched records to upload -- revisit prior steps." );
@@ -113,6 +121,12 @@
 			jQuery ( "#protect_identity" ).prop ( "disabled", true );		
 		}		
 		
+		
+		/*
+		*
+		* Prepare messages based on field mapping and form choices
+		*
+		*/
 		// drop prior set of messages		
 		// message box will always be red or green -- error or good news
 		jQuery( "#upload-settings-need-attention" ).remove();

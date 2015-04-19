@@ -16,7 +16,7 @@ class WIC_DB_Access_WP_User Extends WIC_DB_Access {
 		global $current_user;
 		get_currentuserinfo ();
 		
-		$wic_user_meta = get_user_meta ( $current_user->id, self::WIC_METAKEY ) ;
+		$wic_user_meta = get_user_meta ( $current_user->ID, self::WIC_METAKEY ) ;
 		$preferences = ( count ( $wic_user_meta ) > 0 ) ? unserialize ( $wic_user_meta[0] ) : array();
 		$show_viewed_issue 	= isset ( $preferences['show_viewed_issue'] ) ? $preferences['show_viewed_issue'] : ''; 
 		$show_latest_issue 	= isset ( $preferences['show_latest_issues'] ) ? $preferences['show_latest_issues'] : ''; 
@@ -24,7 +24,7 @@ class WIC_DB_Access_WP_User Extends WIC_DB_Access {
 		$first_form			 	= isset ( $preferences['first_form'] ) ? $preferences['first_form'] : '';
 		
 		$user_preferences = new WIC_DB_User_Preferences_Object ( 
-			$current_user->id, 
+			$current_user->ID, 
 			$current_user->display_name,
 			$show_viewed_issue,
 			$show_latest_issue,

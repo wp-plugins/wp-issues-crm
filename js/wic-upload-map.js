@@ -14,7 +14,15 @@
 
 	jQuery(document).ready(function($) {
 		
+		// save initial message with file identifier for later restoration
+		wicSaveMapMessage = jQuery ( "#post-form-message-box" ).text();
+	
 		initialUploadStatus = $( "#initial-upload-status" ).text();
+
+		// if have started upload reflect that cannot change
+		if ( 'completed' == initialUploadStatus || 'started' == initialUploadStatus ) { 
+			jQuery ( "#post-form-message-box" ).text( wicSaveMapMessage + 'Cannot be altered because final upload has been ' + initialUploadStatus + '.' );
+		} 		
 		
 		// make field labels draggable
 		$( ".wic-draggable" ).draggable({
@@ -116,12 +124,17 @@
 			if ( initialUploadStatus != 'completed' && initialUploadStatus != 'started' ) {
 				jQuery( ".wic-draggable" ).draggable( "enable" );
 			}
+			// if status is still staged check for pending errors by running a save
+			if ( 'staged' == initialUploadStatus ) {
+				wpIssuesCRMAjaxPost( 'upload', 'update_column_map',  jQuery('#ID').val(), wicColumnMap, function( response ) {
+					mappingErrorObject = response;
+					if ( '' < mappingErrorObject.mapping_errors ) {
+						jQuery ( "#post-form-message-box" ).text( "Errors need attention: " + mappingErrorObject.mapping_errors );
+						jQuery ( "#post-form-message-box" ).addClass( 'wic-form-errors-found' )
+					}							
+				});		
+			}
 		});
-	
-		wicSaveMapMessage = jQuery ( "#post-form-message-box" ).text();
-		if ( 'completed' == initialUploadStatus || 'started' == initialUploadStatus ) { 
-			jQuery ( "#post-form-message-box" ).text( wicSaveMapMessage + 'Cannot be altered because final upload has been ' + initialUploadStatus + '.' );
-		} 
 	}
 	
 	// based on a drag action, update column map, both in browser and on server
@@ -134,9 +147,16 @@
 		wicColumnMap[upload_field] = entity_field_object;
 		// send column map on server
 		wpIssuesCRMAjaxPost( 'upload', 'update_column_map',  jQuery('#ID').val(), wicColumnMap, function( response ) {
-			// reenable draggables after update complete -		
+			mappingErrorObject = response;
+			// reenable draggables after update complete 
 			jQuery( ".wic-draggable" ).draggable( "enable" );
-			jQuery ( "#post-form-message-box" ).text( wicSaveMapMessage + " Field map saved.")
+			if ( '' == mappingErrorObject.mapping_errors ) {
+				jQuery ( "#post-form-message-box" ).text(  "Field map saved.")
+				jQuery ( "#post-form-message-box" ).removeClass( 'wic-form-errors-found' )
+			} else {
+				jQuery ( "#post-form-message-box" ).text( "Field map saved with errors: " + mappingErrorObject.mapping_errors );
+				jQuery ( "#post-form-message-box" ).addClass( 'wic-form-errors-found' )
+			}
 		});
 		// also send the particular map update to the server for learning purposes, but only for non-generic column titles
 		if ( upload_field.slice( 0 , 7 ) != 'COLUMN_' || upload_field.length < 7 ) {

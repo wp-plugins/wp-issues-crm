@@ -271,15 +271,27 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			// do lookups on field name 
 			$lookup_sql = $wpdb->prepare ( $sql, array ( $column ) );
 			$lookup = $wpdb->get_results ( $lookup_sql );
-			$found = '';			
+			$found = '';
+			// if input column name found in interface table, put into column map as mapped (if target not already mapped to) 			
 			if ( isset ( $lookup [0] ) ) { 
 				$found = new WIC_DB_Upload_Column_Object ( $lookup[0]->matched_entity, $lookup[0]->matched_field );
+				// test whether db field has already been mapped to
+				foreach ( $column_map as $column_object ) {
+					if ( $column_object > '' ) { // only testing columns that have actually been mapped
+						if ( $column_object->entity == $found->entity && $column_object->field == $found->field ) {
+							// if already mapped to, blank out found value
+							$found = '';
+							break;
+						}				
+					}			
+				}	
 			}
-			$column_map[$column] =$found;			
+			// place a map value in array for every column -- empty if not found or not unique
+			$column_map[$column] = $found;			
 		}
 		$this->serialized_column_map = json_encode ( $column_map );	
 		
-		$this->upload_status = WIC_Entity_Upload::are_any_columns_mapped ( $column_map ) ? 'mapped' : 'staged';
+		$this->upload_status = ( '' == WIC_Entity_Upload::is_column_mapping_valid ( $column_map ) ) ? 'mapped' : 'staged';
 		// proceed to update the upload table with the identity of the successful upload
 		$save_update_array[] = array( 
 			'key' 					=> 'upload_time', 
@@ -383,7 +395,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	
 	// quick update
 	public static function update_upload_status ( $upload_id, $upload_status ) {
-		global $wpdb;
+		global $wpdb;  
 		$table = $wpdb->prefix . 'wic_upload';
 		$sql = "UPDATE $table set upload_status = '$upload_status' WHERE ID = $upload_id";
 		$result = $wpdb->query( $sql );
@@ -1035,6 +1047,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		// get array of array of columns of table mapped to entity fields 
 		$column_map = json_decode ( WIC_DB_Access_Upload::get_column_map ( $upload_id ) );
 		
+		// inject controls into data_object_arrays for each mapped column; also create a separate array of mapped/used columns
 		$used_columns = array();
 		foreach ( $column_map as $column => $entity_field_object ) {
 			if ( '' < $entity_field_object ) { // unmapped columns have an empty entity_field_object
@@ -1055,7 +1068,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		// in same loop, add constituent_id into the multivalue entities
 		$wic_access_object_array = array();
 		foreach ( $data_object_array_array as $entity=>&$data_object_array ) {	// looping on pointer, so altering underlying object
-			
+		
 			// add ID to each array
 			if ( ! isset ( $data_object_array['ID'] ) ) {
 				$field_rule = $wic_db_dictionary->get_field_rules ( $entity, 'ID' );					
@@ -1068,9 +1081,11 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			$wic_access_object_array[$entity] = WIC_DB_Access_Factory::make_a_db_access_object( $entity );
 			// supplement array with default fields set 
 			// (will not be overlayed by values from staging record in loop below since by def are not mapped )
-			// for each entity, loop through fields and if set, add them into array with value set
+			// for each entity, loop through default fields and if set, add them into array with value set
 			// upload default field groups are named to match entities 
 			$group_fields =  $wic_db_dictionary->get_fields_for_group ( 'upload', $entity );
+			// note that $group_fields will be empty for issue and constituent,  
+			// but the return is an array, so foreach does not generate error but does nothing 
 			foreach ( $group_fields as $field_order => $field_slug ) {
 				if ( $default_decisions->$field_slug > '' ) {
 					$field_rule = $wic_db_dictionary->get_field_rules (  $entity, $field_slug );
@@ -1086,13 +1101,14 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 				$data_object_array[$field_rule->field_slug]->initialize_default_values( $entity, $field_rule->field_slug, '' );
 			}
 		}
-		// especially prudent using foreach with pointer -- http://php.net/manual/en/control-structures.foreach.php
+		// necessary to unset when using foreach with pointer -- http://php.net/manual/en/control-structures.foreach.php
 		unset ( $entity );
 		unset ( $data_object_array );		
 
-		// get staging records
+		// get staging records -- processing all, without validity checking, 
+		// but invalid do not have matched_constitutent_id, so will be skipped
 		$used_columns_string = implode ( ',', $used_columns );
-		$sql = "SELECT $used_columns_string, VALIDATION_STATUS, MATCHED_CONSTITUENT_ID, INSERTED_NEW
+		$sql = "SELECT $used_columns_string, MATCHED_CONSTITUENT_ID, INSERTED_NEW
 				  FROM $staging_table LIMIT $offset, $chunk_size
 				  ";
 		$staging_records = $wpdb->get_results( $sql );
@@ -1112,7 +1128,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			'category_search_mode' => '',
 			);
 
-		// make plan for handling issue titles in the loop; add a control to activity if needed
+		// determine whether to use issue titles in the loop; add the issue control to activity if using titles and not already mapped
 		if ( 	isset ($data_object_array_array['issue']['post_title'] ) && //  have title and 
 				!isset( $data_object_array['activity']['issue'] ) ) {			//  need title (issue was not mapped or defaulted)
 			$use_title = true;
@@ -1126,6 +1142,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		foreach ( $staging_records as $staging_record ) {
 			
 			// populate the data object arrays with values from mapped columns (omitting the control columns on the staging record)
+			// note that controls for set defaults are already populated 
 			foreach ( $used_columns as $column ) {
 				$data_object_array_array[$column_map->$column->entity][$column_map->$column->field]->set_value( $staging_record->$column );
 			}
@@ -1134,11 +1151,15 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			if ( 0 == $staging_record->MATCHED_CONSTITUENT_ID || // never matched -- invalid OR matched to dups on db OR unmatched, but unmatched save off   
 				  ( ! $default_decisions->update_matched && '' ==  $staging_record->INSERTED_NEW ) )// update_matched is false && this record not new
 				  { 
-				  continue; // go to next staging file record without doing an update
+				  continue; // go to next staging file record without doing an update ( and without incrementing valid record counter at bottom of loop )
 			}
 			// now go through array of arrays, and do updates
 			foreach ( $data_object_array_array as $entity => $data_object_array ) {
 				if ( 'constituent' == $entity ) {
+					// don't touch the basic constituent record if protecting identity data (setting supports soft identity matching) 
+					if ( $default_decisions->protect_identity ) {
+						continue;					
+					}
 					// if constituent and just added it, don't reupdate the top entity record
 					// also, if only have ID control, nothing to update on the top entity record
 					// assuming not either of those go ahead and update (even without, will count as valid record processed) 
@@ -1155,7 +1176,6 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 						$query_array =	$data_object_array['post_title']->create_search_clause ( $search_clause_args );
 						// execute a search
 						$wic_access_object_array[$entity]->search ( $query_array, $search_parameters );
-
 						// if matches found, take the first for update purposes 
 						if ( $wic_access_object_array[$entity]->found_count > 0 ) {
 							$data_object_array_array['activity']['issue']->set_value( $wic_access_object_array[$entity]->result[0]->ID );					
@@ -1165,25 +1185,37 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 								__FILE__, __LINE__, __METHOD__, true );
 						} 					
 					}
-				} elseif ( 'issue' != $entity ) { // so not constituent and not issue, in other words is any of the multivalue entities
+				} else { // so not constituent and not issue, in other words is any of the multivalue entities
 					if ( 3 > count ( $data_object_array ) ) { // multivals always have ID and constituent ID, if that's all, nothing to update
-						continue;				
+						continue; // continue to next entity				
 					} 	
-		
 					// set current constituent id for the entity
 					$data_object_array['constituent_id']->set_value ( $staging_record->MATCHED_CONSTITUENT_ID );
 					// prepare a query array for those fields used in upload match/dedup checking for multi-value fields 
+					// while in this loop, also check for missing required fields 
 					$query_array = array();
+					$required_error = '';
 					foreach ( $data_object_array as $field_slug => $control ) { 
+						$required_error .= $control->required_check();
 						if ( $control->is_upload_dedup() ) {
 							$query_array = array_merge ( $query_array, $control->create_search_clause ( $search_clause_args ) );
 						}
 					} 
+					// if missing a required field, don't search for, update or store the entity record -- just continue to next entity					
+					// see also wic-upload-set-defaults.us for additional required logic enforcement
+					if ( '' < $required_error ) {
+						continue;					
+					}
 					// execute a search for the multivalue entity -- treating it as a top level entity, but query object is OK with that
 					$wic_access_object_array[$entity]->search ( $query_array, $search_parameters );
 					// if matches found, take the first for update purposes 
 					if ( $wic_access_object_array[$entity]->found_count > 0 ) {
-						$id_to_update = $wic_access_object_array[$entity]->result[0]->ID;					
+						$id_to_update = $wic_access_object_array[$entity]->result[0]->ID;
+						// don't touch the basic address record if protecting identity data (setting supports soft identity matching)
+						if ( $default_decisions->protect_identity && 'address' == $entity ) {
+							continue;					
+						}
+					// but if don't have the address for this type, proceed regardless of protect_identity setting 					
 					} else {
 						$id_to_update = 0;
 					} 					
@@ -1196,7 +1228,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 				} 
 			} // close loop for entities
 
-			// increment counters 		
+			// increment counters -- note that, at top of loop, continuing past invalid records ( by testing for match field )		
 			if ( 'y' != $staging_record->INSERTED_NEW ) { // non-new updates 
 				$constituent_updates_applied++;
 			}

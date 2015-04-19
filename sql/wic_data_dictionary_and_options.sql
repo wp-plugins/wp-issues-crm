@@ -131,7 +131,7 @@ INSERT INTO `wp_wic_data_dictionary` (`ID`, `entity_slug`, `group_slug`, `field_
 (NULL, 'upload', 'activity', 'pro_con', 'select', 'Activity Pro/Con', 30, 0, 0, '', 0, 0, 0, '', 0, 1, '', 'Pro/Con', 'pro_con_options', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'constituent_match', 'update_matched', 'checked', 'Update matched constituents (uncheck to skip matched):', 10, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'constituent_match', 'add_unmatched', 'checked', 'Add unmatched constituents (uncheck to skip unmatched):', 20, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
-(NULL, 'upload', 'constituent_match', 'protect_identity', 'checked', 'Protect primary identity (uncheck to allow update of name, dob, address):', 30, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
+(NULL, 'upload', 'constituent_match', 'protect_identity', 'checked', 'Protect primary constituent data and address (leave checked when soft matching):', 30, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'address', 'address_type', 'select', 'Address type ', 30, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', 'address_type_options', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'address', 'city', 'text', 'City/town ', 40, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
 (NULL, 'upload', 'address', 'state', 'select', 'State ', 50, 0, 0, '', 0, 0, 0, '', 0, 1, '', '', 'state_options', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),

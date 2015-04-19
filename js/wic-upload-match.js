@@ -115,7 +115,7 @@
 			// calling parameters are: entity, action_requested, id_requested, data object, callback
 			chunkCount++;
 			jQuery( "#wic-upload-progress-bar" ).progressbar ( "value", 100 * chunkCount / chunkPlan );
-			progressLegend = '<h3> . . . matched ' + ( chunkCount * chunkSize ).toLocaleString( 'en-US' )  + ' of ' + uploadParameters.insert_count.toLocaleString( 'en-IN' ) + ' records in current pass.</h3>'; 
+			progressLegend = '<h3> . . . processed ' + ( chunkCount * chunkSize ).toLocaleString( 'en-US' )  + ' of ' + uploadParameters.insert_count.toLocaleString( 'en-IN' ) + ' records in current pass.</h3>'; 
 			jQuery( "#upload-results-table-wrapper" ).html( progressLegend + response ); //  + progressLegend );
 			if ( chunkCount < chunkPlan ) {
 				matchUploadPass ( chunkCount * chunkSize );
