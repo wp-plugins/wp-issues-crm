@@ -22,6 +22,7 @@ class WIC_Form_Upload_Download extends WIC_Form_Upload_Validate  {
 			$status_phrase = ( 'completed' == $upload_status ) ? 'fully processed' : 'partially processed' ;					
 
 			// form layout not dependent on upload status, but individual buttons will be enabled according to status
+			// message only speaks to completion
 			$message =  sprintf ( __( 'Download ' . $status_phrase  . ' input records from %s.' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() );
 			?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php			
 
@@ -33,40 +34,50 @@ class WIC_Form_Upload_Download extends WIC_Form_Upload_Validate  {
 			$valid_unique  = 0;
 			$valid_dups		= 0;
 			$unmatched_records_with_valid_components = 0;
-			foreach ( $match_results as $slug => $match_object  ) {
-				$valid_matched += $match_object->matched_with_these_components;
-				$valid_unique  += $match_object->unmatched_unique_values_of_components;	
-				$valid_dups	   +=	$match_object->not_unique;
-				$unmatched_records_with_valid_components += $match_object->unmatched_records_with_valid_components;			
-			}	
-			$validation_errors = $upload_parameters->insert_count - $unmatched_records_with_valid_components - $valid_matched - $valid_dups;			
-			
+			$validation_errors = ''; // set up as string initially -- if unknown, show as empty in string
+			if ( $match_results > '' ) {
+				foreach ( $match_results as $slug => $match_object  ) {
+					$valid_matched += $match_object->matched_with_these_components;
+					$valid_unique  += $match_object->unmatched_unique_values_of_components;	
+					$valid_dups	   +=	$match_object->not_unique;
+					$unmatched_records_with_valid_components += $match_object->unmatched_records_with_valid_components;			
+				}	
+				$validation_errors = $upload_parameters->insert_count - $unmatched_records_with_valid_components - $valid_matched - $valid_dups;
+			}
+
+					
 			// create array of downloads -- for each, button title, explanatory text and disabled -- true = disabled 
 			$download_layout = 	array (
 				'validate' 		=>		array ( 
 					'Validation Errors', 
-					sprintf ( '%s records that cannot be uploaded because of bad data in one or more fields.  ' , $validation_errors ), 
-					'staged' == $upload_status || 'mapped' == $upload_status || 0 == $validation_errors,
+					sprintf ( __( '%s Records that cannot be uploaded because of bad data in one or more fields. ', 'wp-issues-crm' ) , $validation_errors ), 
+					'staged' == $upload_status || 'mapped' == $upload_status || 0 === $validation_errors,
 				 ),
  				 'new_constituents'	=>		array (
 					'New Constituents',
-					sprintf ( '%s records with valid data that match no existing constituents.  Will be grouped by unique identifier combinations and uploaded as new.', $unmatched_records_with_valid_components),				 
+					sprintf ( __( '%s Records with valid data that match no existing constituents.  
+						WP Issues CRM dedups new records against each other and against existing records before upload.
+						New records that match each other but not to any existing records are combined and uploaded.
+						The count here ( %1$s ) may be reduced on upload as dedups among new records are combined. ',
+						'wp-issues-crm' ) , $unmatched_records_with_valid_components),				 
 				 	'staged' == $upload_status || 'mapped' == $upload_status  || 'validated' == $upload_status || 0 == $unmatched_records_with_valid_components,
 				 ), 
 				 'match'			=>		array (
 					'Matches',
-					sprintf ( '%s records that match to single constituents on database -- will update those constituents if uploaded.  ' , $valid_matched ),				 
+					sprintf ( __( '%s Records that match to unique constituents on database based on one or more of matching criteria selected. ',
+						'wp-issues-crm' )  , $valid_matched ),				 
 				 	'staged' == $upload_status || 'mapped' == $upload_status  || 'validated' == $upload_status || 0 == $valid_matched,
 				 ), 
  				 'bad_match'	=>		array (
 					'Bad Match Errors',
-					sprintf ( '%s records that lack match fields or match to multiple existing database records -- will not be uploaded or used for update.  ', $valid_dups ),				 
+					sprintf ( __( '%s Records that lack match fields or match to multiple existing database records -- 
+						will not be uploaded or used for update.  ', 'wp-issues-crm' ) , $valid_dups ),				 
 				 	'staged' == $upload_status || 'mapped' == $upload_status  || 'validated' == $upload_status || 0 == $valid_dups  ,
 				 ), 			
 		
  				 'dump'	=>		array (
 					'All Input Records',
-					sprintf ( 'Dump all %s input records with all error and matching statuses.  ', $upload_parameters->insert_count ),				 
+					sprintf ( __( 'Dump all %s input records with all error and matching statuses. ', 'wp-issues-crm' ) , $upload_parameters->insert_count ),				 
 				 	false
 				 ) 			
 			); 

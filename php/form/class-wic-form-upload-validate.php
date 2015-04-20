@@ -68,6 +68,10 @@ class WIC_Form_Upload_Validate extends WIC_Form_Parent  {
 	  		// file has already been validated -- just displaying saved validation results
 			} else {
 				$message =  sprintf ( __( 'Data previously validated for mapped fields for %s. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() )  . $message;
+				if ( 'completed' == $upload_status || 'started' == $upload_status || 'reversed' == $upload_status ) {
+					$message_level = 'error';
+					$message .= sprintf( __( 'Upload %s.','wp-issues-crm' ), $upload_status ) ;				
+				}
 				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
 				$button_args_main = array(
 					'entity_requested'			=> 'upload',

@@ -61,46 +61,6 @@ function changeActivityIssueButtonDestination() {
 	}
 }
 
-// in field customization, set field options according to type
-function  setFieldTypeDefaults() {
-	// change values of 	 
-	if( document.getElementById('field_type') != undefined ) {
-		
-		var fieldType = document.getElementById('field_type');
-		var optionGroup = document.getElementById('option_group');				
-		var likeSearch = document.getElementById('like_search_enabled');
-		var listFormatter = document.getElementById('list_formatter');	
-			
-		var selectedFieldType = fieldType.options[fieldType.selectedIndex].value;
-		if ( selectedFieldType == 'text' ) {
-			optionGroup.value = '';	
-			likeSearch.value = 1;	
-		} else if ( selectedFieldType == 'select' ) {
-			if ( '' == optionGroup.value ) {
-				alert ( 'Now set option group for your drowdown field.' );			
-			}			
-			likeSearch.value = 0;			
-		} else if ( selectedFieldType == 'date' ) {
-			optionGroup.value = '';	
-			likeSearch.value = 0;	
-		}
-	}
-}
-
-// in field customization, warn if need to set field type
-function  setFieldType() {
-	// alert to change text value 	 
-	if( document.getElementById('option_group') != undefined ) {
-		var optionGroup = document.getElementById('option_group');
-		var selectedOptionGroup = optionGroup.options[optionGroup.selectedIndex].value;
-		var fieldType = document.getElementById('field_type');				
-		var selectedFieldType = fieldType.options[fieldType.selectedIndex].value;
-		if ( selectedOptionGroup != '' && selectedFieldType != 'select' ) {
-			alert ( 'Set field type as dropdown to use option groups' );
-		}
-	}
-}
-
 // show/hide form sections
 function togglePostFormSection( section ) { 
 	var constituentFormSection = document.getElementById ( section );

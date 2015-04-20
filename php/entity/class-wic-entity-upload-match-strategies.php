@@ -88,7 +88,7 @@
 			'link_fields'	=> array(
 				array( 'constituent', 'last_name', 0 ),
 				array( 'constituent', 'first_name', 0 ),
-				array( 'address', 'City', 0 ),					
+				array( 'address', 'city', 0 ),					
 			),
 		),
 		'lnfn'  => array( 

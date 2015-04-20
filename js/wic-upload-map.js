@@ -20,8 +20,9 @@
 		initialUploadStatus = $( "#initial-upload-status" ).text();
 
 		// if have started upload reflect that cannot change
-		if ( 'completed' == initialUploadStatus || 'started' == initialUploadStatus ) { 
-			jQuery ( "#post-form-message-box" ).text( wicSaveMapMessage + 'Cannot be altered because final upload has been ' + initialUploadStatus + '.' );
+		if ( 'completed' == initialUploadStatus || 'started' == initialUploadStatus || 'reversed' == initialUploadStatus ) { 
+			jQuery ( "#post-form-message-box" ).text( 'Mapping cannot be altered because final upload has been ' + initialUploadStatus + '.' );
+			$( "#post-form-message-box" ).addClass ( 'wic-form-errors-found' ) 
 		} 		
 		
 		// make field labels draggable
@@ -121,7 +122,7 @@
 				}
 			}	
 			// enable the draggables, but only if haven't already started the upload
-			if ( initialUploadStatus != 'completed' && initialUploadStatus != 'started' ) {
+			if ( initialUploadStatus != 'completed' && initialUploadStatus != 'started' && initialUploadStatus != 'reversed' ) {
 				jQuery( ".wic-draggable" ).draggable( "enable" );
 			}
 			// if status is still staged check for pending errors by running a save

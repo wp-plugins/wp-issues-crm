@@ -280,10 +280,11 @@
 
 		// having set up form appropriately, decide whether to allow updates and what messages to show
 		// if have already started or completed upload, disable all input
-		if ( 'completed' == initialUploadStatus || 'started' == initialUploadStatus ) { 
+		if ( 'completed' == initialUploadStatus || 'started' == initialUploadStatus || 'reversed' == initialUploadStatus ) { 
 			jQuery ( "#wic-form-upload-set-defaults :input" ).prop( "disabled", true ); 
 			jQuery ( "#upload-settings-good-to-go" ).hide();
 			jQuery ( "#upload-settings-need-attention" ).hide();
+			jQuery ( "#post-form-message-box" ).addClass ( "wic-form-errors-found" );
 		// elseif didn't kill form for record count reasons, show messages and set status accordingly
 		} 	else if ( ! jQuery ( ":input" ).prop ( "disabled" ) ) { 		
 			

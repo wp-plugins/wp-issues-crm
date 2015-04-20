@@ -18,4 +18,5 @@ INSERT INTO wp_wic_option_value ( parent_option_group_slug, option_value, option
 ( 'upload_status', 'matched', 'Records Matched', 40, 1, '0000-00-00 00:00:00', 0),
 ( 'upload_status', 'defaulted', 'Valid default decisions', 50, 1, '0000-00-00 00:00:00', 0),
 ( 'upload_status', 'started', 'Upload Started, not completed', 60, 1, '0000-00-00 00:00:00', 0),
-( 'upload_status', 'completed', 'Upload Completed', 70, 1, '0000-00-00 00:00:00', 0);
+( 'upload_status', 'completed', 'Upload Completed', 70, 1, '0000-00-00 00:00:00', 0),
+( 'upload_status', 'reversed', 'Upload Backed Out', 80, 1, '0000-00-00 00:00:00', 0);

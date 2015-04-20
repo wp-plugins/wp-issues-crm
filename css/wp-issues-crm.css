@@ -96,7 +96,7 @@ button.button.button-primary.wic-top-menu-button.back-to-list span.dashicons {
 /* message box and notices */
 #post-form-message-box {
 	font-size: 1.2em;
-	margin: 20px 1% 20px 7.111111%;
+	margin: 20px 7.11111% 20px 7.111111%;
 	padding: 10px 0;
 }
 
@@ -806,22 +806,26 @@ p.wic-radio-button input{
 }
 
 #option_value-control-set select.wic-input.enabled {
-	margin-right: 0px;
+	margin-left: 20px;
 }
 
 input.wic-input.option-value {
-	width: 10%;
-	max-width: 40px;
+	width: 15%;
+	max-width: 50px;
 }
 
 input.wic-input.option-label {
-	width: 35%;
+	width: 30%;
 }
 
-input.wic-input.value-order {
-	width: 60px;
+#option_value-control-set input.wic-input.value-order {
+	border: none;
+	margin: 10px 5px 0 5px;
+	width: 50px;
 }
-#option_value-control-set label.wic-label.value-order,
+
+
+
 #option_value-control-set label.wic-label.enabled {
 	display: none;
 }
@@ -944,7 +948,7 @@ button.wic-post-list-button {
 }
 
 /****************************************************************
-* option list styling 
+* option list and form styling 
 *
 ******************************************************************/
 
@@ -958,6 +962,11 @@ button.wic-post-list-button {
 
 .wic-post-list-button.option-group-disabled:hover {
 	background: #eee;
+}
+
+#wic-form-data-dictionary-save #field_order,
+#wic-form-data-dictionary-update #field_order {
+	width: 52px;
 }
 /****************************************************************
 * upload form styling 
@@ -1122,9 +1131,9 @@ ul#system-settings-list{
 	border-radius: 3px;
 	float: left;  
 	height: 50px;
-	margin: 0 2% 10px 0;
+	margin: 0 1.5% 10px 0;
 	padding: 2px 2px 10px 2px; 
-	width: 31.333%;
+	width: 23.5%;
 }
 
 .wic-draggable.moving-draggable {
@@ -1319,10 +1328,12 @@ ul.upload-status-summary {
 	margin-top: -15px;
 }
 
+#backout_legend,
 #upload-game-plan {
 	margin: 0 7.1111%;
 }
 
+.backout-button-legend,
 .download-button-legend {
 	margin: -10px 0 30px 7.1111%;
 }

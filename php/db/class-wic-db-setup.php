@@ -99,13 +99,16 @@ class WIC_DB_Setup {
 		// define table names for  use in next few steps
 		$option_group = $wpdb->prefix . 'wic_option_group'; 
 		$option_value = $wpdb->prefix . 'wic_option_value';
-		
+	
 		// add references to parent_option_group_slug based on option_group_id in option_table  
 		// for early versions, did not include parent_option_group_slug in database
 		// for 2.2 and higher, it is included in the initial set up
 		if ( false === $installed_version || $installed_version < '2.2' ) {		
 			$sql = "UPDATE $option_value v INNER JOIN $option_group g ON v.option_group_id = g.ID SET v.parent_option_group_slug = g.option_group_slug";
 			$outcome6 = $wpdb->query ( $sql );
+			// also, make a couple of option groups system reserved that were originally left to user
+			$sql = "UPDATE $option_group SET is_system_reserved = 1 WHERE option_group_slug = 'count_to_ten' OR option_group_slug = 'capability_levels'";
+			$outcome6A = $wpdb->query ( $sql );
 		}
 		
 		// add ons in version 2.2

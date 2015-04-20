@@ -75,7 +75,7 @@ class WIC_DB_Access_Dictionary Extends WIC_DB_Access_WIC {
 			from $table1 g 
 			left join $table2 v on v.option_value = g.group_slug
 			left join $table3 d on g.group_slug = d.group_slug 
-			where g.entity_slug = '$entity' and v.parent_option_group_slug = 'customizable_groups' 
+			where g.entity_slug = '$entity' and v.parent_option_group_slug = 'customizable_groups' and d.enabled = 1
 			order by sidebar_location, group_order, field_order
 			";
 		

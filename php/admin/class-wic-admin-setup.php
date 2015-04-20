@@ -62,33 +62,31 @@ class WIC_Admin_Setup {
 	
 		if ( -1 < strpos( $hook, 'wp-issues-crm' ) ) { 
 	
-			wp_register_script(
+			wp_enqueue_script(
 				'wic-utilities',
-				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-utilities.js' , __FILE__ ) 
+				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-utilities.js' , __FILE__ ), 
+				array( 'jquery' )
 			);
-			wp_enqueue_script('wic-utilities');
 
-			wp_register_script(
+			wp_enqueue_script(
 				'wic-changed-page',
-				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-changed-page.js' , __FILE__ ) 
+				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-changed-page.js' , __FILE__ ), 
+				array( 'jquery' )
 			);
-			wp_enqueue_script('wic-changed-page');
 
-			wp_register_script(
+			wp_enqueue_script(
 				'wic-jquery-ui',
 				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-jquery-ui.js' , __FILE__ ),
 				array( 'jquery-ui-datepicker' )
 			);
-			wp_enqueue_script('wic-jquery-ui');
 
-			wp_register_script(
+			wp_enqueue_script(
 				'wic-ajax-script',
 				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-ajax-script.js' , __FILE__ ),
 				array ( 'jquery' ) 
 			);
-			wp_enqueue_script('wic-ajax-script');
 			
-			// name spacing the URL by putting it into plugin specific global object and setting nonce
+			// name spacing the AJAX URL by putting it into plugin specific js global object and setting nonce
 			wp_localize_script( 'wic-ajax-script', 'wic_ajax_object',
             array( 
             	'ajax_url' 			=> admin_url( 'admin-ajax.php' ),
@@ -96,90 +94,99 @@ class WIC_Admin_Setup {
             ) 
 			);	
 
+			// page specific scripts
 			if ( isset ( $_GET['page'] ) ) {
 				if ( 'wp-issues-crm-storage' == $_GET['page'] ) {
-					wp_register_script(
+					wp_enqueue_script(
 						'wic-manage-storage',
 						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-manage-storage.js' , __FILE__ ),
 						array ( 'jquery-ui-progressbar') 
 					);
-					wp_enqueue_script('wic-manage-storage');				
 				}
 				// load script for uploadsdetails page based on doing uploads at all -- $_get['action'] may not yet be set 
 				if ( 'wp-issues-crm-uploads' == $_GET['page'] ) {
-					wp_register_script(
+					wp_enqueue_script(
 						'wic-upload-details',
 						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-details.js' , __FILE__ ),
 						array ( 'jquery-ui-selectmenu') 
 					);
-					wp_enqueue_script('wic-upload-details');
+				}
+				// load script for field customization if doing that page 
+				if ( 'wp-issues-crm-fields' == $_GET['page'] ) {
+					wp_enqueue_script(
+						'wic-field-customization',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-field-customization.js' , __FILE__ ),
+						array ( 'jquery', 'jquery-ui-spinner' ) 
+					);
+				}
+				// load script for option managment if doing that page 
+				if ( 'wp-issues-crm-options' == $_GET['page']) {
+					wp_enqueue_script(
+						'wic-option-group',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-option-group.js' , __FILE__ ),
+						array ( 'jquery', 'jquery-ui-spinner' ) 
+					);
 				}
 			}
+
 			// load script for upload subpages only if required
 			if ( isset ( $_GET['action'] ) ) {
 				if ( 'map' == $_GET['action'] ) {
-					wp_register_script(
+					wp_enqueue_script(
 						'wic-upload-map',
 						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-map.js' , __FILE__ ),
 						array ( 'jquery-ui-droppable', 'jquery-ui-draggable' ) 
 					);
-					wp_enqueue_script('wic-upload-map');
 				}	
 				if ( 'validate' == $_GET['action'] ) { 
-					wp_register_script(
+					wp_enqueue_script(
 						'wic-upload-validate',
 						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-validate.js' , __FILE__ ),
 						array ( 'jquery-ui-progressbar' ) 
 					);
-					wp_enqueue_script('wic-upload-validate');
 				}
 				if ( 'match' == $_GET['action'] ) { 
-					wp_register_script(
+					wp_enqueue_script(
 						'wic-upload-match',
 						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-match.js' , __FILE__ ),
 						array ( 'jquery-ui-progressbar', 'jquery-ui-sortable' ) 
 					);
-					wp_enqueue_script('wic-upload-match');
 				}
 				if ( 'set_defaults' == $_GET['action'] ) { 
-					wp_register_script(
+					wp_enqueue_script(
 						'wic-upload-set-defaults',
 						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-set-defaults.js' , __FILE__ ),
 						array ( 'jquery-ui-progressbar','jquery-ui-datepicker' ) 
 					);
-					wp_enqueue_script('wic-upload-set-defaults');
 				}
 				if ( 'complete' == $_GET['action'] ) { 
-					wp_register_script(
+					wp_enqueue_script(
 						'wic-upload-complete',
 						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-complete.js' , __FILE__ ),
 						array ( 'jquery-ui-progressbar' ) 
 					);
-					wp_enqueue_script('wic-upload-complete');
 				}
 				if ( 'regrets' == $_GET['action'] ) { 
-					wp_register_script(
+					wp_enqueue_script(
 						'wic-upload-regrets',
 						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-regrets.js' , __FILE__ ),
 						array ( 'jquery-ui-progressbar' ) 
 					);
-					wp_enqueue_script('wic-upload-regrets');
 				}						
 			}
-			wp_register_style(
+			
+			// styles
+			wp_enqueue_style(
 				'wp-issues-crm-styles',
 				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'wp-issues-crm.css' , __FILE__ )
 				);
-			wp_enqueue_style('wp-issues-crm-styles');
 			
-			wp_register_style(
+			wp_enqueue_style(
 				'wic-theme-roller-style',
-				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'jquery-ui-1.11.3.custom'  . DIRECTORY_SEPARATOR .   'jquery-ui.min.css' , __FILE__ )
+				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'jquery-ui-1.11.4.custom'  . DIRECTORY_SEPARATOR .   'jquery-ui.min.css' , __FILE__ )
 				);
-			wp_enqueue_style('wic-theme-roller-style');
-		}					
-			
-	}
+		} // close conditional for using wp-issues-crm					
+	} // close add scripts function
 
 	// add action to intercept press of download button before any headers sent 
 	public function do_download () { 

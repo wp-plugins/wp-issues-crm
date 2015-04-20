@@ -90,15 +90,37 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 					$this->upload_time ) ) ) . 
 					'_' . get_current_user_id();
 
-
+		// create an array of reserved column names to test against
+		// avoid duplicate column errors when reloading downloaded staging tables
+		$reserved_column_names = array (
+			'STAGING_TABLE_ID',
+			'VALIDATION_STATUS',
+			'VALIDATION_ERRORS',
+			'MATCHED_CONSTITUENT_ID',
+			'MATCH_PASS',
+			'FIRST_NOT_FOUND_MATCH_PASS',
+			'NOT_FOUND_VALUES',
+			'INSERTED_NEW', 
+			'INSERTED_CONSTITUENT_ID',
+			'STAGING_TABLE_ID_STRING',
+			'new_issue_ID',
+			'new_issue_title',
+			'new_issue_content',
+			'record_count', 
+			'inserted_post_id', 
+		);	
+				
 		// create a table with the appropriate number of columns -- get column names from first row if available
 		$sql = "CREATE TABLE $table_name ( "; 
 		$i = 1;
 		$column_names = array();
 		foreach ( $columns as $column ) {
-			$column_name = ( in_array ( $this->sanitize_column_name ( $column ), $column_names ) 
-							 || '' == $this->sanitize_column_name ( $column ) 
-							 || 0 == $includes_column_headers ) 
+			// use user supplied column name (sanitized) if none of the following obtain
+			$column_name = ( 
+							in_array ( $this->sanitize_column_name ( $column ), $reserved_column_names ) ||	// not a reserved name after sanitization
+							in_array ( $this->sanitize_column_name ( $column ), $column_names ) || 				// not a dup after sanitization 
+							'' == $this->sanitize_column_name ( $column ) || 											// not empty after sanitization
+							0 == $includes_column_headers ) 																	// not a data row
 					?  'COLUMN_' . $i : $this->sanitize_column_name ( $column ); 
 			$column_names[] = $column_name; 			
 			$sql .= ' `' . $column_name . '` varchar(65535) NOT NULL, ';
@@ -1264,14 +1286,14 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		
 		$return = $return_result ? __( 'Backout of added constituents successful.', 'WP_Issues_CRM' ) : false;
 
-		// on successful completion, set final results for new constituents saved to zero		
-		if ( $return_result ) {
+		// on successful completion, set final results for new constituents saved to zero, update upload status		
+		if ( false !== $return_result ) {
 			$final_results = json_decode ( self::get_final_results ( $upload_id ) );
 			$final_results->new_constituents_saved = 0;
 			$final_results = json_encode ( $final_results );	
 			self::update_final_results( $upload_id, $final_results );					
+			self::update_upload_status ( $upload_id, 'reversed' );
 		}
-
 
 		return ( $return_result );
 	}

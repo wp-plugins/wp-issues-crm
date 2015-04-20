@@ -20,7 +20,7 @@ INSERT INTO wp_wic_option_group (ID, option_group_slug, option_group_desc, enabl
 (24, 'enabled_disabled_array', 'Enabled/Disabled', 1, '2015-01-26 00:00:00', 15, '', 1),
 (25, 'wic_live_issue_options', 'Live Issue Options', 1, '2015-01-26 00:00:00', 15, '', 1),
 (27, 'show_latest_issues_options', 'Options for Activity Issues Dropdown', 1, '0000-00-00 00:00:00', 0, '', 1),
-(28, 'count_to_ten', 'Number of issues to retrieve', 1, '0000-00-00 00:00:00', 0, '', 0),
+(28, 'count_to_ten', 'Number of issues to retrieve', 1, '0000-00-00 00:00:00', 0, '', 1),
 (29, 'trend_search_modes', 'Trend Search Modes', 1, '2015-02-10 12:00:00', 15, '0', 1),
 (30, 'capability_levels', 'Capability Levels', 1, '2015-02-11 16:38:00', 15, '', 1),
 (31, 'first_form', 'Form to show on startup', 1, '0000-00-00 00:00:00', 0, '', 1);

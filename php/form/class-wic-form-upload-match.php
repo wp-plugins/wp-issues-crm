@@ -75,15 +75,16 @@ class WIC_Form_Upload_Match extends WIC_Form_Upload_Validate  {
 	  			echo '</div><div class = "horbar-clear-fix"></div>';
 	  		
 	  		// file has already been completed
-			} elseif ( 'completed' == $upload_status) {
-				$message =  sprintf ( __( 'Records previouly matched for %s. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() )  . $message;
+			} elseif ( 'completed' == $upload_status || 'started' == $upload_status || 'reversed' || $upload_status ) {
+				$message_level = 'error';
+				$message =  sprintf ( __( 'Records previouly matched for %1$s. Upload %2$s.' , 'wp-issues-crm' ), $data_array['upload_file']->get_value(), $upload_status )  . $message;
 				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
 				
 				// don't show button just results 
  
 				$upload_parameters = json_decode ( $data_array['serialized_upload_parameters']->get_value() ); 
-				$match_results_table = '<h3>' . sprintf( __( 'Match implemented for completed upload of %s records saved in staging table.', 'wp-issues-crm' ),
-					$upload_parameters->insert_count) . 
+				$match_results_table = '<h3>' . sprintf( __( 'Match implemented for %2$s upload of %1$s records saved in staging table.', 'wp-issues-crm' ),
+					$upload_parameters->insert_count, $upload_status ) . 
 				'</h3>';
 				$match_results_table .= 
 					WIC_Entity_Upload::prepare_match_results ( json_decode ( $data_array['serialized_match_results']->get_value() ) );

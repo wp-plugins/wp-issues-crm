@@ -89,8 +89,6 @@ class WIC_Form_Upload_Map extends WIC_Form_Parent  {
 		$output .= '<div id = "activity-targets"><h4>' . __( 'Activity fields' , 'wp-issues-crm' ) . '</h4>'. $output_activity . '</div>';
 		$output .= '</div>';
 
-
-
 		$output .= '<div class = "horbar-clear-fix"></div>';
 		$output .= $doa['ID']->update_control();
 

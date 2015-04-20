@@ -20,58 +20,57 @@ class WIC_Form_Upload_Regrets extends WIC_Form_Upload_Validate  {
 			// set up decision/message variables
 			$upload_status 				= $data_array['upload_status']->get_value();
 			$upload_parameters			= json_decode ( $data_array['serialized_upload_parameters']->get_value() );
-			$final_results 				= json_decode ( $data_array['serialized_final_results']->get_value() );
 			$default_decisions			= json_decode ( $data_array['serialized_default_decisions']->get_value() );
-			$new_constituents_saved 	= $final_results->new_constituents_saved;
+			$new_constituents_saved		= 0; // initialized as zero -- makes sense until completed
 			$upload_file 					= $data_array['upload_file']->get_value();
+			$backout_button_legend		= '';
 
-			if ( 'completed' == $upload_status ) {  
+			// compose appropriate message depending on status
+			if ( 'completed' == $upload_status || 'started' == $upload_status ) {
+				// final_results is an object only after completion  
+				$final_results 				= json_decode ( $data_array['serialized_final_results']->get_value() );
+				$new_constituents_saved 	= $final_results->new_constituents_saved;
 				if ( $new_constituents_saved > 0 ) {
 					$message = sprintf ( __( 'Backout %1$s NEW input records from %2$s.' , 'wp-issues-crm' ), $new_constituents_saved, $upload_file );
+					$backout_button_legend = sprintf ( __( 'Backout includes all activities, emails, phones and addresses for constituents.
+						 ', 'wp-issues-crm' ), $new_constituents_saved );
 				} else {
-					$message = sprintf ( __( 'No NEW constituent records created from %s. Matched updates cannot be backed out' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() );				
+					$message = sprintf ( __( 'No NEW constituent records created from %s. Matched updates cannot be backed out.' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() );				
 				}					
+			} elseif ( 'reversed' == $upload_status ) {
+				$message_level = 'error';
+				$message = 	sprintf ( __( 'Upload of %s already backed out.' , 'wp-issues-crm' ), $upload_file );  		
 			} else {
-				$message = 	sprintf ( __( 'Upload of %s not completed -- cannot be backed out.' , 'wp-issues-crm' ), $upload_file );  		
+				$message_level = 'error';
+				$message = 	sprintf ( __( 'Upload of %s not started or completed -- cannot be backed out.' , 'wp-issues-crm' ), $upload_file );  		
 			}
-			// form layout not dependent on upload status, but button will be enabled according to status
+		
+			// show message
 			?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php			
 			
-			// create array of backout options  -- for each, button title, explanatory text and disabled -- true = disabled (single) 
-			$backout_layout = 	array (
-				'backout_new' 		=>		array ( 
-					'Backout New', 
-					sprintf ( __( '%s constituents that were added as new by the upload will be backed out along with any activities for them. ', 
-						'wp-issues-crm' ), $new_constituents_saved ), 
-					'completed' != $upload_status || 0 == $new_constituents_saved,
-				 ),
-			); 
-
-			// keeping css from upload download form
-			echo '<div id = "upload-download-buttons">';
-
-			foreach ( $backout_layout as $button_slug => $backout ) { 
-
-				$button_args_main = array(
-					'entity_requested'			=> $upload_parameters->staging_table_name,
-					'action_requested'			=> $button_slug,
-					'button_class'					=> 'button button-primary wic-form-button',
-					'button_label'					=> __( $backout[0], 'wp-issues-crm' ) ,
-					'type'							=> 'button',
-					'id'								=> 'wic-backout-button',
-					'name'							=> 'wic-backout-button',
-					'disabled'						=> $backout[2]
-				);	
-				$button = $this->create_wic_form_button ( $button_args_main );
-				echo $button;
-				echo '<div class = "download-button-legend" id="'. $button_slug . '_legend" >' . $backout[1] . '</div>';
-			}
+			// show button	
+			$button_args_main = array(
+				'entity_requested'			=> $upload_parameters->staging_table_name,
+				'action_requested'			=> 'backout_new',
+				'button_class'					=> 'button button-primary wic-form-button',
+				'button_label'					=> __( 'Backout New', 'wp-issues-crm' ) ,
+				'type'							=> 'button',
+				'id'								=> 'wic-backout-button',
+				'name'							=> 'wic-backout-button',
+				// enable button consistently with message above button
+				'disabled'						=> ( 'completed' != $upload_status && 'started' != $upload_status) || 0 == $new_constituents_saved,
+			);	
+			$button = $this->create_wic_form_button ( $button_args_main );
+			echo $button;
+			// show button legend
+			echo '<div class = "backout-button-legend" >' . 
+				$backout_button_legend .
+			'</div>';
+			// slot for progress bar
 			echo '<div id = "wic-upload-progress-bar"></div>';
-			echo '</div>'; 	
 			
-			
-			// keeping css from upload complete form
-			echo '<div id = "upload-game-plan">' .
+			// offer some explanation about backout issues
+			echo '<div id = "backout_legend">' .
 					'<h3>' . __( 'Backing out updates:', 'wp-issues-crm' ) . '</h3>' .
 					'<ul class = "upload-status-summary" >' .
 					'<li>' .
@@ -101,7 +100,7 @@ class WIC_Form_Upload_Regrets extends WIC_Form_Upload_Validate  {
 	}
 
 	protected function get_the_legends( $sql = '' ) {
-		// report configuration settings related to upload capacity;
+		// fine print legend area
 		$legend = '<p>' .
 					'</p>';
 			

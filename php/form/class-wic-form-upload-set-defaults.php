@@ -31,7 +31,7 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 					$message = 	sprintf ( __( '%s -- database update settings. ', 'wp-issues-crm' ), $data_array['upload_file']->get_value() );
 					// note: manage message class in js
 				} else {
-					$message =  sprintf ( __( 'Upload already started and/or completed for %s. ' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() )  . $message;
+					$message =  sprintf ( __( 'Settings used for %2$s.  Upload %1$s. ' , 'wp-issues-crm' ), $upload_status, $data_array['upload_file']->get_value() )  . $message;
 				}
 				?><div id="post-form-message-box"><span id="post-form-message-base"><?php echo esc_html( $message ); ?></span></div><?php
 

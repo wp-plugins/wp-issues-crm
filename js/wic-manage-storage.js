@@ -21,6 +21,11 @@
 			decideWhatToShow();
 		});
 		
+		// set keep search when keep all changes
+		jQuery ( "#keep_all" ).change ( function () {
+			jQuery ( "#keep_search" ).prop( "checked" , jQuery ( "#keep_all" ).prop( "checked" ) )
+		});
+		
 		// continue to show the section buttons, but knockout their onclick show/hide toggle function
 		showHideButtons = jQuery ( ".field-group-show-hide-button" );
 		showHideButtons.prop( "onclick", '' );
@@ -55,7 +60,7 @@
 								.appendTo( "#wic-form-manage-storage" ); 
 							console.log (tempElement); 
 				  			$( "#wic-purge-progress-bar" ).show();
-			  			$( "#wic-form-manage-storage" ).submit();
+			  				$( "#wic-form-manage-storage" ).submit();
 				  			tempElement.remove(); 
 				  		}
 			  		}
@@ -71,19 +76,20 @@
 	
 		var uploadMessage, searchMessage, allMessage, subFieldsMessage, fullMessage;
 
-		allMessage = jQuery ( "#keep_all" ).prop( "checked" ) ? " keep all constituent records, " : " purge selected constituent records, "
-		uploadMessage = jQuery ( "#keep_staging" ).prop( "checked" ) ? " keep upload history " : " purge upload history "
-		searchMessage = jQuery ( "#keep_search" ).prop( "checked" ) ? " and keep search history. " : " and purge search history. "
-		
-		
-
 		if ( jQuery ( "#keep_all" ).prop( "checked" ) ) {
+			// always show subfields as kept if keep all checked
 			constituentSubFields.prop( "disabled", true );	
 			constituentSubFields.prop( "checked", true );
-			subFieldsMessage = '';	
+			// allow modification of search purge if not purging constituents
+			jQuery ( "#keep_search" ).prop( "disabled", false );
+			constituentMessage = 'No constituents will be purged.';	
 			jQuery ( "#post-form-message-box" ).removeClass( 'wic-form-errors-found' )
-			fullMessage = 'Purge will ' + allMessage + uploadMessage + searchMessage ;
 		} else {
+			// if purging any constituents, always purge search log
+			jQuery ( "#keep_search" ).prop( "disabled", true );
+			jQuery ( "#keep_search" ).prop( "checked", false );
+			
+			// allow setting of constituent purge criteria and format message
 			constituentSubFields.prop( "disabled", false );
 			jQuery ( "#post-form-message-box" ).addClass( 'wic-form-errors-found' )
 			subFieldsMessage = '';
@@ -110,13 +116,16 @@
 			}
 			
 			if ( '' != subFieldsMessage ) {
-				subFieldsMessage = 'Purge will keep constituents that have ' + subFieldsMessage + ', but will purge ALL other constituents.';
+				constituentMessage= 'Purge will keep constituents that have ' + subFieldsMessage + ', but will purge ALL other constituents.';
 			} else {
-				subFieldsMessage = 'All constituents are selected and will be purged.';			
+				constituentMessage = 'All constituents are selected and will be purged.';			
 			} 
-			fullMessage = subFieldsMessage + ' Purge will ' + uploadMessage + searchMessage ;		
+					
 		}
-		
+
+		uploadMessage = jQuery ( "#keep_staging" ).prop( "checked" ) ? " keep upload history " : " purge upload history "
+		searchMessage = jQuery ( "#keep_search" ).prop( "checked" ) ? " and keep search history. " : " and purge search history. "
+		fullMessage = constituentMessage + ' Purge will ' + uploadMessage + searchMessage ;
 		
 		jQuery ( "#post-form-message-box" ).text( fullMessage );
 	}		

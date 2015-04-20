@@ -27,14 +27,17 @@ class WIC_Form_Upload_Complete extends WIC_Form_Upload_Validate  {
 				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
 			// file is ready for final upload ( or upload has been started and/or completed )
 			} else {
-
 				// set message and button label based on status
 				if ( 'defaulted' == $upload_status ) { 
 				// show message inviting match/rematch
 					$message =  sprintf ( __( 'Ready to complete upload from %s.' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() );
 					$button_label = __( 'Complete Upload', 'wp-issues-crm' );
+				} elseif ( 'reversed' == $upload_status )  {
+					$message = sprintf( __( 'Upload of %s already attempted and reversed.', 'wp-issues-crm' ), $data_array['upload_file']->get_value() ) ;
+					$message_level = 'error';
+					$button_label = __( 'Upload Backed Out' , 'wp-issues-crm' );
 				} elseif ( 'started' == $upload_status ) {
-					$message =  sprintf ( __( 'Upload interrupted for %s.' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() );
+					$message =  sprintf ( __( 'Upload interrupted for %s. You can safely attempt restart.' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() );
 					$button_label = __( 'Restart Upload', 'wp-issues-crm' );
 				} elseif ( 'completed' == $upload_status ) {
 					$message =  sprintf ( __( 'Upload already completed for %s.' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() );
@@ -184,7 +187,7 @@ class WIC_Form_Upload_Complete extends WIC_Form_Upload_Validate  {
 		$total_valid_records_processed = isset ( $final_results->total_valid_records_processed ) ? $final_results->total_valid_records_processed : 0; 
 		$table .= '<tr>' .
 			'<td class = "text">' . __( 'All constituent updates from valid input records (including details for unmatched)', 'wp-issues-crm' ) . '</td>' .
-			'<td class = "wic-statistic" >' . $updated_constituents_count . '</td>' .
+			'<td class = "wic-statistic" >' . '--' . '</td>' .
 			'<td class = "wic-statistic" id = "total_valid_records_processed" >' . $total_valid_records_processed . '</td>' .
 		'</tr>';		
 
