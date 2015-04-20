@@ -1,7 +1,7 @@
-INSERT INTO wp_wic_option_group (ID, option_group_slug, option_group_desc, enabled, last_updated_time, last_updated_by, mark_deleted, is_system_reserved) VALUES
-(32, 'delimiter_options', 'Upload file columns delimited by', 1, '0000-00-00 00:00:00', 0, '', 1),
-(33, 'enclosure_options', 'Upload file columns enclosed by', 1, '0000-00-00 00:00:00', 0, '', 1),
-(34, 'upload_status', 'Upload Status', 1, '0000-00-00 00:00:00', 0, '', 1);
+INSERT INTO wp_wic_option_group ( option_group_slug, option_group_desc, enabled, last_updated_time, last_updated_by, mark_deleted, is_system_reserved) VALUES
+( 'delimiter_options', 'Upload file columns delimited by', 1, '0000-00-00 00:00:00', 0, '', 1),
+( 'enclosure_options', 'Upload file columns enclosed by', 1, '0000-00-00 00:00:00', 0, '', 1),
+( 'upload_status', 'Upload Status', 1, '0000-00-00 00:00:00', 0, '', 1);
 INSERT INTO wp_wic_option_value ( parent_option_group_slug, option_value, option_label, value_order, enabled, last_updated_time, last_updated_by) VALUES
 ( 'delimiter_options', 'comma', 'Comma (common in .csv files)', 10, 1, '0000-00-00 00:00:00', 0),
 ( 'delimiter_options', 'semi', 'Semi-Colon (sometimes used in .csv files)', 20, 1, '0000-00-00 00:00:00', 0),

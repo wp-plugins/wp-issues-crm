@@ -37,23 +37,17 @@ class WIC_Form_Upload_Regrets extends WIC_Form_Upload_Validate  {
 			// form layout not dependent on upload status, but button will be enabled according to status
 			?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php			
 			
-			$matched_legend = ( $default_decisions->update_matched ) ? 
-				__( 'Note that uploaded records that matched to existing constituents and therefore updated them 
-						rather than being added as new cannot be backed out.', 'wp-issues-crm' ) 
-				:	'' ;
-
-								
 			// create array of backout options  -- for each, button title, explanatory text and disabled -- true = disabled (single) 
 			$backout_layout = 	array (
 				'backout_new' 		=>		array ( 
 					'Backout New', 
-					sprintf ( '%s constituents that were added as new by the upload will be backed out along with any activities for them. ' 
-							. $matched_legend , $new_constituents_saved ), 
+					sprintf ( __( '%s constituents that were added as new by the upload will be backed out along with any activities for them. ', 
+						'wp-issues-crm' ), $new_constituents_saved ), 
 					'completed' != $upload_status || 0 == $new_constituents_saved,
 				 ),
 			); 
 
-			// keeping css from upload down form
+			// keeping css from upload download form
 			echo '<div id = "upload-download-buttons">';
 
 			foreach ( $backout_layout as $button_slug => $backout ) { 
@@ -74,6 +68,24 @@ class WIC_Form_Upload_Regrets extends WIC_Form_Upload_Validate  {
 			}
 			echo '<div id = "wic-upload-progress-bar"></div>';
 			echo '</div>'; 	
+			
+			
+			// keeping css from upload complete form
+			echo '<div id = "upload-game-plan">' .
+					'<h3>' . __( 'Backing out updates:', 'wp-issues-crm' ) . '</h3>' .
+					'<ul class = "upload-status-summary" >' .
+					'<li>' .
+						__( 'This backout function only removes newly added constituents. ', 'wp-issues-crm' ) .
+					'</li>' .
+					'<li>' .
+						__( 'Updates to existing constituents generally cannot be reversed except by restoration from a Wordpress database backup.', 'wp-issues-crm' ) .
+					'</li>' .
+					'<li>' .
+						 __( 'In the absence of a good backup, you may be able to surgically remove erroneously added activity records using phpmyadmin or direct SQL.
+						 		The database structure of WP Issues CRM is transparent and intuitive if you have SQL experience.
+						 		However, there is no good way to undo erroneous updates to core constituent data without a good backup.', 'wp-issues-crm' ).
+					'</li><ul>' .
+				'</div>';			
 			
 			echo $data_array['ID']->update_control();	
 			echo $data_array['serialized_upload_parameters']->update_control();

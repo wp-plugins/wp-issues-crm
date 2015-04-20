@@ -65,7 +65,7 @@ class WIC_DB_Dictionary {
 			SELECT option_group_slug, 
 				group_concat( option_value ORDER BY value_order DESC SEPARATOR '<!!>' ) AS option_values,
 				group_concat( option_label ORDER BY value_order DESC SEPARATOR '<!!>' ) AS option_labels
-			FROM $table1 g inner join $table2 v on g.option_group_slug = v.parent_option_group_slug
+			FROM $table1 g inner join $table2 v on g.ID = v.option_group_id
 			WHERE v.enabled and g.enabled
 			GROUP BY option_group_slug
 			ORDER BY option_group_slug

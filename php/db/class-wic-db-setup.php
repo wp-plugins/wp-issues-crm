@@ -13,16 +13,11 @@ class WIC_DB_Setup {
 	*	
 	*	database_setup()	
 	*
-	* 	this function takes sql exported from development environment  
-	*	prepares it for production use with appropriate site variables
-	*	runs db delta to install it
+	*	runs db delta to install/upgrade database
 	*
-	*	manual steps in package preparation of export from development
-	*		set without autoincrement settings, without 'if not exists' and without back ticks (uncheck all object creation options)
-	*		remove all statements other than the create table statements
+	*  then runs routines to install/upgrade dictionary and options tables
 	*
 	*	note: all wic_issues_crm tables use the utf8 character set and utf8_general_ci collation  
-	*
 	*
 	*	note: version globals set in wp-issues-crm.php
 	*
@@ -85,7 +80,7 @@ class WIC_DB_Setup {
 		$sql = "TRUNCATE TABLE $field_groups";
 		$outcome2 = $wpdb->query ( $sql );
 		
-		// insert new (non-custom) dictionary and field group records
+		// insert new (non-custom) dictionary records and all field group records
 		$outcome3 = self::execute_file_sql ( 'wic_data_dictionary_and_field_groups' );
 
 		// populate interface table if not populated, otherwise don't touch it
@@ -96,22 +91,44 @@ class WIC_DB_Setup {
 			$outcome4 = self::execute_file_sql ( 'wic_interface_table' );
 		}
 
-		// install base version of option group if first install
+		// install base version of option groups if first install
 		if ( false === $installed_version ) {
 			$outcome5 = self::execute_file_sql ( 'wic_option_groups_and_options' );	
 		}
 
-		// convert references from option_group_id to option_group_slug in option table  
-		if ( false === $installed_version || $installed_version < '1' ) {		
-			$option_group = $wpdb->prefix . 'wic_option_group'; 
-			$option_value = $wpdb->prefix . 'wic_option_value';
+		// define table names for  use in next few steps
+		$option_group = $wpdb->prefix . 'wic_option_group'; 
+		$option_value = $wpdb->prefix . 'wic_option_value';
+		
+		// add references to parent_option_group_slug based on option_group_id in option_table  
+		// for early versions, did not include parent_option_group_slug in database
+		// for 2.2 and higher, it is included in the initial set up
+		if ( false === $installed_version || $installed_version < '2.2' ) {		
 			$sql = "UPDATE $option_value v INNER JOIN $option_group g ON v.option_group_id = g.ID SET v.parent_option_group_slug = g.option_group_slug";
 			$outcome6 = $wpdb->query ( $sql );
 		}
-
-		if ( false === $installed_version || $installed_version < '1' ) {
+		
+		// add ons in version 2.2
+		if ( false === $installed_version || $installed_version < '2.2' ) {
 			$outcome7 = self::execute_file_sql ( 'wic_option_groups_and_options_upgrade_001' );					
 		}
+	
+		/*
+		* back fill option_group_id based on parent_option_group_slug for upgrades to option table 
+		*  -- note that this query will include any groups user added between upgrades, since parent_option_group_slug not maintained elsewhere 
+		*		
+		* parent_option_group_slug is used only in the upgrade process (and one hard_coded reference in class-wic-db-access-dictionary.php)
+		*
+		* this step must run after all upgrades/additions to option_value and option_group
+		*
+		* it maintains integrity of multivalue logic (which relies on ID) while allowing upgrade 
+		* to make additions to both option_group table and option_value table with indeterminate option_group_id's
+		*
+		* insert statements to option_value in upgrades should include parent_option_group_slug, but not option_group_id
+		*/
+		$sql = "UPDATE $option_value v INNER JOIN $option_group g ON v.parent_option_group_slug = g.option_group_slug 
+			SET v.option_group_id = g.ID where option_group_id = '' ";
+		$outcomex = $wpdb->query ( $sql );
 
 		// always finish by marking version change
 		if ( false !== $installed_version ) {
@@ -136,7 +153,7 @@ class WIC_DB_Setup {
 	}	
 	
 	public static function execute_file_sql ( $file_name ) {		
-		
+
 		global $wpdb;		
 		
 		// load the table set up sql 

@@ -166,7 +166,7 @@ CREATE TABLE wp_wic_option_value (
   last_updated_time datetime NOT NULL,
   last_updated_by bigint(20) NOT NULL,
   PRIMARY KEY (ID),
-  KEY enabled (enabled,parent_option_group_slug,value_order)
+  KEY enabled (enabled,option_group_id,value_order)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 CREATE TABLE wp_wic_phone (
