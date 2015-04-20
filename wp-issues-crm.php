@@ -38,11 +38,9 @@
 *  (the only function created in the public name space by this plugin).
 */
 
-// set database version globals;
-global $wp_issues_crm_dictionary_version;
+// set database version global;
 global $wp_issues_crm_db_version;
-$wp_issues_crm_dictionary_version = '0.83';
-$wp_issues_crm_db_version = '0.83';
+$wp_issues_crm_db_version = '1.0';
 
 
 // check for database install or updates -- note that the 'plugins_loaded' hook fires before is_admin is set, so too late if put in admin_setup

@@ -30,6 +30,7 @@ class WIC_DB_Setup {
 	private static function database_setup() { 
 
 		global $wp_issues_crm_db_version; // see wp-issues-crm.php 
+		$installed_version = get_option ( 'wp_issues_crm_db_version' ); 		
 		
 		global $wpdb;		
 		
@@ -46,12 +47,6 @@ class WIC_DB_Setup {
 		require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
 		
 		$result = dbDelta( $sql, true ); // execute = true
-		
-		if ( false !== get_option ( 'wp_issues_crm_db_version' ) ) {
-			update_option( 'wp_issues_crm_db_version', $wp_issues_crm_db_version );		
-		} else {
-			add_option( 'wp_issues_crm_db_version', $wp_issues_crm_db_version );
-		}
 		
 		/*
 		*
@@ -77,69 +72,89 @@ class WIC_DB_Setup {
 			$sql = "CREATE FULLTEXT INDEX wp_issues_crm_post_title ON $table ( post_title )";		
 			$wpdb->query ( $sql );
 		}
+		
+		// install or upgrade data dictionary and field groups
+		
+		// first purge all except custom fields
+		$dictionary = $wpdb->prefix . 'wic_data_dictionary';
+		$sql = "DELETE FROM $dictionary WHERE  left( field_slug, 13 ) != 'custom_field_'";
+		$outcome1 = $wpdb->query ( $sql );
+		
+		// lose field groups -- user never touches this
+		$field_groups = $wpdb->prefix . 'wic_form_field_groups';
+		$sql = "TRUNCATE TABLE $field_groups";
+		$outcome2 = $wpdb->query ( $sql );
+		
+		// insert new (non-custom) dictionary and field group records
+		$outcome3 = self::execute_file_sql ( 'wic_data_dictionary_and_field_groups' );
+
+		// populate interface table if not populated, otherwise don't touch it
+		$interface = $wpdb->prefix . 'wic_interface'; 
+		$sql = "SELECT upload_field_name from $interface LIMIT 0, 1";
+		$results = $wpdb->get_results ( $sql );
+		if ( 0 == count ( $results ) ) {
+			$outcome4 = self::execute_file_sql ( 'wic_interface_table' );
+		}
+
+		// install base version of option group if first install
+		if ( false === $installed_version ) {
+			$outcome5 = self::execute_file_sql ( 'wic_option_groups_and_options' );	
+		}
+
+		// convert references from option_group_id to option_group_slug in option table  
+		if ( false === $installed_version || $installed_version < '1' ) {		
+			$option_group = $wpdb->prefix . 'wic_option_group'; 
+			$option_value = $wpdb->prefix . 'wic_option_value';
+			$sql = "UPDATE $option_value v INNER JOIN $option_group g ON v.option_group_id = g.ID SET v.parent_option_group_slug = g.option_group_slug";
+			$outcome6 = $wpdb->query ( $sql );
+		}
+
+		if ( false === $installed_version || $installed_version < '1' ) {
+			$outcome7 = self::execute_file_sql ( 'wic_option_groups_and_options_upgrade_001' );					
+		}
+
+		// always finish by marking version change
+		if ( false !== $installed_version ) {
+			update_option( 'wp_issues_crm_db_version', $wp_issues_crm_db_version );		
+		} else {
+			add_option( 'wp_issues_crm_db_version', $wp_issues_crm_db_version );
+		}
+		
 	}
 	
 	public static function update_db_check () { 
 
 		global $wp_issues_crm_db_version; // see wp-issues-crm.php
-		global $wp_issues_crm_dictionary_version; // see wp-issues-crm.php
 
 		// check if database up to date; if not, run setup 
+		// single version check covers database and dictionary -- unlikely that increase churn by combining
 		$installed_version = get_option( 'wp_issues_crm_db_version');
 		if ( $wp_issues_crm_db_version != $installed_version ) { // returns false if absent, so also triggered on first run
 			self::database_setup();
 		}
 
-		// check if dictionary is populated -- if not, install -- assuming either a fresh installation . . .
-		// or a reset of all options fields (i.e., truncate dictionary, field_groups, option_group, option_value )
-		// note that if tables dropped, not truncated, must reset version options to trigger database reinstall
-		global $wpdb;
-		$table = $wpdb->prefix . 'wic_data_dictionary';
-		$test = $wpdb->get_results ( "SELECT ID FROM $table LIMIT 0, 1 " );
-		if ( ! isset( $test[0]->ID ) ) {
-			self::dictionary_install();
-		} else {  // if already populated, run upgrade script if necessary
-			$dictionary_version = get_option( 'wp_issues_crm_dictionary_version' );
-			if ( $wp_issues_crm_dictionary_version != $dictionary_version ) {
-				self::dictionary_upgrade();
-			} 		
-		}
 	}	
 	
-	// run script to load dictionary data
-	private static function dictionary_install() {
-	
-		global $wp_issues_crm_dictionary_version;  // see wp-issues-crm.php
+	public static function execute_file_sql ( $file_name ) {		
+		
 		global $wpdb;		
 		
 		// load the table set up sql 
-		$sql = file_get_contents( plugin_dir_path ( __FILE__ ) . '../../sql/wic_data_dictionary_and_options.sql' );
+		$sql = file_get_contents( plugin_dir_path ( __FILE__ ) . '../../sql/' . $file_name . '.sql' );
 		$sql = self::site_table_names_in_sql ( $sql );
 		
 		// execute statements one by one
 		$sql_array = explode ( ';', $sql );
+		$outcome = true;
 		foreach ( $sql_array as $sql_statement ) {
-			$wpdb->query ( $sql_statement );
+			$result = $wpdb->query ( $sql_statement );
+			if ( false === $result ) {
+				$outcome = false;			
+			}
 		}
-		
-		if ( false !== get_option ( 'wp_issues_crm_dictionary_version' ) ) {
-			update_option( 'wp_issues_crm_dictionary_version', $wp_issues_crm_dictionary_version );		
-		} else {
-			add_option( 'wp_issues_crm_dictionary_version', $wp_issues_crm_dictionary_version );
-		}
-	
-	}
 
-	// run cumulative script to add/modify dictionary
-	private static function dictionary_upgrade() {
-		// dictionary upgrades may become necessary -- 
-		// sql here must be written to be cumulative, executable independent of intermediary versions
-		// must write to handle specific changes -- check if option exists, if not, add . . .
-		global $wp_issues_crm_dictionary_version;  // see wp-issues-crm.php
-
-		// . . . insert dictionary upgrade script here when and if necessary
+		return ( $outcome );
 		
-		update_option( 'wp_issues_crm_dictionary_version', $wp_issues_crm_dictionary_version );		
 	}
 	
 	// replace standard prefix with possible site table prefix
@@ -152,13 +167,15 @@ class WIC_DB_Setup {
 			array ( 'wp_wic_activity'		, 	$wpdb->prefix . 'wic_activity' 	),
 			array ( 'wp_wic_address'		, 	$wpdb->prefix . 'wic_address'		),
 			array ( 'wp_wic_constituent'	, 	$wpdb->prefix . 'wic_constituent'		),
-			array ( 'wp_wic_constituent'	,	$wpdb->prefix . 'wic_constituent'		),
+			array ( 'wp_wic_data_dictionary'	,	$wpdb->prefix . 'wic_data_dictionary'		),
 			array ( 'wp_wic_email'			, 	$wpdb->prefix . 'wic_email'		),
 			array ( 'wp_wic_form_field_groups',$wpdb->prefix . 'wic_form_field_groups'		),
+			array ( 'wp_wic_interface',	$wpdb->prefix . 'wic_interface'		),
 			array ( 'wp_wic_option_group'	,	$wpdb->prefix . 'wic_option_group'		),
 			array ( 'wp_wic_option_value'	,	$wpdb->prefix . 'wic_option_value'		),
 			array ( 'wp_wic_phone'			,	$wpdb->prefix . 'wic_phone'		),
 			array ( 'wp_wic_search_log'	,	$wpdb->prefix . 'wic_search_log'		),
+			array ( 'wp_wic_upload'	,	$wpdb->prefix . 'wic_upload'		),
 		);
 		
 		// convert table names to specific site's production environment
