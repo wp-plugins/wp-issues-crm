@@ -31,18 +31,18 @@ class WIC_Form_Upload_Regrets extends WIC_Form_Upload_Validate  {
 				$final_results 				= json_decode ( $data_array['serialized_final_results']->get_value() );
 				$new_constituents_saved 	= $final_results->new_constituents_saved;
 				if ( $new_constituents_saved > 0 ) {
-					$message = sprintf ( __( 'Backout %1$s NEW input records from %2$s.' , 'wp-issues-crm' ), $new_constituents_saved, $upload_file );
-					$backout_button_legend = sprintf ( __( 'Backout includes all activities, emails, phones and addresses for constituents.
+					$message = sprintf ( __( 'Reverse upload of %1$s NEW input records from %2$s.' , 'wp-issues-crm' ), $new_constituents_saved, $upload_file );
+					$backout_button_legend = sprintf ( __( 'Reversal includes all activities, emails, phones and addresses for constituents.
 						 ', 'wp-issues-crm' ), $new_constituents_saved );
 				} else {
-					$message = sprintf ( __( 'No NEW constituent records created from %s. Matched updates cannot be backed out.' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() );				
+					$message = sprintf ( __( 'No NEW constituent records created from %s. Matched updates cannot be reversed.' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() );				
 				}					
 			} elseif ( 'reversed' == $upload_status ) {
 				$message_level = 'error';
-				$message = 	sprintf ( __( 'Upload of %s already backed out.' , 'wp-issues-crm' ), $upload_file );  		
+				$message = 	sprintf ( __( 'Upload of new constituents from %s already reversed.' , 'wp-issues-crm' ), $upload_file );  		
 			} else {
 				$message_level = 'error';
-				$message = 	sprintf ( __( 'Upload of %s not started or completed -- cannot be backed out.' , 'wp-issues-crm' ), $upload_file );  		
+				$message = 	sprintf ( __( 'Upload of %s not started or completed -- cannot be reversed.' , 'wp-issues-crm' ), $upload_file );  		
 			}
 		
 			// show message
@@ -74,7 +74,7 @@ class WIC_Form_Upload_Regrets extends WIC_Form_Upload_Validate  {
 					'<h3>' . __( 'Backing out updates:', 'wp-issues-crm' ) . '</h3>' .
 					'<ul class = "upload-status-summary" >' .
 					'<li>' .
-						__( 'This backout function only removes newly added constituents. ', 'wp-issues-crm' ) .
+						__( 'This backout function only reverses newly added constituents. ', 'wp-issues-crm' ) .
 					'</li>' .
 					'<li>' .
 						__( 'Updates to existing constituents generally cannot be reversed except by restoration from a Wordpress database backup.', 'wp-issues-crm' ) .

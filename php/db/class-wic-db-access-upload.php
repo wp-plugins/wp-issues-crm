@@ -1150,10 +1150,10 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			'dup_check' => true, 
 			'category_search_mode' => '',
 			);
-
+		
 		// determine whether to use issue titles in the loop; add the issue control to activity if using titles and not already mapped
 		if ( 	isset ($data_object_array_array['issue']['post_title'] ) && //  have title and 
-				!isset( $data_object_array['activity']['issue'] ) ) {			//  need title (issue was not mapped or defaulted)
+				!isset( $data_object_array_array['activity']['issue'] ) ) {			//  need title (issue was not mapped or defaulted)
 			$use_title = true;
 			$field_rule = $wic_db_dictionary->get_field_rules ( 'activity', 'issue' );					
 			$data_object_array_array['activity']['issue'] = WIC_Control_Factory::make_a_control( $field_rule->field_type );	

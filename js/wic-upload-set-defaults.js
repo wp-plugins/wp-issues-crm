@@ -34,10 +34,11 @@
 		// populate form with saved values or initialize
 		populateForm();	
 
-		// hide controls that don't make a difference or are misleading
-		if ( ! $( "#post-form-message-box" ).hasClass( "wic-form-errors-found" ) ) {	
-			decideWhatToShow();
-		}	
+		// on first time through, after populating form, set database values
+		// necesary in case good to without change
+		recordDefaultDecisions(); // updates serialized_default_decisions			
+		decideWhatToShow(); // updates upload_status after analyzing form
+
 		
 		// listen to save all updates to default options
 		controlsArray.change ( function() {
