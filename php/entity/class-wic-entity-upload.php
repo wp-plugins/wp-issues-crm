@@ -10,26 +10,25 @@
 *		-- do raw upload, validating only csv/txt format with consistent column count
 *		-- map fields (fully flexible)
 *		-- validate data
-*			+ IF the field is mapped, all form edits are applied -- sanitization, validation and individual required check; 
+*			+ IF the field is mapped, all form edits are applied -- sanitization and validation and NOT individual required check; 
 *			+ If mapped, a select field must have good values (validation implicit in form context)  
 *			+ Additionally, IF the constituent identity field is mapped it is validated as a good ID
-*			+ Enforcing required rules at this stage makes sense because if user is not supplying other data that makes it required, can always unmap field
-*				(example, has matched address-type; missing values generate errors, but these are good errors if street address is supplied and
-*					silence the errors by unmapping address-type and relying on default)
+*			+ SEE ADDITIONAL DISCUSSION BELOW ON REQUIRED DATA 
 *		-- matching
 *			+ user can select match of input to existing records from valid identity-specifying combinations or custom fields
 *			+ hierarchy of matching order is suggested to user, but user can override
 *			+ apart from constituent ID and any custom fields, all permitted matching modes include at least one of group-required identify fields ( fn/ln/email ) 
+*			+ MUST EITHER MATCH OR FAIL A MATCH ALTHOUGH HAVING THE NECESSARY FIELDS TO TRY THE MATCH TO GET UPDATED OR INSERTED IN FINAL UPLOAD
 *		-- set defaults for constituent	
 *			+ Determine basic add/update behavior for matched records
-*			+ All option to not overwrite good names and addresses with possibly sloppy names and addresses -- set default do not overwrite
-*			+ Only allow defaulting of unmapped fields -- if a column can be replaced in part with defaults, replace it entirely
+*			+ Allow option to not overwrite good names and addresses with possibly sloppy names and addresses -- set default do not overwrite
+*			+ Only allow defaulting of unmapped fields -- if a column can be replaced in part with defaults, user should unmap it replace it entirely
 *		-- set defaults for activities ( in same tab as constituents )
-*			+ Only allow defaulting of unmapped fields -- if a column can be replaced in part with defaults, replace it entirely
+*			+ Only allow defaulting of unmapped fields -- if a column can be replaced in part with defaults, user should unmap it replace it entirely
 *			+ If issue number is mapped or is defaulted to non-blank, it controls; otherwise look to title
-*		-- possible errors/warnings for defaults
 *			+ errors: a data entity is included (mapped or defaulted), but required information is neither mapped nor defaulted ( e.g., if address, type and city )
-*			+ warning: both issue number and title are present, title will be disregarded 
+*					-- note: don't require type online, but in batch mode requiring type through default setting.
+*		-- possible errors/warnings for defaults
 *			+ custom matching, but no fn/ln/email mapped (all will be rejected) or mapped, but warn about non-blanks
 *		-- preupdate as part of update  -- if any unique unmatched
 *			+ save constituent stub
@@ -39,7 +38,8 @@
 *		-- actual update
 *			+ if have matched OLD record, must make decision about what to update
 *				* for fn/ln, go by "protect primary identity" indicator, but even if unchecked, update only if existing value non-blank
-*				* for address, if new type add, if existing type, go by "protect identity" indicator, but even unchecked, update only if existing value non-blank
+*				* for address, if new type add, if existing type, go by "protect identity" indicator, but even unchecked, 
+*						update only if existing value non-blank
 *				* for other constituent information -- demographics and custom -- update if non-blank
 *				* for email/phone, if new type add, if old type, update if non-blank 
 *				* use defaults consistent with these rules where fields unmapped, as if they were the original values
@@ -572,72 +572,86 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		foreach( $record_object_array as $record ) {
 			$errors = '';
 			$update_clause_array = array();
+			
+			// loop through columns for the record -- same as data_object_array
 			foreach ( $data_object_array as $column => $control ) {
-				// ignore empty columns on any record
-				if ( $record->$column > '' ) { 				
-					$control->set_value ( $record->$column );
-					// since will be testing for specified valid values and have already escaped,
-					// content not to sanitize multiselect ( which is expecting an array value for sanitization )
-					if ( 'multiselect' != $control->get_control_type() ) {
-						$control->sanitize();
-					}
-					// invoke the control's validation routine -- covers most cases
-					$error = $control->validate();
-					// also add individual required error ( group required ignored and enforced through map step)
-					$error .= $control->required_check();
-					// do validation for constituent ID field that doesn't require validation in form context since not user supplied
-					if ( 'constituent' == $column_map->$column->entity && 'ID' == $column_map->$column->field ) {
-						$wic_query = 	WIC_DB_Access_Factory::make_a_db_access_object( 'constituent' );
-						// set up search arguments and parameters
-						$search_parameters = array( // accept default search parameters -- 
-							'select_mode' => 'id',
-							'retrieve_limit' => 2,
-							'show_deleted' => true,		
-							'log_search' => false,
+			
+				$control->set_value ( $record->$column );
+				// since will be testing later for specified valid values and have already escaped data,
+				// OK not to sanitize multiselect ( which is expecting an array value for sanitization )
+				if ( 'multiselect' != $control->get_control_type() ) {
+					$control->sanitize();
+				}
+				
+				// invoke the control's validation routine -- does not generate errors on empty
+				$error = $control->validate();
+				
+				// group required enforced through match and insert steps
+				// individual required enforced at final update (so, missing data will not invalidate record, only the subrecord)
+				// do validation for constituent ID field that doesn't require validation in form context since not user supplied
+				// empty will be error for this
+				if ( 'constituent' == $column_map->$column->entity && 'ID' == $column_map->$column->field ) {
+					$wic_query = 	WIC_DB_Access_Factory::make_a_db_access_object( 'constituent' );
+					// set up search arguments and parameters
+					$search_parameters = array( // accept default search parameters -- 
+						'select_mode' => 'id',
+						'retrieve_limit' => 2,
+						'show_deleted' => true,		
+						'log_search' => false,
+					);
+					$query_clause =  array (
+							array (
+								'table'	=> 'constituent',
+								'key' 	=> 'ID',
+								'value'	=> $control->get_value(),
+								'compare'=> '=',
+								'wp_query_parameter' => '',
+							)
 						);
-						$query_clause =  array (
-								array (
-									'table'	=> 'constituent',
-									'key' 	=> 'ID',
-									'value'	=> $control->get_value(),
-									'compare'=> '=',
-									'wp_query_parameter' => '',
-								)
-							);
-						$wic_query->search ( $query_clause, $search_parameters );
-						$error = ( 1 == $wic_query->found_count ) ? '' : __( 'Bad constituent ID', 'wp-issues-crm' );
-					}
-					// do additional validation for sanitization (e.g., date) that reduces input to empty
-					if ( '' < $record->$column && '' == $control->get_value() ) {
-						$error = sprintf ( __( 'Invalid entry for %s -- %s.', 'wp-issues-crm' ), $column_map->$column->field, $record->$column ); 					
-					}
-					// validate select fields -- assure that value in options set (whether in options table or function generated per control logic)
-					// in normal context, select field assumes yielding valid values
-					if ( method_exists ( $control, 'valid_values' ) ) { 
-						if ( ! in_array ( $record->$column, $valid_values[$column] ) ) {
-							$error = sprintf ( __( 'Invalid entry for %s -- %s.', 'wp-issues-crm' ), $column_map->$column->field, $record->$column ); 						
-						}					
-					}
+					$wic_query->search ( $query_clause, $search_parameters );
+					$error = ( 1 == $wic_query->found_count ) ? '' : __( 'Bad constituent ID', 'wp-issues-crm' );
+				}
+				// do additional validation for sanitization (e.g., date) that reduces input to empty
+				if ( '' < $record->$column && '' == $control->get_value() ) {
+					$error = sprintf ( __( 'Invalid entry for %s -- %s.', 'wp-issues-crm' ), $column_map->$column->field, $record->$column ); 					
+				}
+				
+				// validate select fields -- assure that value in options set (whether in options table or function generated per control logic)
+				// in normal context, select field assumes yielding valid values
+				// empty may or may not be valid value
+				if ( method_exists ( $control, 'valid_values' ) ) { 
+					if ( ! in_array ( $record->$column, $valid_values[$column] ) ) {
+						$error = sprintf ( __( 'Invalid entry for %s -- %s.', 'wp-issues-crm' ), $column_map->$column->field, $record->$column ); 						
+					}					
+				}
+
+				// for non-empty column values 
+				if ( $record->$column > '' ) { 	
+					// increment count of non empty values for the column 
 					$column_map->$column->non_empty_count++;
-					// report individual column validation results
 					if ( '' == $error ) {
+						// increment count of non-empty valid values for the column
 						$column_map->$column->valid_count++;
-						// if no error and valid, update staging table with sanitized value
+						// set up update of staging table with sanitized value if non-empty and valid					
 						$update_clause_array[] = array (
 							'column' => $column,
 							'value'	=> $control->get_value(),						
 						);					
 					} 
-					// accumulate all errors across columns for record; note that empty is not an error
-					$errors .= $error;
 				}
+
+				// accumulate all errors across columns for record; note that empty is not an error
+				$errors .= $error;
 			}
+			
 			// this parallels update process for forms, but is distinct since only updating the staging table -- can't use same functions
+			// record_validation_results updates only the results for individual staging table record
 			$result = WIC_DB_Access_Upload::record_validation_results( $update_clause_array, $validation_parameters->staging_table, $record->STAGING_TABLE_ID, $errors );
 			if ( false === $result ) {
 				wp_die( sprintf( __( 'Error recording validation results for record %s', 'wp-issues-crm' ), $record->STAGING_TABLE_ID ) );
 			}
 		}
+		
 		// update the column map with the counts
 		$result = WIC_DB_Access_Upload::update_column_map ( $upload_id, json_encode ( $column_map ) );
 		if ( false === $result ) {
@@ -754,6 +768,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	/*
 	*
 	* match_upload answers AJAX call to test match a chunk of staging table records
+	* 	according to the matching rules for the particular match pass 
 	* does database lookups and records interim results
 	* returns updated result table
 	*
@@ -772,7 +787,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 
 		// set up an array of the columns being used to create staging table retrieval sql and minimize size of retrieval array
 		$column_list_array = array();		
-		// look up match fields in column array to get back to column, add to match field array
+		// look up match fields in column array to get back to input column, add to match field array
 		foreach ( $match_fields_array as &$match_field ) { // passing by pointer so directly modify array element
 			foreach ( $column_map as $column => $entity_field_object ) {
 				if ( '' < $entity_field_object ) { // unmapped columns have an empty entity_field_object
@@ -811,13 +826,15 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 
 		// loop through records, if have necessary fields, look for match using the standard query construct
 		foreach( $record_object_array as $record ) {
+
 			// reinitialize meta query array
 			$meta_query_array = array();
+
 			// keep overall tally -- should be same in all passes
 			$match_rule->total_count++;
-			// necessary values present (otherwise store temporarily in position 4)
-			$missing = false;
 
+			// necessary values present? (otherwise store temporarily in position 4)
+			$missing = false;
 			foreach ( $match_fields_array as $match_field ) { 	
 				if ( ''   ==  $record->$match_field[3] ) {
 					$missing = true;
@@ -844,7 +861,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			} else {
 				continue;			
 			}	
-			// not already matched?
+			// not already matched? note, may have already been "not found"
 			if ( '' == $record->MATCH_PASS ) {
 				$match_rule->have_components_not_previously_matched++;			
 			} else {

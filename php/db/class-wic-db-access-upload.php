@@ -621,15 +621,18 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			$rule->unmatched_unique_values_of_components = 0;			
 		}	
 
-		// proceed to prepare constituent stubs for addition and count additions,
-		// but only if have mapped some group required identifiers -- if none, cannot be adding constituents
+		// proceed to prepare constituent stubs for addition and count additions, but first check one of required identifiers
 		$identifiers_count = count ( $group_required_identifiers_array ); 
+
+		// only proceed if have mapped at least one of required identifiers -- if none, cannot be adding constituents
+		//  . . . in that case, bypass whole process 
 		if ( $identifiers_count > 0 ) {
 			
+			// first create the table which will hold the unmatched records
 			$unmatched_staging_table = $staging_table . '_unmatched'; 
-	
 			global $wpdb;
-			// create a table with the the available constituent columns
+			// use all the available constituent columns (constituent level data items that have been mapped to)
+			// these are items like first name, last name, date of birth that exist on the constituent database record
 			$sql = "CREATE TABLE $unmatched_staging_table ( "; 
 			foreach ( $constituent_field_array as $field ) {
 				$sql .= ' ' . $field . ' varchar(65535) NOT NULL, ';
@@ -642,21 +645,20 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 						PRIMARY KEY (STAGING_TABLE_ID), 
 						KEY MATCH_PASS (FIRST_NOT_FOUND_MATCH_PASS) ) 
 						ENGINE=MyISAM  DEFAULT CHARSET=utf8;';
-	
 			$result = $wpdb->query ( $sql );
 			if ( false === $result ) {
 				return ( false );		
 			}
 	
-			// populate that table with unique unfound values
-			
-			// all input columns mapped to properties of constituent entity		
+			// now populate that table with unique unfound values
+
+			// from the staging table, collect all input columns mapped to constituent level data items
 			$select_column_list = '';  
 			foreach ( $staging_table_column_array as $column ) {
 				$select_column_list .= ' MAX(' . $column . '), ';		
 			}
 			
-			// all available identifiers -- require have at least one to form constituent stub
+			// all available identifiers -- require have at least one non-blank to form constituent stub
 			// note that email will not actually be in the constituent stub, but will pick it up later 
 			// since have pointer back to staging record
 			$having_clause = ' HAVING ';  
@@ -666,6 +668,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 				$having_clause .= " MAX( $column ) > ''  ";
 				$having_clause .= ( $i < $identifiers_count ) ? 'OR' : ''; 		
 			}
+
 			
 			$sql = 	"INSERT $unmatched_staging_table
 						SELECT $select_column_list NULL, FIRST_NOT_FOUND_MATCH_PASS, 0, GROUP_CONCAT( STAGING_TABLE_ID )
@@ -1188,8 +1191,8 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 					// assuming not either of those go ahead and update (even without, will count as valid record processed) 
 					if ( 'y' != $staging_record->INSERTED_NEW &&  1 < count ( $data_object_array ) ) { 
 						$data_object_array['ID']->set_value ( $staging_record->MATCHED_CONSTITUENT_ID );
-						// do the update
-						$wic_access_object_array[$entity]->save_update( $data_object_array );
+						// do the update, passing the blank_overwrite choice
+						$wic_access_object_array[$entity]->upload_save_update( $data_object_array, $default_decisions->protect_blank_overwrite );
 					} 
 				} elseif ( 'issue' == $entity ) {
 					// if have post_title through mapping or default and have assured that all post_titles exist on database				
@@ -1234,7 +1237,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 					// if matches found, take the first for update purposes 
 					if ( $wic_access_object_array[$entity]->found_count > 0 ) {
 						$id_to_update = $wic_access_object_array[$entity]->result[0]->ID;
-						// don't touch the basic address record if protecting identity data (setting supports soft identity matching)
+						// don't touch the found address record if protecting identity data (setting supports soft identity matching)
 						if ( $default_decisions->protect_identity && 'address' == $entity ) {
 							continue;					
 						}
@@ -1245,7 +1248,8 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 					$data_object_array['ID']->set_value ( $id_to_update );
 
 					// now, either update found record ( email,phone, address or activity ) or save new one
-					$result = $wic_access_object_array[$entity]->save_update ( $data_object_array ) ;
+					// pass user decision as to whether blanks should be overwritten (only matters on update)
+					$result = $wic_access_object_array[$entity]->upload_save_update ( $data_object_array, $default_decisions->protect_blank_overwrite ) ;
 
 
 				} 

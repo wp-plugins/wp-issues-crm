@@ -78,6 +78,7 @@
 			jQuery ( "#update_matched" ).prop ( "checked", true );
 			jQuery ( "#add_unmatched" ).prop ( "checked", true );
 			jQuery ( "#protect_identity" ).prop ( "checked", true );
+			jQuery ( "#protect_blank_overwrite" ).prop ( "checked", true );
 		}
 	}
 	
@@ -104,22 +105,28 @@
 			jQuery ( "#post-form-message-box" ).addClass ( "wic-form-errors-found" );			
 			jQuery ( ":input" ).prop ( "disabled", true );
 		// if no matched constituents, disable update choices
-		} else if ( 0 == validMatched ) {
-			jQuery ( "#update_matched" ).prop ( "checked", false );
-			jQuery ( "#protect_identity" ).prop ( "checked", false );
-			jQuery ( "#update_matched" ).prop ( "disabled", true );
-			jQuery ( "#protect_identity" ).prop ( "disabled", true );
-		// if nothing to add, disable the add choice
-		} else if ( 0 == validUnique ) {
-			jQuery ( "#add_unmatched" ).prop ( "checked", false );
-			jQuery ( "#add_unmatched" ).prop ( "disabled", true );
+		} else {
+			if ( 0 == validMatched ) {
+				jQuery ( "#update_matched" ).prop ( "checked", false );
+				jQuery ( "#protect_identity" ).prop ( "checked", false );
+				jQuery ( "#protect_blank_overwrite" ).prop ( "checked", false );
+				jQuery ( "#update_matched" ).prop ( "disabled", true );
+				jQuery ( "#protect_identity" ).prop ( "disabled", true );
+				jQuery ( "#protect_blank_overwrite" ).prop ( "disabled", true );
+			// if nothing to add, disable the add choice
+			} else if ( 0 == validUnique ) {
+				jQuery ( "#add_unmatched" ).prop ( "checked", false );
+				jQuery ( "#add_unmatched" ).prop ( "disabled", true );
+			}
 		}
 		
 		// enable disable protect identity, depending on whether doing updates to matched.
 		if ( jQuery ( "#update_matched" ).prop( "checked" ) ){
 			jQuery ( "#protect_identity" ).prop ( "disabled", false );
+			jQuery ( "#protect_blank_overwrite" ).prop ( "disabled", false );
 		} else {
-			jQuery ( "#protect_identity" ).prop ( "disabled", true );		
+			jQuery ( "#protect_identity" ).prop ( "disabled", true );
+			jQuery ( "#protect_blank_overwrite" ).prop ( "disabled", true );					
 		}		
 		
 		
@@ -222,6 +229,20 @@
 		} else if ( '' == jQuery( "#email_type" ).val() && jQuery( "#email_type" ).is(':visible') ) {
 			errorsArray.push ( 'Set an email type to upload email addresses.' )		
 		}
+
+		// show the issue creation option under following conditions:
+		// activity_issue default showing and blank (i.e., not mapped and controlling), but title also mapped
+		// in this condition, available title column will be controlling the update -- need to show results (is required in validation)
+		if ( !activityIssueMapped &&
+				'' == jQuery( "#issue" ).val() &&
+				titleMapped 
+				) {
+			// computes table (if not already computed ) and shows it ( or hides it if no have new issues );		
+			addIssueTable( issueTitleColumn, issueContentColumn );
+		} else { 
+			jQuery ( "#wic-field-group-new_issue_creation" ).hide();
+			jQuery ( "#create_issues" ).prop ( "checked", false );
+		}
 		
 		if ( 	activityMapped 							|| // any activity field
 				titleMapped								||    // content alone will not force additions, just warning
@@ -241,21 +262,16 @@
 				 	'' == jQuery( "#issue" ).val() ) {
 				errorsArray.push ( 'Choose an issue to upload activity data.' )		
 			}
-			// if have mapped title and not overwritten, must consent to additions
+			// if have mapped title and not overwritten, and there are new issues must consent to additions
 			if (  titleMapped && ! activityIssueMapped &&
 				 	'' == jQuery( "#issue" ).val() && 	
-					! jQuery ( "#create_issues" ).prop ( "checked" )				 	
+					! jQuery ( "#create_issues" ).prop ( "checked" ) &&
+					defaultDecisions.new_issues_count > 0 				 	
 				 	) {			// not overriden by mapped issue choice
 				errorsArray.push ( 'You must affirmatively accept New Issue Titles or change other settings.' )	;		
 			}			
 		}				
 
-		// warning about ignoring content without titles
-		if ( issueMapped && ! titleMapped ) {
-			commentsArray.push( 'You have mapped issue content without mapping issue title.  The issue content column will be ignored.')			
-		}
-		
-		
 		// show/hide title elements in constituent default field group based on whether all group inputs are hidden
 		if ( 0 == jQuery( "#wic-field-group-constituent, #wic-field-group-address, #wic-field-group-email, #wic-field-group-phone" ).find( ":input" ).not( ":button, :hidden" ).length ) {
 			jQuery( "#wic-inner-field-group-constituent-toggle-button" ).hide();	
@@ -265,19 +281,6 @@
 			jQuery( "#wic-inner-field-group-constituent p" ).show();			
 		}
 		
-		// show the issue creation option under following conditions:
-		// activity_issue default showing and blank (i.e., not mapped and controlling), but title also mapped, so title default not showing
-		// in this condition, available title column will be controlling the update -- need to show results (is required in validation)
-		if ( !activityIssueMapped &&
-				'' == jQuery( "#issue" ).val() &&
-				titleMapped 
-				) {
-			jQuery ( "#wic-field-group-new_issue_creation" ).show();
-			addIssueTable( issueTitleColumn, issueContentColumn );		
-		} else { 
-			jQuery ( "#wic-field-group-new_issue_creation" ).hide();
-			jQuery ( "#create_issues" ).prop ( "checked", false );
-		}
 
 		// having set up form appropriately, decide whether to allow updates and what messages to show
 		// if have already started or completed upload, disable all input
@@ -336,11 +339,17 @@
 	}		
 
 	function addIssueTable( issueTitleColumn, issueContentColumn ) { 
+
 		// if exist issue table return ( don't recreate on form refersh)
 		if ( 0 < jQuery ( "#new-issue-table" ).length ) {
+			if ( defaultDecisions.new_issues_count > 0 ) {	
+				jQuery ( "#wic-field-group-new_issue_creation" ).show();
+			} else {
+				jQuery ( "#wic-field-group-new_issue_creation" ).hide();		
+			}
 			return;
 		} 
-		
+
 		// create div to receive reults
 		jQuery ( "#wic-inner-field-group-new_issue_creation" ).append ( '<div id = "new-issue-progress-bar-legend"> . . . looking up issues . . . </div>' ); 
 		jQuery ( "#wic-inner-field-group-new_issue_creation" ).append ( '<div id = "new-issue-progress-bar"></div>' );			
@@ -360,6 +369,12 @@
 			jQuery ( "#new-issue-progress-bar-legend" ).remove();
 			jQuery ( "#new-issue-progress-bar" ).remove();
 			recordDefaultDecisions();  // need to set the number of new issues among the default decisions
+			console.log( defaultDecisions );
+			if ( defaultDecisions.new_issues_count > 0 ) {	
+				jQuery ( "#wic-field-group-new_issue_creation" ).show();
+			} else {
+				jQuery ( "#wic-field-group-new_issue_creation" ).hide(); 			
+			}
 		});
 	}
 

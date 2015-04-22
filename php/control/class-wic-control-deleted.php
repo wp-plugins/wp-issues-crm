@@ -22,7 +22,7 @@ class WIC_Control_Deleted extends WIC_Control_Parent {
 	
 	// hidden control do nothing on save or update	
 	public function create_search_clause ( $dup_check ) {}
-	public function create_update_clauses () {}	
+	public function create_update_clause () {}	
 
 	public function search_control () {
 		// do not display a deleted control in search forms -- it is for deleting among multivalue rows	

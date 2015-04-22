@@ -350,6 +350,27 @@ abstract class WIC_DB_Access {
 		return;	
 	}
 
+	
+	// abbreviated version of save update for use in the upload context
+	// no multi value processing necessary, since each entity handled as a top entity in the upload process
+	// allow decision as to whether to protect blanks from overwrite.
+	public function upload_save_update ( &$doa, $protect_blank_overwrite ) { 
+		if ( $protect_blank_overwrite ) {
+			$save_update_array = $this->upload_assemble_save_update_array( $doa ); // drops blank values from the update array
+		} else {
+			$save_update_array = $this->assemble_save_update_array( $doa );
+		}
+
+		if ( count ( $save_update_array ) > 0 ) {
+			if ( $doa['ID']->get_value() > 0 ) {
+				$this->db_update ( $save_update_array );		
+			} else { 
+				$this->db_save ( $save_update_array );
+			}
+		}
+		// don't bother to set the insert id -- no further processign.
+	}
+
 
 	/*
 	*
@@ -366,6 +387,22 @@ abstract class WIC_DB_Access {
 				$update_clause = $control->create_update_clause();
 				if ( '' < $update_clause ) {
 					$save_update_array[] = $update_clause;
+				}
+			}
+		}	
+		return ( $save_update_array );
+	}
+
+	// special version for uploads where want to skip blank values in update process
+	protected function upload_assemble_save_update_array ( &$doa ) {
+		$save_update_array = array();
+		foreach ( $doa as $field => $control ) {
+			if ( ! $control->is_multivalue() ) {
+				if ( $control->is_present() ) { // only do save-updates when control value non-blank
+					$update_clause = $control->create_update_clause();
+					if ( '' < $update_clause ) {
+						$save_update_array[] = $update_clause;
+					}
 				}
 			}
 		}	
