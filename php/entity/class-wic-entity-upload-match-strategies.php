@@ -51,6 +51,7 @@
 			'label'			=>	'eMail Address, First Name',
 			'link_fields'	=> array(
 				array( 'email', 'email_address', 0 ),
+				array( 'constituent', 'first_name', 0 ),				
 			),
 		),
 		'email' => array( 

@@ -64,7 +64,13 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 			echo $data_array['serialized_upload_parameters']->update_control();
 			echo $data_array['serialized_column_map']->update_control();		
 			echo $data_array['serialized_match_results']->update_control();	
-			echo $data_array['serialized_default_decisions']->update_control();		
+			echo $data_array['serialized_default_decisions']->update_control();
+
+			$options = get_option ('wp_issues_crm_plugin_options_array');
+			if ( isset ( $options['do_zip_code_format_check'] ) ) {
+				echo '<div id="do_zip_code_format_check"></div>';			
+			} 			
+					
 		 	wp_nonce_field( 'wp_issues_crm_post', 'wp_issues_crm_post_form_nonce_field', true, true ); 
 			echo $this->get_the_legends( $sql ); ?>
 			</div>								

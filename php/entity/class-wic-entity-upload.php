@@ -261,7 +261,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		$decode_delimiter = array (
 			'comma' 	=> ',',
 			'semi'	=>	';',
-			'tab'		=>	'\t',
+			'tab'		=>	"\t", // double quotes convert the string to a tab character
 			'space'	=>	' ',
 			'colon'	=>	':',
 			'hyphen'	=>	'-',		
@@ -331,7 +331,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		  	   			$this->data_object_array['escape']->get_value()
 		  	   			); 
 		      if ( false === $data ) {
-					$validation_errors .= __( 'File uploaded and opened, but unable to read file as csv.  Check upload parameters. ', 'wp-issues-crm' );		
+					$validation_errors .= __( 'File uploaded and opened, but unable to read file as csv or txt.  Check upload parameters. ', 'wp-issues-crm' );		
 				} elseif (  count( $data ) < 2 ) {      	
 					$validation_errors .= __( 'File appears to have zero or one columns, possible error in delimiter definition.', 'wp-issues-crm' );		
 		      }
@@ -586,8 +586,10 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 				// invoke the control's validation routine -- does not generate errors on empty
 				$error = $control->validate();
 				
+				// invoke required checking -- does generate errors on empty if field is "individual" required
 				// group required enforced through match and insert steps
-				// individual required enforced at final update (so, missing data will not invalidate record, only the subrecord)
+				$error .= $control->required_check();
+
 				// do validation for constituent ID field that doesn't require validation in form context since not user supplied
 				// empty will be error for this
 				if ( 'constituent' == $column_map->$column->entity && 'ID' == $column_map->$column->field ) {
@@ -609,11 +611,11 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 							)
 						);
 					$wic_query->search ( $query_clause, $search_parameters );
-					$error = ( 1 == $wic_query->found_count ) ? '' : __( 'Bad constituent ID', 'wp-issues-crm' );
+					$error .= ( 1 == $wic_query->found_count ) ? '' : __( 'Bad constituent ID', 'wp-issues-crm' );
 				}
 				// do additional validation for sanitization (e.g., date) that reduces input to empty
 				if ( '' < $record->$column && '' == $control->get_value() ) {
-					$error = sprintf ( __( 'Invalid entry for %s -- %s.', 'wp-issues-crm' ), $column_map->$column->field, $record->$column ); 					
+					$error .= sprintf ( __( 'Invalid entry for %s -- %s.', 'wp-issues-crm' ), $column_map->$column->field, $record->$column ); 					
 				}
 				
 				// validate select fields -- assure that value in options set (whether in options table or function generated per control logic)
@@ -621,7 +623,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 				// empty may or may not be valid value
 				if ( method_exists ( $control, 'valid_values' ) ) { 
 					if ( ! in_array ( $record->$column, $valid_values[$column] ) ) {
-						$error = sprintf ( __( 'Invalid entry for %s -- %s.', 'wp-issues-crm' ), $column_map->$column->field, $record->$column ); 						
+						$error .= sprintf ( __( 'Invalid entry for %s -- %s.', 'wp-issues-crm' ), $column_map->$column->field, $record->$column ); 						
 					}					
 				}
 
@@ -640,7 +642,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 					} 
 				}
 
-				// accumulate all errors across columns for record; note that empty is not an error
+				// accumulate all errors across columns for record; note that empty is not an error unless field is required
 				$errors .= $error;
 			}
 			
@@ -652,7 +654,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			}
 		}
 		
-		// update the column map with the counts
+		// update the column map with the counts for the processed chunk of records
 		$result = WIC_DB_Access_Upload::update_column_map ( $upload_id, json_encode ( $column_map ) );
 		if ( false === $result ) {
 			wp_die( sprintf( __( 'Error updating validation totals.', 'wp-issues-crm' ), $record->STAGING_TABLE_ID ) );

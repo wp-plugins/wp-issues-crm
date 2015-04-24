@@ -29,6 +29,8 @@ class WIC_List_Upload extends WIC_List_Parent {
 			);	
 			$buttons .= WIC_Form_Parent::create_wic_form_button ( $button_args_main );
 
+			$buttons .= '<a href="http://wp-issues-crm.com/?page_id=101" target = "_blank" >' . __( 'Options for Uploading Files', 'wp-issues-crm' ) . '</a>';
+
 		$buttons .= '</div>';
 
 		return $buttons;

@@ -2,17 +2,57 @@
 *
 * wic-upload-set-defaults.js
 *
-* note that this routine plays role in enforcement 
+* note that this routine plays role in enforcement of required rules at the column level
 *
 */
 
 // self-executing anonymous namespace
 ( function() {
-	
-	var columnMap, defaultDecisions, initialUploadStatus, matchResults, saveHeaderMessage, uploadID, uploadParameters;
 
+	var columnMap, defaultDecisions, initialUploadStatus, matchResults, saveHeaderMessage, uploadID, uploadParameters,
+		validMatched, validUnique, commentsArray, errorsArray;
+
+	// set up presumptions that fields not mapped 		
+	var addressMapped = false;
+	var phoneMapped 	= false;
+	var emailMapped 	= false;
+	var issueMapped 	= false;
+	var titleMapped 	= false;
+	var activityMapped = false;
+	var activityIssueMapped = false;
+	var issueMapped	= false;
+	var issueTitleColumn = '';
+	var issueContentColumn = '';
+	var str = '';
+	var hidegroup = '';
+	
+	// for use with us zip code validation if set
+	var regPostalCode = new RegExp("^\\d{5}(-\\d{4})?$");
+	
+	// initialize in progress flag for Ajax call
+	var newIssuesInProgress = 0;
+	/*
+	*
+	* in ready function, make all choices and all setup possible to make without knowing user input
+	*
+	*/
 	jQuery(document).ready(function($) {
 		
+		// if error is showing at ready stage, it is because mapping, validation and/or matching steps have not been completed 
+		// therefore no need to further prepare form
+		if ( jQuery ( "#post-form-message-box" ).hasClass ( "wic-form-errors-found" )	) {
+			return;	
+		}
+
+		// set up window close listener for new issue creation
+		$(window).on('beforeunload', function() {
+			if ( 1 == newIssuesInProgess ) {
+				return ( 'started new issue creation, but not completed');
+			}   
+      });
+
+		// otherwise, initial status is something other than 'staged', 'mapped' or 'validated'
+		// php has defined an appropriate initial message based on status			
 		initialUploadStatus = $( "#initial-upload-status" ).text();
 
 		// uploadID, upload parameters and column map populated on upload
@@ -26,151 +66,41 @@
 		// will be unpopulated on first time through this stage -- need to handle further below
 		defaultDecisions	= 		jQuery( "#serialized_default_decisions" ).val() > '' ? 
 			JSON.parse ( jQuery( "#serialized_default_decisions" ).val() ) : {};
+
 		// getting all form elements holding non-hidden values
 		// note that other elements may become hidden as a result of logic, but array will remain constant
 		controlsArray =  jQuery ( ":input" ).not( ":button, :hidden" );
-		saveHeaderMessage = jQuery ( "#post-form-message-base" ).text();	
-	
-		// populate form with saved values or initialize
-		populateForm();	
-
-		// on first time through, after populating form, set database values
-		// necesary in case good to without change
-		recordDefaultDecisions(); // updates serialized_default_decisions			
-		decideWhatToShow(); // updates upload_status after analyzing form
-
-		
 		// listen to save all updates to default options
 		controlsArray.change ( function() {
 			recordDefaultDecisions();
 			decideWhatToShow();
-		});	
-		
-		// add zip code validation for default field
-		
-		//
-		$("#settings-test-button").click(function(){
-			jQuery ( "#post-form-message-box" ).removeClass ( "wic-form-errors-found" );	
-			// jQuery( "#settings-test-button" ).prop( "disabled", true );
-			$( "#wic-upload-progress-bar" ).progressbar ( "value", false );
-	  		$( "#wic-upload-progress-bar" ).show();
-		}); 
+		});
 
-    $(window).on('beforeunload', function() {
-      });
-	});
+		saveHeaderMessage = jQuery ( "#post-form-message-base" ).text();	
 
-	// populate displayed  form values from hidden field;
-	function populateForm() {
-		// if user has already set defaults . . . 
-		if ( ! jQuery.isEmptyObject ( defaultDecisions ) ) { 
-			controlsArray.each ( function ( index ) {
-				elementID 		= jQuery( this ).attr( "id" ) 
-				// note that since selects do not have type attribute, cannot user ternary here (get undefined)
-				if ( 'checkbox' == jQuery( this ).attr( "type" ) ) {
-				 jQuery( this ).prop ( "checked", defaultDecisions[ jQuery( this ).attr( "id" ) ] )
-				} else {
-					jQuery( this ).val( defaultDecisions[ jQuery( this ).attr( "id" ) ]);
-				}
-			});
-		// if user has not set defaults, make some recommendations
-		} else {
-			jQuery ( "#update_matched" ).prop ( "checked", true );
-			jQuery ( "#add_unmatched" ).prop ( "checked", true );
-			jQuery ( "#protect_identity" ).prop ( "checked", true );
-			jQuery ( "#protect_blank_overwrite" ).prop ( "checked", true );
-		}
-	}
-	
-	function decideWhatToShow() { 
-
-		/*
-		* first compute totals relevant for add/update fields
-		*/
-		var validMatched = 0;
-		var validUnique  = 0;
-		// 
+		// get and save totals
+		validMatched = 0;
+		validUnique  = 0;
 		for ( var matchSlug in matchResults  ) { 
 			validMatched +=  matchResults[matchSlug].matched_with_these_components;
 			validUnique  +=  Number( matchResults[matchSlug].unmatched_unique_values_of_components ) ;
 				// this field has type string because of ancestry as a literal ? for display purposes
 		}	
-		
-		/*
-		* next enable/set defaults for add update choices
-		*/
-		// the null case -- kill the form
-		if ( 0 == validMatched && 0 == validUnique ) {
-			jQuery ( "#post-form-message-box" ).text ( "No new or matched records to upload -- revisit prior steps." );
-			jQuery ( "#post-form-message-box" ).addClass ( "wic-form-errors-found" );			
-			jQuery ( ":input" ).prop ( "disabled", true );
-		// if no matched constituents, disable update choices
-		} else {
-			if ( 0 == validMatched ) {
-				jQuery ( "#update_matched" ).prop ( "checked", false );
-				jQuery ( "#protect_identity" ).prop ( "checked", false );
-				jQuery ( "#protect_blank_overwrite" ).prop ( "checked", false );
-				jQuery ( "#update_matched" ).prop ( "disabled", true );
-				jQuery ( "#protect_identity" ).prop ( "disabled", true );
-				jQuery ( "#protect_blank_overwrite" ).prop ( "disabled", true );
-			// if nothing to add, disable the add choice
-			} else if ( 0 == validUnique ) {
-				jQuery ( "#add_unmatched" ).prop ( "checked", false );
-				jQuery ( "#add_unmatched" ).prop ( "disabled", true );
-			}
-		}
-		
-		// enable disable protect identity, depending on whether doing updates to matched.
-		if ( jQuery ( "#update_matched" ).prop( "checked" ) ){
-			jQuery ( "#protect_identity" ).prop ( "disabled", false );
-			jQuery ( "#protect_blank_overwrite" ).prop ( "disabled", false );
-		} else {
-			jQuery ( "#protect_identity" ).prop ( "disabled", true );
-			jQuery ( "#protect_blank_overwrite" ).prop ( "disabled", true );					
-		}		
-		
-		
-		/*
-		*
-		* Prepare messages based on field mapping and form choices
-		*
-		*/
-		// drop prior set of messages		
-		// message box will always be red or green -- error or good news
-		jQuery( "#upload-settings-need-attention" ).remove();
-		jQuery( "#upload-settings-good-to-go" ).remove();
-		var commentsArray = [];
-		var errorsArray = [];
-		
-		// if both matched and unmatched are unchecked, nothing will be uploaded
-		if ( false === jQuery ( "#update_matched" ).prop ( "checked" ) && false === jQuery ( "#add_unmatched" ).prop ( "checked" ) ) {
-			errorsArray.push ( 'You have specified that no records will be updated or added -- nothing to upload.')		
-		}
 
-		// hide defaults for fields that have already been mapped		
-		// hide phone or email default type if phone or email not supplied.
-		// show logic unnecessary because nothing will cause them to show within the form
-		// generate messages if field values needed		
-		var addressMapped = false;
-		var phoneMapped 	= false;
-		var emailMapped 	= false;
-		var issueMapped 	= false;
-		var titleMapped 	= false;
-		var activityMapped = false;
-		var activityIssueMapped = false;
-		var issueMapped	= false;
-		var issueTitleColumn = '';
-		var issueContentColumn = '';
-		var str = '';
-		var hidegroup = ''; 
+		/*
+		* process column map and hide fields already mapped
+		* set up flags for entities and fields that are mapped for use in validating
+		*/
 		for ( var inputColumn in columnMap  ) {
-			// don't show defaults for fields that have already been mapped
+			
+			// hide controls for fields that have already been mapped
 			var mappedField = columnMap[inputColumn].field; 
 			if ( undefined != mappedField ) { 
 				hideGroup =  '#wic-control-' + mappedField.replace ( '_', '-' ); 
 				jQuery( hideGroup ).hide();
 			}
-			// check what fields are completed	
+			
+			// check what entities/fields are mapped	
 			if ( 'address' == columnMap[inputColumn].entity ) {
 				addressMapped = true; // any address field			
 			} 
@@ -198,7 +128,121 @@
 			}
 		}
 
-		// addresses can be added entirely with defaults so we don't hide the address_type field
+		// populate form with saved values or initialize with some defaults
+		// if user has already set defaults, retrieve values 
+		if ( ! jQuery.isEmptyObject ( defaultDecisions ) ) { 
+			controlsArray.each ( function ( index ) {
+				elementID 		= jQuery( this ).attr( "id" ) 
+				// note that since selects do not have type attribute, cannot user ternary here (get undefined)
+				if ( 'checkbox' == jQuery( this ).attr( "type" ) ) {
+				 jQuery( this ).prop ( "checked", defaultDecisions[ jQuery( this ).attr( "id" ) ] )
+				} else {
+					jQuery( this ).val( defaultDecisions[ jQuery( this ).attr( "id" ) ]);
+				}
+			});
+		// if user has not previously set defaults, make some recommendations
+		} else {
+			jQuery ( "#update_matched" ).prop ( "checked", true );
+			jQuery ( "#add_unmatched" ).prop ( "checked", true );
+			jQuery ( "#protect_identity" ).prop ( "checked", true );
+			jQuery ( "#protect_blank_overwrite" ).prop ( "checked", true );
+		}	
+
+		// enable/set necessary values for add update choices (may change previous recommendations)
+		// the null case -- kill the form
+		if ( 0 == validMatched && 0 == validUnique ) {
+			jQuery ( "#post-form-message-box" ).text ( "No new or matched records to upload -- revisit prior steps." );
+			jQuery ( "#post-form-message-box" ).addClass ( "wic-form-errors-found" );			
+			jQuery ( ":input" ).prop ( "disabled", true );
+		} else {
+			// if no matched constituents, disable update choices
+			if ( 0 == validMatched ) {
+				jQuery ( "#update_matched" ).prop ( "checked", false );
+				jQuery ( "#protect_identity" ).prop ( "checked", true );
+				jQuery ( "#protect_blank_overwrite" ).prop ( "checked", true );
+				jQuery ( "#update_matched" ).prop ( "disabled", true );
+				jQuery ( "#protect_identity" ).prop ( "disabled", true );
+				jQuery ( "#protect_blank_overwrite" ).prop ( "disabled", true );
+			// if nothing to add, disable the add choice
+			} else if ( 0 == validUnique ) {
+				jQuery ( "#add_unmatched" ).prop ( "checked", false );
+				jQuery ( "#add_unmatched" ).prop ( "disabled", true );
+			}
+		}
+
+		// if title mapped not overridden by issue, create new issue table -- 
+		// will be hidden later if no new issues or if default issue is set
+		if ( titleMapped && ! activityIssueMapped ) {
+
+			// create div to receive results
+			jQuery ( "#wic-inner-field-group-new_issue_creation" ).append ( '<div id = "new-issue-progress-bar-legend"> . . . looking up issues . . . </div>' ); 
+			jQuery ( "#wic-inner-field-group-new_issue_creation" ).append ( '<div id = "new-issue-progress-bar"></div>' );			
+			jQuery ( "#wic-inner-field-group-new_issue_creation" ).append ( '<div id = "new-issue-table"></div>' );	
+			jQuery ( "#new-issue-progress-bar" ).progressbar({
+				value: false
+			});
+
+			newIssuesInProgress = 1;
+			 
+			// set up AJAX call and go	
+			var data = {
+				staging_table : uploadParameters.staging_table_name,
+				issue_title_column : issueTitleColumn,
+				issue_content_column : issueContentColumn  		
+			}
+			wpIssuesCRMAjaxPost( 'upload', 'get_unmatched_issue_table',  jQuery('#ID').val(), data, function( response ) {
+				jQuery ( "#new-issue-table" ).html(response); // show table results
+				jQuery ( "#new-issue-progress-bar-legend" ).remove();
+				jQuery ( "#new-issue-progress-bar" ).remove();
+				newIssuesInProgress = 0;				
+				// do these form set up items as callbacks.
+				recordDefaultDecisions();  // need to set the number of new issues among the default decisions
+				decideWhatToShow();
+				// have to do this in the callback on first run through to have the new issue count to test
+	
+			});
+	
+		} else {
+			// on ready, after populating form, set database values from form
+			// necessary in case good to go without change and database values have not been saved
+			// done in the callback above as well
+			recordDefaultDecisions();
+			decideWhatToShow();
+		}
+	});
+
+	
+	function decideWhatToShow() { 
+	
+		// enable disable protect identity, depending on whether doing updates to matched.
+		if ( jQuery ( "#update_matched" ).prop( "checked" ) ){
+			jQuery ( "#protect_identity" ).prop ( "disabled", false );
+			jQuery ( "#protect_blank_overwrite" ).prop ( "disabled", false );
+		} else {
+			jQuery ( "#protect_identity" ).prop ( "disabled", true );
+			jQuery ( "#protect_blank_overwrite" ).prop ( "disabled", true );					
+		}		
+		
+		
+		/*
+		*
+		* Prepare messages based on field mapping and form choices
+		*
+		*/
+
+		// drop prior set of messages		
+		// message box will always be red or green -- error or good news
+		jQuery( "#upload-settings-need-attention" ).remove();
+		jQuery( "#upload-settings-good-to-go" ).remove();
+		commentsArray = [];
+		errorsArray = [];
+		
+		// if both matched and unmatched are unchecked, nothing will be uploaded
+		if ( false === jQuery ( "#update_matched" ).prop ( "checked" ) && false === jQuery ( "#add_unmatched" ).prop ( "checked" ) ) {
+			errorsArray.push ( 'You have specified that no records will be updated or added -- nothing to upload.')		
+		}
+
+		// addresses can be added entirely with defaults so we don't hide the address_type field even if no address values mapped
 		// just enforcing the required rules for address if some elements supplied either by mapping or default
 		if ( 	addressMapped 							|| // street address or any of the defaultable values could be mapped
 				jQuery ( "#address_type" ).val() > '' || 
@@ -213,7 +257,15 @@
 			// error if address city blank and not hidden as previously mapped
 			if ( '' == jQuery( "#city" ).val() && jQuery( "#city" ).is(':visible') ) {
 				errorsArray.push ( 'Set a city to upload address data.' )		
-			}
+			} 
+			// this div is present only if the zip check option is set for WP Issues CRM
+			if ( 1 == jQuery ( "#do_zip_code_format_check" ).length && jQuery ( "#zip" ).val() > '' ) {
+				if ( false == regPostalCode.test( jQuery ( "#zip" ).val() ) ) {
+					errorsArray.push ( 'If postal code is supplied, it must be in 5 digit or 5-4 digit format.' )				
+				}
+			}		
+			
+			
 		}
 		// if phone number number not mapped, hide phone type default
 		if ( ! phoneMapped ) {
@@ -230,46 +282,48 @@
 			errorsArray.push ( 'Set an email type to upload email addresses.' )		
 		}
 
-		// show the issue creation option under following conditions:
-		// activity_issue default showing and blank (i.e., not mapped and controlling), but title also mapped
-		// in this condition, available title column will be controlling the update -- need to show results (is required in validation)
-		if ( !activityIssueMapped &&
-				'' == jQuery( "#issue" ).val() &&
-				titleMapped 
-				) {
-			// computes table (if not already computed ) and shows it ( or hides it if no have new issues );		
-			addIssueTable( issueTitleColumn, issueContentColumn );
-		} else { 
-			jQuery ( "#wic-field-group-new_issue_creation" ).hide();
-			jQuery ( "#create_issues" ).prop ( "checked", false );
-		}
-		
-		if ( 	activityMapped 							|| // any activity field
-				titleMapped								||    // content alone will not force additions, just warning
+		/*
+		*	Activity more complicated . . . if any field mapped or defaulted, need date, type and issue or title
+		*	Title mapping is, in effect, an activity field, but don't allow default titling 
+		*/
+	
+		if ( 	activityMapped 								|| // any activity field mapped
+				titleMapped										|| // note: content cannot be mapped without title
 				jQuery ( "#activity_date" ).val() > '' || 
 				jQuery ( "#activity_type" ).val() > ''	||
-				jQuery ( "#pro_con" ).val() > '' ||	
+				jQuery ( "#pro_con" ).val() > '' 		||	
 				jQuery ( "#issue" ).val() > '' 			
 			) { 
+
 			if ( '' == jQuery( "#activity_date" ).val() && jQuery( "#activity_date" ).is(':visible') ) {
 				errorsArray.push ( 'Set an activity date to upload activity data.' )		
 			}	
 			if ( '' == jQuery( "#activity_type" ).val() && jQuery( "#activity_type" ).is(':visible') ) {
 				errorsArray.push ( 'Set an activity type to upload activity data.' )		
 			}	
-			// can supply either issue selection or offer a non-blank title
-			if (  ! titleMapped && ! activityIssueMapped &&
-				 	'' == jQuery( "#issue" ).val() ) {
-				errorsArray.push ( 'Choose an issue to upload activity data.' )		
-			}
-			// if have mapped title and not overwritten, and there are new issues must consent to additions
-			if (  titleMapped && ! activityIssueMapped &&
-				 	'' == jQuery( "#issue" ).val() && 	
-					! jQuery ( "#create_issues" ).prop ( "checked" ) &&
-					defaultDecisions.new_issues_count > 0 				 	
-				 	) {			// not overriden by mapped issue choice
-				errorsArray.push ( 'You must affirmatively accept New Issue Titles or change other settings.' )	;		
-			}			
+			// must supply either map activity issue (a numeric link to post on the activity record), default the issue or map title
+			// if haven't mapped or defaulted issue, look for title and act accordingly
+			if ( '' == jQuery( "#issue" ).val() && jQuery( "#issue" ).is(':visible') ) {
+				// if haven't mapped title, must default or supply issue
+				if ( ! titleMapped ) { 				
+					errorsArray.push ( 'Choose an issue to upload activity data.' )		
+				} else { 
+					if ( defaultDecisions.new_issue_count > 0 ) {	
+						jQuery ( "#wic-field-group-new_issue_creation" ).show();
+						if ( ! jQuery ( "#create_issues" ).prop ( "checked" ) ) {		
+							errorsArray.push ( 'You must affirmatively accept New Issue Titles or change other settings.' )	;
+						}
+					} else {
+						jQuery ( "#wic-field-group-new_issue_creation" ).hide();		
+						// new issues = 0, then should advise user that titles will be used, although no new issues
+						commentsArray.push ( "Activities will be created based on the issue titles column. " +
+							"All titles have previously been saved as issues." );				
+					}
+				} 
+			// if mapped or supplied an issue, then hide the whole issue creation section
+			} else {
+				jQuery ( "#wic-field-group-new_issue_creation" ).hide();
+			}		
 		}				
 
 		// show/hide title elements in constituent default field group based on whether all group inputs are hidden
@@ -291,7 +345,6 @@
 			jQuery ( "#post-form-message-box" ).addClass ( "wic-form-errors-found" );
 		// elseif didn't kill form for record count reasons, show messages and set status accordingly
 		} 	else if ( ! jQuery ( ":input" ).prop ( "disabled" ) ) { 		
-			
 			if ( errorsArray.length > 0 ) { 
 				jQuery( "#post-form-message-box" ).append( '<ul id="upload-settings-need-attention"></ul>' );
 				for ( var i in errorsArray ) {
@@ -338,44 +391,8 @@
 		});
 	}		
 
-	function addIssueTable( issueTitleColumn, issueContentColumn ) { 
 
-		// if exist issue table return ( don't recreate on form refersh)
-		if ( 0 < jQuery ( "#new-issue-table" ).length ) {
-			if ( defaultDecisions.new_issues_count > 0 ) {	
-				jQuery ( "#wic-field-group-new_issue_creation" ).show();
-			} else {
-				jQuery ( "#wic-field-group-new_issue_creation" ).hide();		
-			}
-			return;
-		} 
 
-		// create div to receive reults
-		jQuery ( "#wic-inner-field-group-new_issue_creation" ).append ( '<div id = "new-issue-progress-bar-legend"> . . . looking up issues . . . </div>' ); 
-		jQuery ( "#wic-inner-field-group-new_issue_creation" ).append ( '<div id = "new-issue-progress-bar"></div>' );			
-		jQuery ( "#wic-inner-field-group-new_issue_creation" ).append ( '<div id = "new-issue-table"></div>' );	
-		jQuery ( "#new-issue-progress-bar" ).progressbar({
-			value: false
-		});
-		 
-		// set up AJAX call and go	
-		var data = {
-			staging_table : uploadParameters.staging_table_name,
-			issue_title_column : issueTitleColumn,
-			issue_content_column : issueContentColumn  		
-		}
-		wpIssuesCRMAjaxPost( 'upload', 'get_unmatched_issue_table',  jQuery('#ID').val(), data, function( response ) {
-			jQuery ( "#new-issue-table" ).html(response); // show table results
-			jQuery ( "#new-issue-progress-bar-legend" ).remove();
-			jQuery ( "#new-issue-progress-bar" ).remove();
-			recordDefaultDecisions();  // need to set the number of new issues among the default decisions
-			console.log( defaultDecisions );
-			if ( defaultDecisions.new_issues_count > 0 ) {	
-				jQuery ( "#wic-field-group-new_issue_creation" ).show();
-			} else {
-				jQuery ( "#wic-field-group-new_issue_creation" ).hide(); 			
-			}
-		});
-	}
+
 
 })(); // end anonymous namespace enclosure

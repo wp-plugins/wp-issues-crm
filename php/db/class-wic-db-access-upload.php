@@ -621,7 +621,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			$rule->unmatched_unique_values_of_components = 0;			
 		}	
 
-		// proceed to prepare constituent stubs for addition and count additions, but first check one of required identifiers
+		// proceed to prepare constituent stubs for addition and count additions, but first check that have at least one of required identifiers
 		$identifiers_count = count ( $group_required_identifiers_array ); 
 
 		// only proceed if have mapped at least one of required identifiers -- if none, cannot be adding constituents
@@ -631,6 +631,11 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			// first create the table which will hold the unmatched records
 			$unmatched_staging_table = $staging_table . '_unmatched'; 
 			global $wpdb;
+			
+			// belt and suspenders -- should have happened on reset_match 
+			$sql = "DROP TABLE IF EXISTS $unmatched_staging_table";
+			$drop_result = $wpdb->query( $sql );
+			
 			// use all the available constituent columns (constituent level data items that have been mapped to)
 			// these are items like first name, last name, date of birth that exist on the constituent database record
 			$sql = "CREATE TABLE $unmatched_staging_table ( "; 
@@ -779,7 +784,10 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 							$issue_title_column as new_issue_title,
 							$new_issue_content_source as new_issue_content, 
 							count(STAGING_TABLE_ID) as record_count 
-						FROM $staging_table GROUP BY $issue_title_column ) as issues
+						FROM $staging_table 
+						WHERE VALIDATION_STATUS = 'y' 
+						GROUP BY $issue_title_column 
+						) as issues
 					LEFT JOIN $post_table ON new_issue_title = post_title
 						AND ( post_status = 'publish' or post_status = 'private' ) and post_type = 'post'
 					WHERE post_title is null
@@ -1206,6 +1214,8 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 						if ( $wic_access_object_array[$entity]->found_count > 0 ) {
 							$data_object_array_array['activity']['issue']->set_value( $wic_access_object_array[$entity]->result[0]->ID );					
 						} else {
+							// this could happen if user was quick enough to get through good-to-go status on the set default form and OK leave form
+							// while new issue table creation was in progress and table were only partially populated -- not likely
 							WIC_Function_Utilities::wic_error ( 
 								sprintf ( 'Data base corrupted for post title: %1$s in update constituent phase.' , $data_object_array['post_title']->get_value() ), 
 								__FILE__, __LINE__, __METHOD__, true );
@@ -1218,20 +1228,12 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 					// set current constituent id for the entity
 					$data_object_array['constituent_id']->set_value ( $staging_record->MATCHED_CONSTITUENT_ID );
 					// prepare a query array for those fields used in upload match/dedup checking for multi-value fields 
-					// while in this loop, also check for missing required fields 
 					$query_array = array();
-					$required_error = '';
 					foreach ( $data_object_array as $field_slug => $control ) { 
-						$required_error .= $control->required_check();
 						if ( $control->is_upload_dedup() ) {
 							$query_array = array_merge ( $query_array, $control->create_search_clause ( $search_clause_args ) );
 						}
 					} 
-					// if missing a required field, don't search for, update or store the entity record -- just continue to next entity					
-					// see also wic-upload-set-defaults.us for additional required logic enforcement
-					if ( '' < $required_error ) {
-						continue;					
-					}
 					// execute a search for the multivalue entity -- treating it as a top level entity, but query object is OK with that
 					$wic_access_object_array[$entity]->search ( $query_array, $search_parameters );
 					// if matches found, take the first for update purposes 

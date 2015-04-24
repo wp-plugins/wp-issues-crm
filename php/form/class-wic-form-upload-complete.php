@@ -156,12 +156,12 @@ class WIC_Form_Upload_Complete extends WIC_Form_Upload_Validate  {
 		'</tr>';
 		
 		// new issues row
-		$new_issues_count = $default_decisions->create_issues ? $default_decisions->new_issue_count : 0;
-		$new_issues_result = isset ( $final_results->new_issues_saved ) ? $final_results->new_issues_saved : 0; 
+		$new_issue_count = $default_decisions->create_issues ? $default_decisions->new_issue_count : 0;
+		$new_issue_result = isset ( $final_results->new_issues_saved ) ? $final_results->new_issues_saved : 0; 
 		$table .= '<tr>' .
 			'<td class = "wic-text">' . __( 'New issues from unique unmatched titles', 'wp-issues-crm' ) . '</td>' .
-			'<td class = "wic-statistic" >' . $new_issues_count . '</td>' .
-			'<td class = "wic-statistic" id = "new_issues_saved" >' . $new_issues_result . '</td>' .
+			'<td class = "wic-statistic" >' . $new_issue_count . '</td>' .
+			'<td class = "wic-statistic" id = "new_issues_saved" >' . $new_issue_result . '</td>' .
 		'</tr>';
 		
 		// new constituents row

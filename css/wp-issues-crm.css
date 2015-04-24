@@ -1083,6 +1083,13 @@ li.nav-tab-active  {
 	text-align: left;
 }
 
+#wic-form-upload-save  input#escape.wic-input.escape,
+#wic-form-upload-save  input#max_line_length.wic-input.max-line-length,
+#wic-form-upload-save  input#max_execution_time.wic-input.max-execution-time
+{
+	color: red;
+	width: 50px;
+}
 
 #wic-field-group-upload_parameters {
 	margin-left: 11.11111%;
@@ -1319,7 +1326,7 @@ ul.upload-status-summary {
 	border-left: 4px solid #7AD03A;
 	margin: 10px 6% 0 0;
 	padding: 10px 20px;
-	list-style: none;
+	list-style: square;
 	list-style-position: inside;
 }
 
