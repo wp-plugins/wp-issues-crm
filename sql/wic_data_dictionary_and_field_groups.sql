@@ -147,7 +147,9 @@ INSERT INTO `wp_wic_data_dictionary` (`entity_slug`, `group_slug`, `field_slug`,
 ( 'manage_storage', 'constituent', 'keep_phone', 'checked', 'Keep if phone number', 50, 0, 0, '', 0, 0, 0, '1', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
 ( 'manage_storage', 'constituent', 'keep_address', 'checked', 'Keep if physical address', 60, 0, 0, '', 0, 0, 0, '1', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
 ( 'manage_storage', 'constituent', 'keep_all', 'checked', 'Keep all constituents', 65, 0, 0, '', 0, 0, 0, '1', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
-( 'manage_storage', 'constituent', 'confirm', 'text', 'Type PURGE CONSTITUENT DATA in all caps to confirm constituent purge.', 70, 0, 0, '', 0, 0, 0, '', 0, 1, '', 'enter exactly as shown', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00');
+( 'manage_storage', 'constituent', 'confirm', 'text', 'Type PURGE CONSTITUENT DATA in all caps to confirm constituent purge.', 70, 0, 0, '', 0, 0, 0, '', 0, 1, '', 'enter exactly as shown', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
+( 'list', 'list', 'search_id', 'text', '', 0, 0, 0, '', 0, 1, 1, '', 0, 0, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
+( 'list', 'list', 'wic-post-export-button', 'select', 'Type', 10, 0, 0, '', 0, 0, 0, '', 0, 0, '', '', 'download_options', '', '', 0, 0, 1, 1000, 1, '', 0, '0000-00-00 00:00:00');
 INSERT INTO wp_wic_form_field_groups ( entity_slug, group_slug, group_label, group_legend, group_order, initial_open, sidebar_location, last_updated_time, last_updated_by) VALUES
 ( 'constituent', 'contact', 'Contact', '', 10, 1, 0, '0000-00-00 00:00:00', 0),
 ( 'constituent', 'case', 'Case Management', '', 30, 1, 1, '0000-00-00 00:00:00', 0),
@@ -210,4 +212,5 @@ to make the use of the titles to create issues unnecessary.', 50, 1, 1, '0000-00
 ( 'manage_storage', 'constituent', 'Purge Constituents', 'Purge constituent data -- check to keep constituents with specified data categories. 
 	All other constituents will be purged.  For example, if you check \"Keep if activity\" and \"Keep if email address\", then only constituents that have either an activity or an email address will be retained.
 	All lacking both activity or email address be purged.  Uncheck \"Keep all constituents\" and enter confirmation phrase to confirm constituent purge.
-	Note that the entire search log is always purged when any constituents are purged.', 30, 1, 1, '0000-00-00 00:00:00', 0);
+	Note that the entire search log is always purged when any constituents are purged.', 30, 1, 1, '0000-00-00 00:00:00', 0),
+( 'list', 'list', 'List Transients', '', 10, 0, 0, '0000-00-00 00:00:00', 0);

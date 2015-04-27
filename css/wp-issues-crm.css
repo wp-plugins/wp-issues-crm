@@ -1344,6 +1344,22 @@ ul.upload-status-summary {
 .download-button-legend {
 	margin: -10px 0 30px 7.1111%;
 }
+
+label.wic-label.wic-post-export-button {
+	display: none;
+}
+
+#wic-post-export-button {
+	width: 13.3333333%;
+}
+
+#wic-post-export-button-button {
+	border-color: #0073aa;
+	width: 13.3333333%;
+	margin: 0 .888% 2px 7.111%;
+	height: 26px;
+}
+
 /* list element widths */
 .pl-constituent-first_name{ width:14%;}
 .pl-constituent-middle_name{ width:14%;}

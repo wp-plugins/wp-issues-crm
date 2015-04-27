@@ -77,7 +77,7 @@ class WIC_Admin_Setup {
 			wp_enqueue_script(
 				'wic-jquery-ui',
 				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-jquery-ui.js' , __FILE__ ),
-				array( 'jquery-ui-datepicker' )
+				array( 'jquery-ui-datepicker', 'jquery-ui-selectmenu','jquery-ui-menu'  )
 			);
 
 			wp_enqueue_script(
@@ -190,13 +190,13 @@ class WIC_Admin_Setup {
 
 	// add action to intercept press of download button before any headers sent 
 	public function do_download () { 
-		if ( isset( $_POST['wic-post-export-button'] ) ) { 
-			WIC_List_Constituent_Export::do_constituent_download( $_POST['wic-post-export-button'] );	
+		if ( isset( $_POST['wic-post-export-button'] ) && ! isset( $_POST['wic-form-button'] ) && ! isset( $_POST['wic-post-list-button'] )  ) {
+			WIC_List_Constituent_Export::do_constituent_download( $_POST['wic-post-export-button'], $_POST['search_id'] );	
 		} elseif ( isset( $_POST['wic-category-export-button'] ) ) { 
 			WIC_List_Constituent_Export::do_constituent_category_download( $_POST['wic-category-export-button'] );	
 		} elseif ( isset ( $_POST['wic-staging-table-download-button'] ) ) {
 			WIC_List_Constituent_Export::do_staging_table_download( $_POST['wic-staging-table-download-button'] );
-		}		
+		}
  	}
 
 	public static function wic_set_up_roles_and_capabilities() {

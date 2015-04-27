@@ -7,7 +7,13 @@
 
 class WIC_List_Constituent_Export {
 
-	public static function do_constituent_download ( $id ) {
+	public static function do_constituent_download ( $download_type, $search_id ) { 
+		
+		// if user changed download type back to empty (initial button value), do nothing.
+		// barred by js, but bullet proofing
+		if ( '' == $download_type ) {
+			return;		
+		}		
 		
 		if ( true === self::do_download_security_checks() )  { 
 
@@ -16,7 +22,7 @@ class WIC_List_Constituent_Export {
 			$file_name = 'wic-constituent-export-' . $current_user->user_firstname . '-' .  current_time( 'Y-m-d-H-i-s' )  .  '.csv' ;
 					
 			// retrieves only the meta array, not the search parameters, since will supply own
-			$search = WIC_DB_Access::get_search_from_search_log( $id );	
+			$search = WIC_DB_Access::get_search_from_search_log( $search_id );	
 			// can be issue or constituent	
 			$wic_query = WIC_DB_Access_Factory::make_a_db_access_object( $search['entity'] );
 			
@@ -41,17 +47,17 @@ class WIC_List_Constituent_Export {
 				}
 				$args = array (			
 					'id_array' => $issue_array,
-					'search_id' => $id,
+					'search_id' => $search_id,
 					'retrieve_mode' => 'download',
 					);
 				$comment_query = new WIC_Entity_Comment ( 'get_constituents_by_issue_id', $args );
 			} 
 			
-			$sql = self::assemble_constituent_export_sql(); // runs off temp table
+			$sql = self::assemble_constituent_export_sql( $download_type ); // runs off temp table
 
 			self::do_the_export( $file_name, $sql );
 	
-			WIC_DB_Access::mark_search_as_downloaded( $id );
+			WIC_DB_Access::mark_search_as_downloaded( $search_id );
 			
 			exit;
 		}
@@ -80,7 +86,7 @@ class WIC_List_Constituent_Export {
 			// initiate a query with those activity search parameters and issue category as an additional criterion
 			$wic_query->search_activities_with_category_slice( $search['meta_query_array'], $category_contributors );
 			// query leaves results in a temp table picked up $sql 
-			$sql = self::assemble_constituent_export_sql(); 
+			$sql = self::assemble_constituent_export_sql( 'type0' ); 
 			// send the file
 			self::do_the_export ( $file_name, $sql  );
 			// mark the whole search as downloaded (no mechanism to mark slice)	
@@ -140,7 +146,7 @@ class WIC_List_Constituent_Export {
 	/*
 	*	sql points to temporary table created early in transaction
 	*/
-	public static function assemble_constituent_export_sql () { 
+	public static function assemble_constituent_export_sql ( $download_type ) { 
 		
 		// reference global wp query object	
 		global $wpdb;	
@@ -156,23 +162,98 @@ class WIC_List_Constituent_Export {
 		
 		// pass constituent list through repeated chunks to db as temp table
 		$temp_constituent_table = $wpdb->prefix . 'wic_temporary_constituent_list';		
-	
-   	// go direct to database and do customized search and write temp table
-		$sql = 	"CREATE TEMPORARY TABLE $temp_constituent_table
+
+		global $wic_db_dictionary;
+		$custom_fields = $wic_db_dictionary->custom_fields_match_array ();
+		$custom_fields_string = '';
+		if ( count ( $custom_fields ) > 0 ) {
+			foreach ( $custom_fields as $field => $match_array ) {
+				$custom_fields_string .= ', ' . $field . ' as `' . $match_array['label'] . '` ';			
+			}
+	 		
+		}
+
+		// initialize download sql -- if remains blank, will bypass download
+		
+		$download_sql = '';
+		switch ( $download_type ) {
+			case 'emails':		
+				$download_sql =" 
 					SELECT  first_name as fn, last_name as ln,  
-						max( email_address ) as email_address, 
-						max( city ) as city, 
-						max( phone_number ) as phone_number,
-						max( address_line ) as address_line_1,
-						max( concat ( city, ', ', state, ' ',  zip ) ) as address_line_2,
-						max( zip ) as zip, 
+						email_type, email_address, 
+						max( city ) as city $custom_fields_string
+					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
+					inner join $email e on e.constituent_id = c.ID
+					left join $address a on a.constituent_id = c.ID	
+					GROUP BY c.ID, e.ID
+					"; 		
+				break;
+			case 'phones':		
+				$download_sql =" 
+					SELECT  first_name as fn, last_name as ln,  
+						phone_type, phone_number, extension, 
+						max( city ) as city $custom_fields_string
+					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
+					inner join $phone p on p.constituent_id = c.ID
+					left join $address a on a.constituent_id = c.ID	
+					GROUP BY c.ID, p.ID
+					"; 		
+				break;
+			case 'addresses':		
+				$download_sql =" 
+					SELECT  first_name as fn, last_name as ln,  
+						address_type, 
+						address_line as address_line_1,
+						concat ( city, ', ', state, ' ',  zip ) as address_line_2,
+						city, state, zip $custom_fields_string
+					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
+					inner join $address a on a.constituent_id = c.ID	
+					GROUP BY c.ID, a.ID
+					"; 		
+				break;		
+			case 'type0':
+				$download_sql = " 		
+					SELECT  first_name as fn, last_name as ln,  
+						city, 
+						email_address, 
+						phone_number,
+						address_line as address_line_1,
+						concat ( city, ', ', state, ' ',  zip ) as address_line_2,
+						state, zip $custom_fields_string
+					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
+					left join $email e on e.constituent_id = c.ID
+					left join $phone p on p.constituent_id = c.ID
+					left join $address a on a.constituent_id = c.ID	
+					WHERE ( address_type = '0' or address_type is null ) &&
+					( email_type = '0' or email_type is null ) && 
+					( phone_type = '0' or phone_type is null )  
+					";	
+				break;
+			case 'dump':
+				$download_sql = " 		
+					SELECT  first_name as fn, last_name as ln,  
+						email_address, 
+						phone_number,
+						address_line,
+						city, state, zip,
 						c.* 
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
 					left join $email e on e.constituent_id = c.ID
 					left join $phone p on p.constituent_id = c.ID
 					left join $address a on a.constituent_id = c.ID	
-					WHERE ( address_type = '0' or address_type is null )
-					GROUP BY c.ID
+					";	
+				break;				
+		
+		} 	
+	
+	
+	
+	
+	
+	
+   	// go direct to database and do customized search and write temp table
+		$sql = 	"CREATE TEMPORARY TABLE $temp_constituent_table
+					$download_sql
 					"; 
 		
 		$result = $wpdb->query ( $sql );

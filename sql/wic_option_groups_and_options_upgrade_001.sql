@@ -1,7 +1,8 @@
 INSERT INTO wp_wic_option_group ( option_group_slug, option_group_desc, enabled, last_updated_time, last_updated_by, mark_deleted, is_system_reserved) VALUES
 ( 'delimiter_options', 'Upload file columns delimited by', 1, '0000-00-00 00:00:00', 0, '', 1),
 ( 'enclosure_options', 'Upload file columns enclosed by', 1, '0000-00-00 00:00:00', 0, '', 1),
-( 'upload_status', 'Upload Status', 1, '0000-00-00 00:00:00', 0, '', 1);
+( 'upload_status', 'Upload Status', 1, '0000-00-00 00:00:00', 0, '', 1),
+( 'download_options', 'Download Options', 1, '0000-00-00 00:00:00', 0, '', 1);
 INSERT INTO wp_wic_option_value ( parent_option_group_slug, option_value, option_label, value_order, enabled, last_updated_time, last_updated_by) VALUES
 ( 'delimiter_options', 'comma', 'Comma (common in .csv files)', 10, 1, '0000-00-00 00:00:00', 0),
 ( 'delimiter_options', 'semi', 'Semi-Colon (sometimes used in .csv files)', 20, 1, '0000-00-00 00:00:00', 0),
@@ -19,4 +20,10 @@ INSERT INTO wp_wic_option_value ( parent_option_group_slug, option_value, option
 ( 'upload_status', 'defaulted', 'Valid default decisions', 50, 1, '0000-00-00 00:00:00', 0),
 ( 'upload_status', 'started', 'Upload Started, not completed', 60, 1, '0000-00-00 00:00:00', 0),
 ( 'upload_status', 'completed', 'Upload Completed', 70, 1, '0000-00-00 00:00:00', 0),
-( 'upload_status', 'reversed', 'Upload Backed Out', 80, 1, '0000-00-00 00:00:00', 0);
+( 'upload_status', 'reversed', 'Upload Backed Out', 80, 1, '0000-00-00 00:00:00', 0),
+( 'download_options', '', 'Export', 10, 1, '0000-00-00 00:00:00', 0),
+( 'download_options', 'emails', 'Export emails', 10, 1, '0000-00-00 00:00:00', 0),
+( 'download_options', 'addresses', 'Export addresses', 20, 1, '0000-00-00 00:00:00', 0),
+( 'download_options', 'phones', 'Export phones', 30, 1, '0000-00-00 00:00:00', 0),
+( 'download_options', 'type0', 'Export home info', 30, 1, '0000-00-00 00:00:00', 0),
+( 'download_options', 'dump', 'Export dump', 40, 1, '0000-00-00 00:00:00', 0);

@@ -24,7 +24,7 @@ abstract class WIC_List_Parent {
 		global $wic_db_dictionary;
 
   		// set up form
-		$output = '<div id="wic-post-list"><form method="POST">' . 
+		$output = '<div id="wic-post-list"><form id="wic_constituent_list_form" method="POST">' . 
 			'<div class = "wic-post-field-group wic-group-odd">';
 
 		$message = $this->format_message ( $wic_query, $header ); 
@@ -96,15 +96,11 @@ abstract class WIC_List_Parent {
 
 		if ( isset ( $wic_query->search_id ) ) { 
 			
-			$button_args_main = array(
-				'button_class'					=> 'button button-primary wic-form-button',
-				'button_label'					=> __( 'Export All', 'wp-issues-crm' ),
-				'id'								=> 'wic-post-export-button',
-				'name'							=> 'wic-post-export-button',
-				'value' 							=>  $wic_query->search_id, 
-				'title'						=>	__( 'Download constituents', 'wp-issues-crm' ),
-			);	
-			$buttons = WIC_Form_Parent::create_wic_form_button ( $button_args_main );	
+			// wic-post-export-button
+			$download_type_control = WIC_Control_Factory::make_a_control( 'select' );
+			$download_type_control->initialize_default_values(  'list', 'wic-post-export-button', '' );
+			$buttons = $download_type_control->update_control();			
+			
 			
 			// show search form with parameters  
 			$button_args = array (
@@ -116,6 +112,13 @@ abstract class WIC_List_Parent {
 					'title'	=>	__( 'Change search criteria', 'wp-issues-crm' ),
 				);
 			$buttons .= WIC_Form_Parent::create_wic_form_button( $button_args );
+
+			// hidden search_id field
+			$search_id_control = WIC_Control_Factory::make_a_control( 'text' );
+			$search_id_control->initialize_default_values(  'list', 'search_id', '' );
+			$search_id_control->set_value( $wic_query->search_id );
+			$buttons .= $search_id_control->update_control();			
+
 		}
 		
 		return ( $buttons );
