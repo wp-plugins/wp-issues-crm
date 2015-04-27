@@ -44,7 +44,7 @@ $easily_reinstalled_tables_array = array(
 	'upload'
 );
 foreach ( $easily_reinstalled_tables_array as $table ) {
-	$table = $wpdb->prefix . 'WIC_' . $table;
+	$table = $wpdb->prefix . 'wic_' . $table;
 	$sql = "DROP TABLE IF EXISTS $table";
 	$wpdb->query ($sql);
 } 
