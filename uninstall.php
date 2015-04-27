@@ -50,7 +50,23 @@ foreach ( $easily_reinstalled_tables_array as $table ) {
 } 
 
 // delete staging tables
-WIC_Entity_Manage_Storage::delete_staging_tables();
+// copied from WIC_Entity_Manage_Storage::delete_staging_tables();
+$staging_stub = $wpdb->prefix . 'wic_staging%';
+$sql = "SHOW TABLES LIKE '$staging_stub'";
+$staging_tables = $wpdb->get_results( $sql, ARRAY_A );
 
-// delete individual search historiers
-WIC_Entity_Manage_Storage::purge_individul_search_histories();
+// run through list of staging tables and delete all
+if ( is_array ( $staging_tables ) ) {
+	foreach ( $staging_tables as $staging_table ) {
+		foreach ( $staging_table as $key => $value ) {
+			$sql = "DROP TABLE IF EXISTS $value";
+			$wpdb->query( $sql );			
+		}
+	}
+}
+
+// delete individual search histories
+// copied from WIC_Entity_Manage_Storage::purge_individul_search_histories()
+$wp_options = $wpdb->options;
+$sql = " DELETE FROM $wp_options WHERE option_name LIKE '_wp_issues_crm_individual_search_history_%' ";
+$wpdb->query($sql);
