@@ -32,8 +32,9 @@ $wpdb->query ($sql);
 $sql = "DELETE FROM {$wpdb->prefix}usermeta  WHERE meta_key = 'wic_data_user_preferences' ";
 $wpdb->query ($sql);
 
-// delete tables that include minimal constituent data
+// delete tables that include minimal permanent user data
 // not include dictionary because user may have set up custom fields
+// easier to reinstall if left in place
 $easily_reinstalled_tables_array = array(
 	'form_field_groups',
 	'option_group',
@@ -42,9 +43,14 @@ $easily_reinstalled_tables_array = array(
 	'search_log',
 	'upload'
 );
-
 foreach ( $easily_reinstalled_tables_array as $table ) {
 	$table = $wpdb->prefix . 'WIC_' . $table;
 	$sql = "DROP TABLE IF EXISTS $table";
 	$wpdb->query ($sql);
 } 
+
+// delete staging tables
+WIC_Entity_Manage_Storage::delete_staging_tables();
+
+// delete individual search historiers
+WIC_Entity_Manage_Storage::purge_individul_search_histories();

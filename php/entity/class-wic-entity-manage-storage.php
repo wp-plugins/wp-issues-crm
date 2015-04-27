@@ -47,11 +47,12 @@ class WIC_Entity_Manage_Storage extends WIC_Entity_Parent {
 		
 		// purge staging tables if so chosen
 		if ( 0 == $this->data_object_array['keep_staging']->get_value() ) {
-			$this->delete_staging_tables();
+			self::delete_staging_tables();
 		}
 		// purge search log if so chosen
 		if ( 0 == $this->data_object_array['keep_search']->get_value() ) {
 			$this->truncate_search_log();
+			self::purge_individul_search_histories();
 		}		
 		// purge constituents if fully authorized
 		if ( 0 == $this->data_object_array['keep_all']->get_value() &&
@@ -63,7 +64,7 @@ class WIC_Entity_Manage_Storage extends WIC_Entity_Parent {
 		$this->new_form_generic ( 'WIC_Form_Manage_Storage', __( 'Previous purge completed. Results below.', 'wp-issues-crm' ) );
 	}	
 	
-	private function delete_staging_tables() {
+	public static function delete_staging_tables() {
 
 		global $wpdb;
 		$staging_stub = $wpdb->prefix . 'wic_staging%';
@@ -94,6 +95,13 @@ class WIC_Entity_Manage_Storage extends WIC_Entity_Parent {
 		$wpdb->query( $sql );
 	
 	}
+	
+	public static function purge_individul_search_histories() {
+		global $wpdb;
+		$wp_options = $wpdb->options;
+		$sql = " DELETE FROM $wp_options WHERE option_name LIKE '_wp_issues_crm_individual_search_history_%' ";
+		$wpdb->query($sql);
+	}	
 	
 	private function purge_constituent_data() {
 		
