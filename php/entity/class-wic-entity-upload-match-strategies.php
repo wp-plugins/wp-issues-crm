@@ -96,14 +96,14 @@
 			'label'			=>	'First Name, Street Address',
 			'link_fields'	=> array(
 				array( 'constituent', 'first_name', 0 ),
-				array( 'address', 'city', 0 ),					
+				array( 'address', 'address_line', 0 ),					
 			),
 		),
 		'fnaddr5'  => array( 
 			'label'			=>	'First Name, Street Address (First 5 Characters Only)',
 			'link_fields'	=> array(
 				array( 'constituent', 'first_name', 0 ),
-				array( 'address', 'city', 5 ),					
+				array( 'address', 'address_line', 5 ),					
 			),
 		),
 		'lnfn'  => array( 

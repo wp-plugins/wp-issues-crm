@@ -149,7 +149,7 @@ INSERT INTO `wp_wic_data_dictionary` (`entity_slug`, `group_slug`, `field_slug`,
 ( 'manage_storage', 'constituent', 'keep_all', 'checked', 'Keep all constituents', 65, 0, 0, '', 0, 0, 0, '1', 0, 1, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
 ( 'manage_storage', 'constituent', 'confirm', 'text', 'Type PURGE CONSTITUENT DATA in all caps to confirm constituent purge.', 70, 0, 0, '', 0, 0, 0, '', 0, 1, '', 'enter exactly as shown', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
 ( 'list', 'list', 'search_id', 'text', '', 0, 0, 0, '', 0, 1, 1, '', 0, 0, '', '', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
-( 'list', 'list', 'wic-post-export-button', 'select', 'Type', 10, 0, 0, '', 0, 0, 0, '', 0, 0, '', '', 'download_options', '', '', 0, 0, 1, 1000, 1, '', 0, '0000-00-00 00:00:00');
+( 'list', 'list', 'wic-post-export-button', 'select', 'Type', 10, 0, 0, '', 0, 0, 0, '', 0, 0, '', '', 'download_options', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00');
 INSERT INTO wp_wic_form_field_groups ( entity_slug, group_slug, group_label, group_legend, group_order, initial_open, sidebar_location, last_updated_time, last_updated_by) VALUES
 ( 'constituent', 'contact', 'Contact', '', 10, 1, 0, '0000-00-00 00:00:00', 0),
 ( 'constituent', 'case', 'Case Management', '', 30, 1, 1, '0000-00-00 00:00:00', 0),

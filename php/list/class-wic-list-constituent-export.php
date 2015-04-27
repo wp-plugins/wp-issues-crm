@@ -107,34 +107,26 @@ class WIC_List_Constituent_Export {
 			
 			// naming the download file
 			$file_name = $staging_table_name  . '_' . $file_requested . '.csv' ;
-
+			$sql = "SELECT * FROM $staging_table_name ";
 			// set up the sql			
 			if ( 'validate' == $file_requested ) {
-				$sql = "
-					SELECT * FROM $staging_table_name
-					WHERE VALIDATION_STATUS = 'N'
-					";
+				// validation errors; can export after validation
+				$sql .= " WHERE VALIDATION_STATUS = 'n' "; 										
 			} else if ( 'new_constituents' == $file_requested ) {
-				$sql = "
-					SELECT * FROM $staging_table_name
-					WHERE MATCH_PASS = '' AND FIRST_NOT_FOUND_MATCH_PASS > '' 
-					";
+				// not matched, but have matching fields; can export after define matching 
+				$sql .= " WHERE MATCH_PASS = '' AND FIRST_NOT_FOUND_MATCH_PASS > '' "; 	
 			} else if ( 'match' == $file_requested ) {
-				$sql = "
-					SELECT * FROM $staging_table_name
-					WHERE MATCH_PASS > '' 
-					";
+				// actually matched; can export after define matching
+				$sql .= " WHERE MATCH_PASS > '' AND MATCHED_CONSTITUENT_ID > 0 "; 		
 			} else if ( 'bad_match' == $file_requested ) {				
-				$sql = "
-					SELECT * FROM $staging_table_name
-					WHERE VALIDATION_STATUS = 'N' AND MATCH_PASS = '' AND FIRST_NOT_FOUND_MATCH_PASS = '';					
-					";
-			} else if ( 'dump' == $file_requested ) {
-				$sql = "
-					SELECT * FROM $staging_table_name
-					";
+				// EITHER found in a match pass, but not matched because 2 or more found OR valid, but no match attempted  -- can export after define matching
+				$sql .= " WHERE ( MATCH_PASS > '' AND MATCHED_CONSTITUENT_ID = 0 ) "; 	// 
+				$sql .= " OR ( VALIDATION_STATUS = 'y' AND MATCH_PASS = '' AND FIRST_NOT_FOUND_MATCH_PASS = '' )"; 
+			} else if ( 'unmatched' == $file_requested ) {
+				// not linked -- meaningful only after completion										
+				$sql .= " WHERE MATCHED_CONSTITUENT_ID = 0 ";
 			}	
-
+			// 'dump' has no where clause
 			self::do_the_export( $file_name, $sql );	
 			
 			exit;
@@ -246,11 +238,6 @@ class WIC_List_Constituent_Export {
 		
 		} 	
 	
-	
-	
-	
-	
-	
    	// go direct to database and do customized search and write temp table
 		$sql = 	"CREATE TEMPORARY TABLE $temp_constituent_table
 					$download_sql
@@ -312,7 +299,13 @@ class WIC_List_Constituent_Export {
 		    fputcsv($fh, $result); // defaults are delimiter ',', enclosure '"', escape '/'
 			}
 		} 
+
+		if ( 0 == $i ) { // write a not found header if no records were found
+			fputcsv( $fh, array ( "No records found for $file_name" ) ); 		
+		}
+
 		fclose ( $fh );		
+
 	}
 
 

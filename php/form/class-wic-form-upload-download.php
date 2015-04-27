@@ -42,7 +42,6 @@ class WIC_Form_Upload_Download extends WIC_Form_Upload_Validate  {
 					$valid_dups	   +=	$match_object->not_unique;
 					$unmatched_records_with_valid_components += $match_object->unmatched_records_with_valid_components;			
 				}	
-				$validation_errors = $upload_parameters->insert_count - $unmatched_records_with_valid_components - $valid_matched - $valid_dups;
 			}
 
 					
@@ -50,36 +49,45 @@ class WIC_Form_Upload_Download extends WIC_Form_Upload_Validate  {
 			$download_layout = 	array (
 				'validate' 		=>		array ( 
 					'Validation Errors', 
-					sprintf ( __( '%s Records that cannot be uploaded because of bad data in one or more fields. ', 'wp-issues-crm' ) , $validation_errors ), 
-					'staged' == $upload_status || 'mapped' == $upload_status || 0 === $validation_errors,
-				 ),
+					__( 'Records that cannot be uploaded because of bad data or missing required data in one or more mapped fields. ', 'wp-issues-crm' ), 
+					'staged' == $upload_status || 'mapped' == $upload_status,
+				 ), 	// note: cannot show count of validation errors, because don't track and can't compute by backing out valid 
+				 		// b/c don't have count of those valid but lacking match components ( which don't show in any of the $match_results numbers ) 
  				 'new_constituents'	=>		array (
 					'New Constituents',
-					sprintf ( __( '%s Records with valid data that match no existing constituents.  
+					sprintf ( __( 'Records with valid data that match no existing constituents.  
 						WP Issues CRM dedups new records against each other and against existing records before upload.
 						New records that match each other but not to any existing records are combined and uploaded.
-						The count here ( %1$s ) may be reduced on upload as dedups among new records are combined. ',
+						The count here ( %1$s ) may be reduced on upload as dups in this file are combined. ',
 						'wp-issues-crm' ) , $unmatched_records_with_valid_components),				 
 				 	'staged' == $upload_status || 'mapped' == $upload_status  || 'validated' == $upload_status || 0 == $unmatched_records_with_valid_components,
 				 ), 
 				 'match'			=>		array (
 					'Matches',
-					sprintf ( __( '%s Records that match to unique constituents on database based on one or more of matching criteria selected. ',
+					sprintf ( __( '%s record(s) matching to unique constituents on database based on one or more of matching criteria selected. ',
 						'wp-issues-crm' )  , $valid_matched ),				 
 				 	'staged' == $upload_status || 'mapped' == $upload_status  || 'validated' == $upload_status || 0 == $valid_matched,
 				 ), 
  				 'bad_match'	=>		array (
 					'Bad Match Errors',
-					sprintf ( __( '%s Records that lack match fields or match to multiple existing database records -- 
-						will not be uploaded or used for update.  ', 'wp-issues-crm' ) , $valid_dups ),				 
-				 	'staged' == $upload_status || 'mapped' == $upload_status  || 'validated' == $upload_status || 0 == $valid_dups  ,
+					__( 'Records that lack match fields or match to multiple existing database records -- 
+						will not be uploaded or used for update.  ', 'wp-issues-crm' ) , 				 
+				 	'staged' == $upload_status || 'mapped' == $upload_status  || 'validated' == $upload_status ,
+				 	// can't show count b/c  . . . same as invalid
 				 ), 			
-		
+ 				 'unmatched'	=>		array (
+					'Need Attention',
+					__( 'All records that have not been marked as matched.  This includes the records that could not be finally processed for any reason.  Input records with no validation errors 
+						are marked as matched at the matching stage if they match to existing constituents. Apparent new constituents with no validation errors 
+						are marked as matched to their new constituent records during the upload completion process.',
+						 'wp-issues-crm' ) , 				 
+				 	'completed' != $upload_status ,
+				 ), 		
  				 'dump'	=>		array (
-					'All Input Records',
-					sprintf ( __( 'Dump all %s input records with all error and matching statuses. ', 'wp-issues-crm' ) , $upload_parameters->insert_count ),				 
+					'All Input',
+					sprintf ( __( 'Dump all input records (%s) with all error and matching statuses . ', 'wp-issues-crm' ) , $upload_parameters->insert_count ),				 
 				 	false
-				 ) 			
+				 ), 			
 			); 
 
 			echo '<div id = "upload-download-buttons">';

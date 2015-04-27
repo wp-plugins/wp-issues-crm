@@ -333,21 +333,18 @@ class WIC_Admin_Settings {
 	public function uninstall_legend() {
 		echo '<div id="uninstall"><p>' . __( 'WP Issues CRM does a partial uninstall of its own data if you "delete" it through the <a href="/wp-admin/plugins.php">plugins menu</a>.  It removes its entries
 			in the Wordpress options table -- which include the plugin options, database version and cached search histories. 
-			It also removes entries in the Wordpress user meta table for individual preference settings for the plugin.', 'wp-issues-crm') . '</p><p>' .  
-			__( 'However, for safety, it does not automatically remove its core tables -- the risk of data loss in a busy office is just too great. 
-			To completely deinstall WP Issues CRM, access the Wordpress database through phpmyadmin or through the mysql console and delete the following tables (usually prefixed with wp_wic_) :', 'wp-issues-crm' ) . '</p>' . 
-		'<ol><li>activity</li>' .
-		'<li>address</li>' .
-		'<li>constituent</li>' .
-		'<li>data_dictionary</li>' .
-		'<li>email</li>' .
-		'<li>form_field_groups</li>' .
-		'<li>interface</li>' .
-		'<li>option_group</li>' .
-		'<li>option_value</li>' .
-		'<li>phone</li>' .												
-		'<li>search_log</li>' .
-		'<li>upload</li></ol>' .		
+			It also removes entries in the Wordpress user meta table for individual preference settings for the plugin.
+			Finally, it removes its control and audit trail tables, with the exception of the dictionary (which may include user configured fields).', 'wp-issues-crm') . '</p><p>' .  
+			__( 'However, for safety, it does not automatically remove the core user built tables -- the risk of data loss in a busy office is just too great. 
+			To completely deinstall WP Issues CRM, access the Wordpress database through phpmyadmin or through the mysql console and delete the following tables (usually prefixed with "wp_wic_" ) :', 'wp-issues-crm' ) . '</p>' . 
+		'<ol>' . 
+			'<li>activity</li>' .
+			'<li>address</li>' .
+			'<li>constituent</li>' .
+			'<li>data_dictionary</li>' .
+			'<li>email</li>' .
+			'<li>phone</li>' . 
+		'</ol>' .		
 		'<p>' . __( 'Finally, run this command to delete post_meta data created by WP Issues CRM (this will not affect issue posts themselves):', 'wp-issues-crm' ) . '</p>' .
 		'<pre>DELETE FROM wp_postmeta WHERE meta_key LIKE \'wic_data_%\'</pre></div>' .
 		'<p>' . __( 'Take note: These steps should all be taken AFTER the plugin is deactivated -- otherwise it will automatically restore missing tables. ', 'wp-issues-crm' ) . '</p>' ;

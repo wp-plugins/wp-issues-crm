@@ -22,8 +22,8 @@ INSERT INTO wp_wic_option_value ( parent_option_group_slug, option_value, option
 ( 'upload_status', 'completed', 'Upload Completed', 70, 1, '0000-00-00 00:00:00', 0),
 ( 'upload_status', 'reversed', 'Upload Backed Out', 80, 1, '0000-00-00 00:00:00', 0),
 ( 'download_options', '', 'Export', 10, 1, '0000-00-00 00:00:00', 0),
-( 'download_options', 'emails', 'Export emails', 10, 1, '0000-00-00 00:00:00', 0),
-( 'download_options', 'addresses', 'Export addresses', 20, 1, '0000-00-00 00:00:00', 0),
-( 'download_options', 'phones', 'Export phones', 30, 1, '0000-00-00 00:00:00', 0),
-( 'download_options', 'type0', 'Export home info', 30, 1, '0000-00-00 00:00:00', 0),
-( 'download_options', 'dump', 'Export dump', 40, 1, '0000-00-00 00:00:00', 0);
+( 'download_options', 'emails', 'Export Emails', 10, 1, '0000-00-00 00:00:00', 0),
+( 'download_options', 'addresses', 'Export Addresses', 20, 1, '0000-00-00 00:00:00', 0),
+( 'download_options', 'phones', 'Export Phones', 30, 1, '0000-00-00 00:00:00', 0),
+( 'download_options', 'type0', 'Export Home Info', 35, 1, '0000-00-00 00:00:00', 0),
+( 'download_options', 'dump', 'Export Dump', 40, 1, '0000-00-00 00:00:00', 0);

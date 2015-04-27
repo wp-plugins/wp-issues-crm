@@ -68,18 +68,7 @@
 *					SO: set reset default object when match is reset -- a new match is required iff any prior remap or rematch 
 *
 *
-*  Enforcement of Field Required rules is as follows (summarizing))
-*		-- At mapping stage (initial on upload and on form), run method is_column_mapping_valid -- tests for missing phone number, email address or
-*			post title but only if other fields are mapped for the corresponding entities -- enforces rules by keeping status at 'staged'
-*		-- At validation stage, no required checking -- just sanitization and validation of values supplied
-*		--	At matching stage, enforcing identity group required by showing only options that include one of fn/ln/email; HOWEVER, since also offers
-*		 	custom matching, USER CAN BYPASS fn/ln/email REQUIREMENT ON UPLOAD IF MATCHING ON A CUSTOM FIELD -- BUT WILL BE CAUGHT AT INSERT STAGE
-*		-- At set default stage, cover address and activity required logic -- do here, not at mapping, because can offer defaults to complete
-*			fields missing in mapping -- e.g., can default City for address. Does require type for phone, email and address even though these
-*			not required on form entry.  Can work around by defining Unknown option and defaulting types to Unknown. 
-*		-- When doing inserts of constituents, require that at least one of email, fn or ln have been mapped and at least one is present.
-*		-- At constituent update stage, test for presence of required fields before saving.  Mapping and Default steps force required fields to be 
-*			mapped, but still need to test that values actually present on a given record before saving a blank address, email, phone or activity.
+*  Enforcement of Validation and Field Required rules in the upload is explained at: http://wp-issues-crm.com/?page_id=74
 *
 *
 *
@@ -128,7 +117,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	public static function format_tab_titles ( $upload_id ) {
 		
 		$tab_titles_array = array (
-			__( 'Describe', 'wp-issues-crm' ) 			=> 'details', 		
+			__( 'Describe File', 'wp-issues-crm' ) 			=> 'details', 		
 			__( 'Map Fields', 'wp-issues-crm' )			=> 'map',
 			__( 'Validate Data', 'wp-issues-crm' )		=> 'validate',
 			__( 'Define Matching', 'wp-issues-crm' )	=>	'match',
@@ -142,10 +131,12 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		
 		$output = '<div id = "upload-tabs-headers"><ul class = "upload-tabs-headers">';
 		    	foreach ( $tab_titles_array as $tab_title => $tab_link ) {
+					$raquo_pointer_left =  ( 'details' == $tab_link || 'download' == $tab_link || 'regrets' == $tab_link ) ? '' : '&raquo; ';
+					$raquo_pointer =  ( 'complete' == $tab_link || 'download' == $tab_link || 'regrets' == $tab_link ) ? '' : '&raquo;';
 		    		$nav_tab_active = ( $active_tab == $tab_link ) ? 'nav-tab-active' : 'nav-tab-inactive';
 					$output .= '<li class="' . $nav_tab_active . '">
-							<a href="/wp-admin/admin.php?page=wp-issues-crm-uploads&action=' . $tab_link . '&upload_id=' . $upload_id . '"> '. 
-						esc_html( trim( __( $tab_title, 'wp-issues-crm' ) ) )  .'</a></li>';
+							<a href="/wp-admin/admin.php?page=wp-issues-crm-uploads&action=' . $tab_link . '&upload_id=' . $upload_id . '"> '. $raquo_pointer_left .
+						esc_html( trim( __( $tab_title, 'wp-issues-crm' ) ) )  . ' ' . $raquo_pointer . '</a></li>';
    			
 				}  
       $output .= '</ul></div><div class = "horbar-clear-fix" ></div>';
@@ -881,6 +872,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			// all necessary variables were present for matching and the values of those variables -- 
 			// a subsequent less unique pass may result in a match in which case these won't be used, but if no match in any 
 			// pass, these will be used to create constituent stub for insertion in final upload completion stage
+			// note that all invalid records are bypassed above, so need not test for validity
 			$first_not_found_match_pass 	= '';
 			$not_found_values					= ''; 	
 			// not found case -- populate not found pass and values

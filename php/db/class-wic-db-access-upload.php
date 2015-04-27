@@ -693,7 +693,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			$sql = "
 					SELECT FIRST_NOT_FOUND_MATCH_PASS as pass_slug, COUNT(FIRST_NOT_FOUND_MATCH_PASS) AS pass_count
 					FROM $staging_table 
-					WHERE MATCH_PASS = '' AND FIRST_NOT_FOUND_MATCH_PASS > '' AND VALIDATION_STATUS = 'y'
+					WHERE MATCH_PASS = '' AND FIRST_NOT_FOUND_MATCH_PASS > '' 
 					GROUP BY FIRST_NOT_FOUND_MATCH_PASS
 					";
 			$result_array = $wpdb->get_results ( $sql );

@@ -1087,7 +1087,6 @@ li.nav-tab-active  {
 #wic-form-upload-save  input#max_line_length.wic-input.max-line-length,
 #wic-form-upload-save  input#max_execution_time.wic-input.max-execution-time
 {
-	color: red;
 	width: 50px;
 }
 

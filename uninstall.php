@@ -1,7 +1,7 @@
 <?php
 /*
 *
-*	uninstall.php deletes options and preferences, but not core data in the main wp_issues_crm tables
+*	uninstall.php deletes factory defaults, wp_options and preferences, but not core data in the main wp_issues_crm tables
 * 	 -- the risk of data loss in larger offices is too high.
 *
 *	To completely uninstall wp_issues_crm, after deleting the plugin, go to phpmyadmin or the mysql console and:
@@ -9,13 +9,9 @@
 *				- activity
 *				- address
 *				- constituent
-*				- data_dictionary
 *				- email
-*				- form_field_groups
-*				- option_group
-*				- option_value
 *				- phone
-*				- search_log
+
 *		(2) delete post meta data created by wp_issues_crm by running . . .
 *				DELETE FROM wp_postmeta WHERE meta_key LIKE 'wic_data_%'
 *			
@@ -36,3 +32,19 @@ $wpdb->query ($sql);
 $sql = "DELETE FROM {$wpdb->prefix}usermeta  WHERE meta_key = 'wic_data_user_preferences' ";
 $wpdb->query ($sql);
 
+// delete tables that include minimal constituent data
+// not include dictionary because user may have set up custom fields
+$easily_reinstalled_tables_array = array(
+	'form_field_groups',
+	'option_group',
+	'option_value',
+	'interface',
+	'search_log',
+	'upload'
+);
+
+foreach ( $easily_reinstalled_tables_array as $table ) {
+	$table = $wpdb->prefix . 'WIC_' . $table;
+	$sql = "DROP TABLE IF EXISTS $table";
+	$wpdb->query ($sql);
+} 
