@@ -64,9 +64,3 @@ if ( is_array ( $staging_tables ) ) {
 		}
 	}
 }
-
-// delete individual search histories
-// copied from WIC_Entity_Manage_Storage::purge_individul_search_histories()
-$wp_options = $wpdb->options;
-$sql = " DELETE FROM $wp_options WHERE option_name LIKE '_wp_issues_crm_individual_search_history_%' ";
-$wpdb->query($sql);
