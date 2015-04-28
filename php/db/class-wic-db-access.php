@@ -173,35 +173,6 @@ abstract class WIC_DB_Access {
 	
 	/*
 	*
-	* retrieve last NON individual retrieval ( i.e., not containing 'ID' as search key)
-	* note that not looking at zero results -- these bounce to the user anyway
-	*
-	*
-	public function search_log_last_general ( $user_id ) { 
-		
-		global $wpdb;		
-		$search_log_table = $wpdb->prefix . 'wic_search_log';
-		$entity = $this->entity;
-		
-		$sql = 			
-			"
-			SELECT ID
-			FROM $search_log_table
-			WHERE user_id = $user_id
-				AND entity = '$entity'
-				AND result_count > 1
-			ORDER	BY search_time DESC
-			LIMIT 0, 1
-			";
-		
-		$latest_search = $wpdb->get_results ( $sql );
-
-		return ( $latest_search[0]->ID );
-
-	} 	 	*/
-	
-	/*
-	*
 	* retrieve last logged event
 	*
 	*/
@@ -330,7 +301,7 @@ abstract class WIC_DB_Access {
 		if ( count ( $save_update_array ) > 0 ) {
 			if ( $doa['ID']->get_value() > 0 ) {
 				$this->db_update ( $save_update_array );		
-			} else {
+			} else { 
 				$this->db_save ( $save_update_array );
 			}
 		}
@@ -379,6 +350,27 @@ abstract class WIC_DB_Access {
 		return;	
 	}
 
+	
+	// abbreviated version of save update for use in the upload context
+	// no multi value processing necessary, since each entity handled as a top entity in the upload process
+	// allow decision as to whether to protect blanks from overwrite.
+	public function upload_save_update ( &$doa, $protect_blank_overwrite ) { 
+		if ( $protect_blank_overwrite ) {
+			$save_update_array = $this->upload_assemble_save_update_array( $doa ); // drops blank values from the update array
+		} else {
+			$save_update_array = $this->assemble_save_update_array( $doa );
+		}
+
+		if ( count ( $save_update_array ) > 0 ) {
+			if ( $doa['ID']->get_value() > 0 ) {
+				$this->db_update ( $save_update_array );		
+			} else { 
+				$this->db_save ( $save_update_array );
+			}
+		}
+		// don't bother to set the insert id -- no further processign.
+	}
+
 
 	/*
 	*
@@ -401,6 +393,22 @@ abstract class WIC_DB_Access {
 		return ( $save_update_array );
 	}
 
+	// special version for uploads where want to skip blank values in update process
+	protected function upload_assemble_save_update_array ( &$doa ) {
+		$save_update_array = array();
+		foreach ( $doa as $field => $control ) {
+			if ( ! $control->is_multivalue() ) {
+				if ( $control->is_present() ) { // only do save-updates when control value non-blank
+					$update_clause = $control->create_update_clause();
+					if ( '' < $update_clause ) {
+						$save_update_array[] = $update_clause;
+					}
+				}
+			}
+		}	
+		return ( $save_update_array );
+	}
+
 
 	/*
 	*
@@ -408,8 +416,8 @@ abstract class WIC_DB_Access {
 	*
 	*/
 
-	public function list_by_id ( $id_string,  $sort_direction = 'ASC' ) {
-		$this->db_list_by_id ( $id_string, $sort_direction ); 
+	public function list_by_id ( $id_string ) { 
+		$this->db_list_by_id ( $id_string );   
 	}
 
 	public static function get_mysql_time() {
@@ -434,6 +442,16 @@ abstract class WIC_DB_Access {
 	*/
 	public function updated_last ( $user_id ) {
 		return ( $this->db_updated_last ( $user_id ) );
+	}
+
+	public static function table_count ( $table_name ) {
+		global $wpdb;
+		// expects fully qualified table name with prefix
+		$result = $wpdb->get_results ( "
+			SELECT COUNT(*) as table_count from $table_name
+			"
+			);
+		return ( $result[0]->table_count );	
 	}
 
 	abstract protected function db_search ( $meta_query_array, $search_parameters );

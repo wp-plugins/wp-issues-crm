@@ -3,7 +3,7 @@
  * Plugin Name: WP Issues CRM
  * Plugin URI: http://wp-issues-crm.com 
  * Description: Constituent Relationship Management for organizations that respond to constituents.  Organizes constituent contacts ( calls, etc. ) around Wordpress posts and categories. 
- * Version: 0.83
+ * Version: 2.2.1
  * Author: Will Brownsberger
  * Author URI: http://willbrownsberger.com
  * Text Domain: wp-issues-crm
@@ -11,7 +11,7 @@
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html 
  *	Text Domain: wp-issues-crm
  *
- *  Copyright 2014  WILL BROWNSBERGER  (email : willbrownsberger@gmail.com)
+ *  Copyright 2015  WILL BROWNSBERGER  (email : willbrownsberger@gmail.com)
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License, version 2, as 
@@ -34,14 +34,13 @@
 *	WP_Issues_CRM classes are organized under subdirectories within the plugin directory like so: 
 *			<path to plugin>/php/class-category/class-identifier -- for example WIC_Entity_Issues is in /php/entity/class-wic-entity-issue.php
 *
-*  This module also includes hide private posts function (the only function created in the public name space by this plugin).
+*  This module also includes keep_private_posts_off_front_end_even_for_administrators
+*  (the only function created in the public name space by this plugin).
 */
 
-// set database version globals;
-global $wp_issues_crm_dictionary_version;
+// set database version global;
 global $wp_issues_crm_db_version;
-$wp_issues_crm_dictionary_version = '0.83';
-$wp_issues_crm_db_version = '0.83';
+$wp_issues_crm_db_version = '2.2';
 
 
 // check for database install or updates -- note that the 'plugins_loaded' hook fires before is_admin is set, so too late if put in admin_setup

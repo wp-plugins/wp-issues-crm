@@ -12,6 +12,10 @@ class WIC_Form_issue_Search extends WIC_Form_Parent  {
 		return ( 'issue' );	
 	}
 
+	// no header tabs
+	protected function format_tab_titles( &$data_array ){}
+
+
 	// choose form buttons
 	protected function get_the_buttons ( &$data_array ) {
 		

@@ -96,14 +96,13 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 	* retrieve database records joined across parent and child tables based on array of search parameters
 	*
 	*/
-	protected function db_search( $meta_query_array, $search_parameters ) { // $select_mode = '*' ) {
+	protected function db_search( $meta_query_array, $search_parameters ) { 
 
 		global $wic_db_dictionary;
 
 		// default search parameters
 		$select_mode 		= 'id';
 		$sort_order 		= false;
-		$sort_direction	= 'ASC';
 		$compute_total 	= false;
 		$retrieve_limit 	= '10';
 		$show_deleted		= true;
@@ -112,13 +111,13 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 
 		// implement search parameters
 		$top_entity = $this->entity;
-		if ( 'id' == $select_mode) {
+		if ( 'id' == $select_mode || 'download' == $select_mode ) {
 			$select_list = $top_entity . '.' . 'ID ';	
 		} else {
 			$select_list = $top_entity . '.' . '* '; 
 		}
 		$sort_clause = $sort_order ? $wic_db_dictionary->get_sort_order_for_entity( $this->entity ) : '';
-		$order_clause = ( '' == $sort_clause ) ? '' : " ORDER BY $sort_clause $sort_direction ";
+		$order_clause = ( '' == $sort_clause ) ? '' : " ORDER BY $sort_clause "; 
 		$deleted_clause = $show_deleted ? '' : 'AND ' . $top_entity . '.mark_deleted != \'deleted\'';
 		$found_rows = $compute_total ? 'SQL_CALC_FOUND_ROWS' : '';
 		// retrieve limit goes directly into SQL
@@ -132,7 +131,7 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 		$join = '';
 		$values = array();
 		// explode the meta_query_array into where string and array ready for wpdb->prepare
-		foreach ( $meta_query_array as $where_item ) {
+		foreach ( $meta_query_array as $where_item ) { 
 
 			// pull out tables for join clause		
 			if( ! in_array( $where_item['table'], $table_array ) ) {
@@ -161,7 +160,7 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 				$values[] = $where_item['value'][0];
 				$values[] = $where_item['value'][1];
 			} else {
-				WIC_Function_Utilities::wic_error ( sprintf( 'Incorrect compare settings for field %1$s.', $this->field->field_slug  ), __FILE__, __LINE__, __METHOD__, true );
+				WIC_Function_Utilities::wic_error ( sprintf( 'Incorrect compare settings for field %1$s.',  $where_item['key']  ), __FILE__, __LINE__, __METHOD__, true );
 			}	 
 		}
 		// prepare a join clause		
@@ -174,8 +173,9 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 		}
 		$join = ( '' == $join ) ? $wpdb->prefix . 'wic_' . $this->entity : $join; 
 
-		// prepare SQL
-		$sql = $wpdb->prepare( "
+		// prepare SQL ( or skip prepare if no user input to where clause)
+		if ( $where > '' ) {
+			$sql = $wpdb->prepare( "
 					SELECT $found_rows	$select_list
 					FROM 	$join
 					WHERE 1=1 $deleted_clause $where 
@@ -183,25 +183,45 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 					$order_clause
 					LIMIT 0, $retrieve_limit
 					",
-				$values );	
+				$values );
+		} else {
+			$sql = "
+					SELECT $found_rows	$select_list
+					FROM 	$join
+					WHERE 1=1 $deleted_clause 
+					GROUP BY $top_entity.ID
+					$order_clause
+					LIMIT 0, $retrieve_limit
+					";
+		}	
 		// $sql group by always returns single row, even if multivalues for some records 
 
 		$sql_found = "SELECT FOUND_ROWS() as found_count";
 		$this->sql = $sql; 
 		
-		// do search
-		$this->result = $wpdb->get_results ( $sql );
-	 	$this->showing_count = count ( $this->result );
-		// only do sql_calc_found_rows on id searches; in other searches, found count will always equal showing count
-		$found_count_object_array = $wpdb->get_results( $sql_found );
-		$this->found_count = $found_count_object_array[0]->found_count;
-		// set value to say whether found_count is known
-		$this->found_count_real = $compute_total;
-		$this->retrieve_limit = $retrieve_limit;
-		$this->outcome = true;  // wpdb get_results does not return errors for searches, so assume zero return is just a none found condition (not an error)
-										// codex.wordpress.org/Class_Reference/wpdb#SELECT_Generic_Results 
-		$this->explanation = ''; 
 
+		if ( 'download' == $select_mode ) {
+			$temp_table = $wpdb->prefix . 'wic_temporary_id_list';			
+			$sql = "CREATE temporary table $temp_table " . $sql;
+			$temp_result = $wpdb->query  ( $sql );
+			if ( false === $temp_result ) {
+				WIC_Function_Utilities::wic_error ( sprintf( 'Error in download, likely permission error.' ), __FILE__, __LINE__, __METHOD__, true );
+			}			
+		
+		} else {
+			// do search
+			$this->result = $wpdb->get_results ( $sql );
+		 	$this->showing_count = count ( $this->result );
+			// only do sql_calc_found_rows on id searches; in other searches, found count will always equal showing count
+			$found_count_object_array = $wpdb->get_results( $sql_found );
+			$this->found_count = $found_count_object_array[0]->found_count;
+			// set value to say whether found_count is known
+			$this->found_count_real = $compute_total;
+			$this->retrieve_limit = $retrieve_limit;
+			$this->outcome = true;  // wpdb get_results does not return errors for searches, so assume zero return is just a none found condition (not an error)
+											// codex.wordpress.org/Class_Reference/wpdb#SELECT_Generic_Results 
+			$this->explanation = ''; 
+		}
 
 	}	
 	
@@ -306,7 +326,7 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 		} 
 	}
 
-	protected function db_list_by_id ( $id_string, $sort_direction ) {
+	protected function db_list_by_id ( $id_string ) { 
 
 		global $wpdb;
 		global $wic_db_dictionary;	
@@ -316,7 +336,7 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 		$where = $top_entity . '.ID IN ' . $id_string . ' ';
 		$join = $wpdb->prefix . 'wic_' . $this->entity . ' AS ' . $this->entity;
 		$sort_clause = $wic_db_dictionary->get_sort_order_for_entity( $this->entity );
-		$order_clause = ( '' == $sort_clause ) ? '' : " ORDER BY $sort_clause $sort_direction ";
+		$order_clause = ( '' == $sort_clause ) ? '' : " ORDER BY $sort_clause"; 
 		$select_list = '';	
 
 		// assemble list query based on dictionary list specification

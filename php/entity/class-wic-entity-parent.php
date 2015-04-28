@@ -348,24 +348,27 @@ abstract class WIC_Entity_Parent {
 			if ( $save ) { 
 				// retrieve the new ID from the save process
 				$this->data_object_array['ID']->set_value( $wic_access_object->insert_id );
-				// in this branch, i.e., case of a save, want to spoof a search log entry as an id search so can return to saved entity
-				// note that in the case of an update, the search log already has an entry pointing to the entity, since found it for update
-				// so . . . .  prepare search log items ( as in WIC_Entity_Parent->id_search_generic )
-				$search_clause_args = array(
-					'match_level' => '0',
-					'dup_check' => false,
-					'category_search_mode' => '',
+				// log_saves() in this parent class returns false; child classes can override as true
+				if ( $this->log_saves() ) {				
+					// in this branch, i.e., case of a save, want to spoof a search log entry as an id search so can return to saved entity
+					// note that in the case of an update, the search log already has an entry pointing to the entity, since found it for update
+					// so . . . .  prepare search log items ( as in WIC_Entity_Parent->id_search_generic )
+					$search_clause_args = array(
+						'match_level' => '0',
+						'dup_check' => false,
+						'category_search_mode' => '',
+						);
+					// invoke the search_clause creator from ID control (comes assembled with own wrapper array)
+					$meta_query_array = $this->data_object_array['ID']->create_search_clause( $search_clause_args );
+					$search_parameters = array (
+						'select_mode' 		=> '*',
+						'show_deleted' 	=> true,	
+						'log_search' 		=> true,
+						'old_search_id' 	=> false,
 					);
-				// invoke the search_clause creator from ID control (comes assembled with own wrapper array)
-				$meta_query_array = $this->data_object_array['ID']->create_search_clause( $search_clause_args );
-				$search_parameters = array (
-					'select_mode' 		=> '*',
-					'show_deleted' 	=> true,	
-					'log_search' 		=> true,
-					'old_search_id' 	=> false,
-				);
-				$wic_access_object->found_count = 1; // as if had done a search
-				$wic_access_object->search_log ( $meta_query_array, $search_parameters );						
+					$wic_access_object->found_count = 1; // as if had done a search
+					$wic_access_object->search_log ( $meta_query_array, $search_parameters );
+				}						
 			}
 			// check if changes were made
 			$this->made_changes = $wic_access_object->were_changes_made();
@@ -377,6 +380,11 @@ abstract class WIC_Entity_Parent {
 			$form = new $success_form;
 			$form->layout_form ( $this->data_object_array, $message, $message_level );					
 		}
+	}
+
+	// default on logging is no, but override in particular entities (constituent and issues)
+	protected function log_saves() {
+		return false;	
 	}
 
 	/*************************************************************************************
@@ -551,5 +559,6 @@ abstract class WIC_Entity_Parent {
 	public function were_changes_made () {
 		return ( $this->made_changes );	
 	}
+	
 }
 

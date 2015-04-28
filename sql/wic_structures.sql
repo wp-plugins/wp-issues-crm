@@ -85,7 +85,7 @@ CREATE TABLE wp_wic_data_dictionary (
   group_slug varchar(30) NOT NULL,
   field_slug varchar(30) NOT NULL,
   field_type varchar(30) NOT NULL,
-  field_label varchar(60) NOT NULL,
+  field_label varchar(120) NOT NULL,
   field_order mediumint(9) NOT NULL,
   listing_order int(11) NOT NULL,
   sort_clause_order mediumint(11) NOT NULL,
@@ -104,6 +104,8 @@ CREATE TABLE wp_wic_data_dictionary (
   reverse_sort tinyint(1) NOT NULL DEFAULT '0',
   customizable tinyint(1) NOT NULL DEFAULT '0',
   enabled tinyint(1) NOT NULL DEFAULT '1',
+  uploadable int(11) NOT NULL,
+  upload_dedup tinyint(1) NOT NULL,
   mark_deleted varchar(10) NOT NULL,
   last_updated_by bigint(20) NOT NULL,
   last_updated_time datetime NOT NULL,
@@ -131,7 +133,7 @@ CREATE TABLE wp_wic_form_field_groups (
   ID bigint(20) NOT NULL AUTO_INCREMENT,
   entity_slug varchar(30) NOT NULL,
   group_slug varchar(30) NOT NULL,
-  group_label varchar(40) NOT NULL,
+  group_label varchar(255) NOT NULL,
   group_legend text NOT NULL,
   group_order smallint(6) NOT NULL DEFAULT '0',
   initial_open tinyint(1) NOT NULL,
@@ -156,6 +158,7 @@ CREATE TABLE wp_wic_option_group (
 CREATE TABLE wp_wic_option_value (
   ID bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   option_group_id varchar(50) NOT NULL,
+  parent_option_group_slug varchar(30) NOT NULL,
   option_value varchar(50) NOT NULL,
   option_label varchar(200) NOT NULL,
   value_order smallint(11) NOT NULL,
@@ -189,10 +192,34 @@ CREATE TABLE wp_wic_search_log (
   entity varchar(30) NOT NULL,
   serialized_search_array text NOT NULL,
   download_time varchar(20) NOT NULL,
-  serialized_search_parameters text NOT NULL,
+  serialized_search_parameters blob NOT NULL,
   result_count bigint(20) NOT NULL,
   PRIMARY KEY (ID),
   KEY user_entity_time (user_id,entity,search_time),
   KEY user_time (user_id,search_time)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
+CREATE TABLE wp_wic_upload (
+  ID bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  upload_time datetime NOT NULL,
+  upload_by bigint(20) NOT NULL,
+  upload_description varchar(255) NOT NULL,
+  upload_file varchar(255) NOT NULL,
+  upload_status varchar(255) NOT NULL,
+  serialized_upload_parameters blob NOT NULL,
+  serialized_column_map blob NOT NULL,
+  serialized_match_results blob NOT NULL,
+  serialized_default_decisions blob NOT NULL,
+  serialized_final_results blob NOT NULL,
+  last_updated_time datetime NOT NULL,
+  last_updated_by bigint(20) NOT NULL,
+  PRIMARY KEY (ID),
+  KEY upload_time_upload_by (upload_time,upload_by)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
+
+CREATE TABLE wp_wic_interface (
+  upload_field_name varchar(255) NOT NULL,
+  matched_entity varchar(255) NOT NULL,
+  matched_field varchar(255) NOT NULL,
+  PRIMARY KEY (upload_field_name)
+) ENGINE=MyISAM  DEFAULT CHARSET=utf8;

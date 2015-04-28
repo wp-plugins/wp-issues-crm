@@ -90,6 +90,22 @@ class WIC_Function_Utilities { // functions that serve multiple entities
 		return ( self::get_last_updated_by_array( 'wic_activity' ) );		
 	}
 
+	// for issue list: look up assigned user's display name
+	// but this is a generic function, also used in upload for example 
+	public static function issue_staff_formatter ( $user_id ) {
+		
+		$display_name = '';		
+		if ( isset ( $user_id ) ) { 
+			if ( $user_id > 0 ) {
+				$user =  get_users( array( 'fields' => array( 'display_name' ), 'include' => array ( $user_id ) ) );
+				$display_name = esc_attr( $user[0]->display_name ); // best to generate an error here if this is not set on non-zero user_id
+			}
+		}
+		return ( $display_name );
+	}
+
+
+
 	/*
 	* extract label from value/label array
 	*/
@@ -128,49 +144,8 @@ class WIC_Function_Utilities { // functions that serve multiple entities
 	}	
 
 	/* 
-	*  The following two array functions just create option arrays used in the admin area. 
+	*  option arrays used in the admin area. 
 	*/
-
-	
-	public static function order_array () {
-		$order_array = array(
-			array(
-				'value' => '',
-				'label' => 'Order?',
-			),
-		);
-		
-		/* offer multiples of 10 first */
-		for ( $i = 1; $i <= 20; $i++ ) {
-			$temp = array (
-				'value' => $i * 10,
-				'label' => $i * 10,
-			);
-			array_push ( $order_array, $temp );
-		}
-		/* offer multiples of 5 next */
-		for ( $i = 0; $i <= 20; $i++ ) {
-			$temp = array (
-				'value' => $i * 10 + 5,
-				'label' => $i * 10 + 5,
-			);
-			array_push ( $order_array, $temp );
-		}
-		/* offer individual lines */
-		for ( $i = 1; $i <= 200; $i++ ) {
-			$temp = array (
-				'value' => $i,
-				'label' => $i,
-			);
-			if ( $i % 5 > 0 ) {
-				array_push ( $order_array, $temp );
-			}
-		}
-
-		return ( $order_array );		
-		
-	}	
-	
 	public static function list_option_groups() {
 
 		global $wpdb;
@@ -179,6 +154,7 @@ class WIC_Function_Utilities { // functions that serve multiple entities
 			"
 			SELECT option_group_slug, option_group_desc
 			FROM $table
+			WHERE is_system_reserved = 0
 			"
 		);
 		

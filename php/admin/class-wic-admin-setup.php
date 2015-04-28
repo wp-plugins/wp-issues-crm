@@ -26,6 +26,9 @@ class WIC_Admin_Setup {
 		
 		//	enqueue styles and scripts	
 		add_action( 'admin_enqueue_scripts', array( $this, 'add_wic_scripts' ) );
+		
+		//	set ajax responses early, as if in the plugin base
+		$this->set_wic_ajax_responses();
 
 		// set up download hook -- admin init is early enough to intercept button for download
 		add_action( 'admin_init', array( $this, 'do_download' ) );	
@@ -49,46 +52,154 @@ class WIC_Admin_Setup {
 	
 	}
 
-
+	public function set_wic_ajax_responses() { 
+		$wic_ajax = new WIC_Admin_Ajax;
+		add_action( 'wp_ajax_wp_issues_crm', array ( $wic_ajax, 'route_ajax' ));
+	}
+	
 	// load scripts and styles only for this plugin's pages
 	public function add_wic_scripts ( $hook ) {
 	
 		if ( -1 < strpos( $hook, 'wp-issues-crm' ) ) { 
 	
-			wp_register_script(
+			wp_enqueue_script(
 				'wic-utilities',
-				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-utilities.js' , __FILE__ ) 
+				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-utilities.js' , __FILE__ ), 
+				array( 'jquery' )
 			);
-			wp_enqueue_script('wic-utilities');
 
-			wp_register_script(
+			wp_enqueue_script(
 				'wic-changed-page',
-				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-changed-page.js' , __FILE__ ) 
+				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-changed-page.js' , __FILE__ ), 
+				array( 'jquery' )
 			);
-			wp_enqueue_script('wic-changed-page');
 
+			wp_enqueue_script(
+				'wic-jquery-ui',
+				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-jquery-ui.js' , __FILE__ ),
+				array( 'jquery-ui-datepicker', 'jquery-ui-selectmenu','jquery-ui-menu'  )
+			);
 
+			wp_enqueue_script(
+				'wic-ajax-script',
+				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-ajax-script.js' , __FILE__ ),
+				array ( 'jquery' ) 
+			);
 			
-			wp_register_style(
+			// name spacing the AJAX URL by putting it into plugin specific js global object and setting nonce
+			wp_localize_script( 'wic-ajax-script', 'wic_ajax_object',
+            array( 
+            	'ajax_url' 			=> admin_url( 'admin-ajax.php' ),
+            	'wic_ajax_nonce' 	=> wp_create_nonce ( 'wic_ajax_nonce' ),  
+            ) 
+			);	
+
+			// page specific scripts
+			if ( isset ( $_GET['page'] ) ) {
+				if ( 'wp-issues-crm-storage' == $_GET['page'] ) {
+					wp_enqueue_script(
+						'wic-manage-storage',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-manage-storage.js' , __FILE__ ),
+						array ( 'jquery-ui-progressbar') 
+					);
+				}
+				// load script for uploadsdetails page based on doing uploads at all -- $_get['action'] may not yet be set 
+				if ( 'wp-issues-crm-uploads' == $_GET['page'] ) {
+					wp_enqueue_script(
+						'wic-upload-details',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-details.js' , __FILE__ ),
+						array ( 'jquery-ui-selectmenu') 
+					);
+				}
+				// load script for field customization if doing that page 
+				if ( 'wp-issues-crm-fields' == $_GET['page'] ) {
+					wp_enqueue_script(
+						'wic-field-customization',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-field-customization.js' , __FILE__ ),
+						array ( 'jquery', 'jquery-ui-spinner' ) 
+					);
+				}
+				// load script for option managment if doing that page 
+				if ( 'wp-issues-crm-options' == $_GET['page']) {
+					wp_enqueue_script(
+						'wic-option-group',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-option-group.js' , __FILE__ ),
+						array ( 'jquery', 'jquery-ui-spinner' ) 
+					);
+				}
+			}
+
+			// load script for upload subpages only if required
+			if ( isset ( $_GET['action'] ) ) {
+				if ( 'map' == $_GET['action'] ) {
+					wp_enqueue_script(
+						'wic-upload-map',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-map.js' , __FILE__ ),
+						array ( 'jquery-ui-droppable', 'jquery-ui-draggable' ) 
+					);
+				}	
+				if ( 'validate' == $_GET['action'] ) { 
+					wp_enqueue_script(
+						'wic-upload-validate',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-validate.js' , __FILE__ ),
+						array ( 'jquery-ui-progressbar' ) 
+					);
+				}
+				if ( 'match' == $_GET['action'] ) { 
+					wp_enqueue_script(
+						'wic-upload-match',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-match.js' , __FILE__ ),
+						array ( 'jquery-ui-progressbar', 'jquery-ui-sortable' ) 
+					);
+				}
+				if ( 'set_defaults' == $_GET['action'] ) { 
+					wp_enqueue_script(
+						'wic-upload-set-defaults',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-set-defaults.js' , __FILE__ ),
+						array ( 'jquery-ui-progressbar','jquery-ui-datepicker' ) 
+					);
+				}
+				if ( 'complete' == $_GET['action'] ) { 
+					wp_enqueue_script(
+						'wic-upload-complete',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-complete.js' , __FILE__ ),
+						array ( 'jquery-ui-progressbar' ) 
+					);
+				}
+				if ( 'regrets' == $_GET['action'] ) { 
+					wp_enqueue_script(
+						'wic-upload-regrets',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-upload-regrets.js' , __FILE__ ),
+						array ( 'jquery-ui-progressbar' ) 
+					);
+				}						
+			}
+			
+			// styles
+			wp_enqueue_style(
 				'wp-issues-crm-styles',
 				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'wp-issues-crm.css' , __FILE__ )
 				);
-			wp_enqueue_style('wp-issues-crm-styles');
 			
-		}					
-			
-	}
+			wp_enqueue_style(
+				'wic-theme-roller-style',
+				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'css' . DIRECTORY_SEPARATOR . 'jquery-ui-1.11.4.custom'  . DIRECTORY_SEPARATOR .   'jquery-ui.min.css' , __FILE__ )
+				);
+		} // close conditional for using wp-issues-crm					
+	} // close add scripts function
 
 	// add action to intercept press of download button before any headers sent 
 	public function do_download () { 
-		if ( isset( $_POST['wic-post-export-button'] ) ) { 
-			WIC_List_Constituent_Export::do_constituent_download( $_POST['wic-post-export-button'] );	
+		if ( isset( $_POST['wic-post-export-button'] ) && ! isset( $_POST['wic-form-button'] ) && ! isset( $_POST['wic-post-list-button'] )  ) {
+			WIC_List_Constituent_Export::do_constituent_download( $_POST['wic-post-export-button'], $_POST['search_id'] );	
 		} elseif ( isset( $_POST['wic-category-export-button'] ) ) { 
 			WIC_List_Constituent_Export::do_constituent_category_download( $_POST['wic-category-export-button'] );	
-		}		
+		} elseif ( isset ( $_POST['wic-staging-table-download-button'] ) ) {
+			WIC_List_Constituent_Export::do_staging_table_download( $_POST['wic-staging-table-download-button'] );
+		}
  	}
 
-	public function wic_set_up_roles_and_capabilities() {
+	public static function wic_set_up_roles_and_capabilities() {
 
 		// give administrators the manage constituents capacity	
 	   $role = get_role( 'administrator' );

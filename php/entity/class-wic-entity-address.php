@@ -15,6 +15,15 @@ class WIC_Entity_Address extends WIC_Entity_Multivalue {
 		$this->entity_instance = $instance;
 	} 
 
+	public static function zip_validator ( $zip ) { 
+		$options = get_option ('wp_issues_crm_plugin_options_array');
+		if ( isset ( $options['do_zip_code_format_check'] ) && '' < $zip ) {
+			if ( ! preg_match ( "/^\d{5}([\-]?\d{4})?$/i", $zip ) ) {
+				return ( __( 'Invalid USPS Zip Code supplied.', 'wp-issues-crm' ) ); 			
+			}
+		}	
+		return ( '' );
+	}
 
 	private function get_zip_from_usps () {
 		

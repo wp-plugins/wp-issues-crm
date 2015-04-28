@@ -80,7 +80,7 @@ class WIC_List_Option_Group extends WIC_List_Constituent {
 				'entity_requested'			=> 'option_group', // entity_requested is not processed, since whole page is for option_group
 				'action_requested'			=> 'new_option_group',
 				'button_class'					=> 'button button-primary wic-form-button',
-				'button_label'					=> __('Add New Option Group', 'wp-issues-crm')
+				'button_label'					=> __('Add New', 'wp-issues-crm')
 			);	
 			$buttons .= WIC_Form_Parent::create_wic_form_button ( $button_args_main );
 

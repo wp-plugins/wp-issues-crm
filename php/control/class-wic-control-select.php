@@ -104,6 +104,22 @@ class WIC_Control_Select extends WIC_Control_Parent {
 		return ( $control );
 	
 	}
+	
+	/*********************************************************************************
+	*
+	* function to support bulk validation in upload process
+	*
+	*********************************************************************************/
+
+	public function valid_values() {
+		$args = array ( 'value' => '' );  
+		$options_array = $this->create_options_array( $args );
+		$valid_values = array();
+		foreach ( $options_array as $option ) {
+			$valid_values[] = $option['value'];		
+		}
+		return ( $valid_values );
+	}	
 		
 }
 

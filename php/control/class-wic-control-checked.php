@@ -28,4 +28,20 @@ class WIC_Control_Checked extends WIC_Control_Parent {
 		$this->value = 0;	
 	}
 
+	// 
+	public function validate() { 
+		$validation_error = '';
+		$class_name = 'WIC_Entity_' . $this->field->entity_slug;
+		$validator = $this->field->field_slug . '_validator';
+		if ( method_exists ( $class_name, $validator ) ) { 
+			$validation_error = $class_name::$validator ( $this->value );
+		} else { 
+			if ( '0' != $this->value && '1' != $this->value ) {
+				$validation_error = __( 'Invalid value for checked field.', 'wp-issues-crm' );
+			}		
+		}
+		return $validation_error;
+	}
+
+
 }	

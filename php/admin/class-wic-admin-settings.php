@@ -126,7 +126,6 @@ class WIC_Admin_Settings {
             'wp_issues_crm_settings_page' // page ID ( a group of settings sections)
         ); 
 
-		// naming of the callback with array elements (in the callbacks) is what ties the option array together 		
       add_settings_field(
             'use_postal_address_interface', // field id
             'Enable USPS Web Interface', // field label
@@ -142,6 +141,16 @@ class WIC_Admin_Settings {
             'wp_issues_crm_settings_page', // page 
             'postal_address_interface' // settings section within page
        ); 
+
+      add_settings_field(
+            'do_zip_code_format_check', // field id
+            'Verify USPS zip format', // field label
+            array( $this, 'do_zip_code_format_check_callback' ), // field call back 
+            'wp_issues_crm_settings_page', // page 
+            'postal_address_interface' // settings section within page
+       ); 
+
+
     
 	// Uninstall Settings (legend only)
       add_settings_section(
@@ -309,6 +318,10 @@ class WIC_Admin_Settings {
 	
 	}
 
+	public function do_zip_code_format_check_callback() {
+		printf( '<input type="checkbox" id="do_zip_code_format_check" name="wp_issues_crm_plugin_options_array[do_zip_code_format_check]" value="%s" %s />',
+            1, checked( '1', isset ( $this->plugin_options['do_zip_code_format_check'] ), false ) );
+	}
 
 
 	/*
@@ -319,20 +332,19 @@ class WIC_Admin_Settings {
 	// section legend call back
 	public function uninstall_legend() {
 		echo '<div id="uninstall"><p>' . __( 'WP Issues CRM does a partial uninstall of its own data if you "delete" it through the <a href="/wp-admin/plugins.php">plugins menu</a>.  It removes its entries
-			in the Wordpress options table -- which include the plugin options, database version, dictionary version and cached search histories. 
-			It also removes entries in the Wordpress user meta table for individual preference settings for the plugin.', 'wp-issues-crm') . '</p><p>' .  
-			__( 'However, for safety, it does not automatically remove its core tables -- the risk of data loss in a busy office is just too great. 
-			To completely deinstall WP Issues CRM, access the Wordpress database through phpmyadmin or through the mysql console and delete the following tables (usually prefixed with wp_wic_) :', 'wp-issues-crm' ) . '</p>' . 
-		'<ol><li>activity</li>' .
-		'<li>address</li>' .
-		'<li>constituent</li>' .
-		'<li>data_dictionary</li>' .
-		'<li>email</li>' .
-		'<li>form_field_groups</li>' .
-		'<li>option_group</li>' .
-		'<li>option_value</li>' .
-		'<li>phone</li>' .												
-		'<li>search_log</li></ol>' .		
+			in the Wordpress options table -- which include the plugin options, database version and cached search histories. 
+			It also removes entries in the Wordpress user meta table for individual preference settings for the plugin.
+			Finally, it removes its control and audit trail tables, with the exception of the dictionary (which may include user configured fields).', 'wp-issues-crm') . '</p><p>' .  
+			__( 'However, for safety, it does not automatically remove the core user built tables -- the risk of data loss in a busy office is just too great. 
+			To completely deinstall WP Issues CRM, access the Wordpress database through phpmyadmin or through the mysql console and delete the following tables (usually prefixed with "wp_wic_" ) :', 'wp-issues-crm' ) . '</p>' . 
+		'<ol>' . 
+			'<li>activity</li>' .
+			'<li>address</li>' .
+			'<li>constituent</li>' .
+			'<li>data_dictionary</li>' .
+			'<li>email</li>' .
+			'<li>phone</li>' . 
+		'</ol>' .		
 		'<p>' . __( 'Finally, run this command to delete post_meta data created by WP Issues CRM (this will not affect issue posts themselves):', 'wp-issues-crm' ) . '</p>' .
 		'<pre>DELETE FROM wp_postmeta WHERE meta_key LIKE \'wic_data_%\'</pre></div>' .
 		'<p>' . __( 'Take note: These steps should all be taken AFTER the plugin is deactivated -- otherwise it will automatically restore missing tables. ', 'wp-issues-crm' ) . '</p>' ;
@@ -359,12 +371,16 @@ class WIC_Admin_Settings {
 		if( isset( $input['user_name_for_postal_address_interface'] ) ) {
             $new_input['user_name_for_postal_address_interface'] = sanitize_text_field( $input['user_name_for_postal_address_interface'] );
       } 
+    		if( isset( $input['do_zip_code_format_check'] ) ) {
+            $new_input['do_zip_code_format_check'] = absint( $input['do_zip_code_format_check'] );
+      } 
   		if( isset( $input['access_level_required'] ) ) {
             $new_input['access_level_required'] = sanitize_text_field( $input['access_level_required'] );
       }
 		if( isset( $input['access_level_required_downloads'] ) ) {
             $new_input['access_level_required_downloads'] = sanitize_text_field( $input['access_level_required_downloads'] );
-      }        
+      }    
+           
       return ( $new_input );      
 	}
 
