@@ -101,5 +101,13 @@ class WIC_Form_Upload_Set_Defaults extends WIC_Form_Upload_Validate  {
 	protected function get_the_formatted_control ( $control ) {
 		return ( $control->update_control() ); 
 	}
+
+	protected function get_the_legends( $sql = '' ) {
+		$legend = '<p>' .  __( 'WP Issues CRM enforces validation and required field rules at the row and column level. For more understanding of how WP Issues CRM protects data quality, go to ', 'wp-issues-crm' ) . 
+			'<a href="http://wp-issues-crm.com/?page_id=74" target = "_blank">WPissuesCRM.com</a>.' . '</p>';
+		$legend = '<div class = "wic-upload-legend">' . $legend . '</div>';		
+		return $legend;
+		
+	}
 	 	
 }
