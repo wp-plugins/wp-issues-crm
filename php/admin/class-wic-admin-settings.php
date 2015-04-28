@@ -331,7 +331,10 @@ class WIC_Admin_Settings {
 	*/
 	// section legend call back
 	public function uninstall_legend() {
-		echo '<div id="uninstall"><p>' . __( 'WP Issues CRM does a partial uninstall of its own data if you "delete" it through the <a href="/wp-admin/plugins.php">plugins menu</a>.  It removes its entries
+		echo '<div id="uninstall">' .
+			'<p>' . __( 'If you simply wish to refresh original options settings, you can safely deactivate and delete WP Issues CRM and then reinstall it on
+			the <a href="/wp-admin/plugins.php">plugins menu</a>.  WP Issues CRM will come back up	with all of your data.', 'wp-issues-crm' ) . '</p>' 
+			. '<p>' . __( 'WP Issues CRM does a partial uninstall of its own data if you "delete" it through the <a href="/wp-admin/plugins.php">plugins menu</a>.  It removes its entries
 			in the Wordpress options table -- which include the plugin options, database version and cached search histories. 
 			It also removes entries in the Wordpress user meta table for individual preference settings for the plugin.
 			Finally, it removes its control and audit trail tables, with the exception of the dictionary (which may include user configured fields).', 'wp-issues-crm') . '</p><p>' .  
@@ -347,7 +350,7 @@ class WIC_Admin_Settings {
 		'</ol>' .		
 		'<p>' . __( 'Finally, run this command to delete post_meta data created by WP Issues CRM (this will not affect issue posts themselves):', 'wp-issues-crm' ) . '</p>' .
 		'<pre>DELETE FROM wp_postmeta WHERE meta_key LIKE \'wic_data_%\'</pre></div>' .
-		'<p>' . __( 'Take note: These steps should all be taken AFTER the plugin is deactivated -- otherwise it will automatically restore missing tables. ', 'wp-issues-crm' ) . '</p>' ;
+		'<p>' . __( 'Take note: These steps should all be taken AFTER the plugin is deactivated -- otherwise it will automatically restore missing tables. ', 'wp-issues-crm' ) . '</p>';
 				
 	}
 	// call back for the option array (used by options.php in handling the form on return)
