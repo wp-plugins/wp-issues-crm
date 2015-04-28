@@ -190,7 +190,7 @@ class WIC_Admin_Setup {
 
 	// add action to intercept press of download button before any headers sent 
 	public function do_download () { 
-		if ( isset( $_POST['wic-post-export-button'] ) && ! isset( $_POST['wic-form-button'] ) && ! isset( $_POST['wic-post-list-button'] )  ) {
+		if ( isset( $_POST['wic-post-export-button'] ) && ! isset( $_POST['wic_form_button'] ) ) {
 			WIC_List_Constituent_Export::do_constituent_download( $_POST['wic-post-export-button'], $_POST['search_id'] );	
 		} elseif ( isset( $_POST['wic-category-export-button'] ) ) { 
 			WIC_List_Constituent_Export::do_constituent_category_download( $_POST['wic-category-export-button'] );	

@@ -63,6 +63,7 @@ like incoming emails.
 == WP Issues CRM Upload Facility ==
 WP Issues CRM now includes a flexible upload subsystem. The upload subsystem is designed to handle large uploads as in an initial setup and also
 to support frequent smaller uploads to reduce manual data entry.
+= Upload Features =
 * Handles common file .csv and txt file formats
 * Learns your the field mappings for your repetitive file uploads
 * Validates data transparently so that you can fix problems as they emerge
@@ -83,6 +84,9 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 
 == Changelog ==
+= 2.2.2 =
+* Fix bug -- prevent repetitive downloads in certain key sequences
+* 
 = 2.2.1 =
 * Add Uploads subsystem -- major new functionality for uploads of small or very large data sets with high control and transparency 
 * Technical revisions to download process to support very large data sets
