@@ -39,6 +39,8 @@ class WIC_Admin_Ajax {
 
 		if ( 'upload' == $_POST['entity'] ) {
 			$required_capability = 'activate_plugins';		
+		} elseif ( 'search_log' == $_POST['entity'] ) {
+			$required_capability = '';		
 		}
 		self::ajax_check_capability( $required_capability ); 
 		
