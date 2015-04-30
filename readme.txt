@@ -4,7 +4,7 @@ Donate link:
 Tags: contact, crm, constituent, customer, issues, list
 Requires at least: 4.0
 Tested up to: 4.2.1
-Stable tag: 2.2.1
+Stable tag: 2.2.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -86,7 +86,8 @@ this product ourselves on a daily basis and we are committed to continuous long-
 == Changelog ==
 = 2.2.2 =
 * Fix bug -- prevent repetitive downloads in certain key sequences
-* 
+* Add search favoriting -- suggestion of Brendan Berger
+
 = 2.2.1 =
 * Add Uploads subsystem -- major new functionality for uploads of small or very large data sets with high control and transparency 
 * Technical revisions to download process to support very large data sets
