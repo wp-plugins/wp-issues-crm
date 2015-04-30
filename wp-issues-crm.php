@@ -40,7 +40,7 @@
 
 // set database version global;
 global $wp_issues_crm_db_version;
-$wp_issues_crm_db_version = '2.2';
+$wp_issues_crm_db_version = '2.2.2';
 
 
 // check for database install or updates -- note that the 'plugins_loaded' hook fires before is_admin is set, so too late if put in admin_setup
