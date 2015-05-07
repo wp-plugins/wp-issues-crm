@@ -162,7 +162,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		*  No real payoff in preserving it as an option for users.
 		*
 		*	Strategy: execution time aside, the risk with an insert approach is that 
-		*  users will can into memory and packet size issues with larger packets in
+		*  users will run into memory and packet size issues with larger packets in
 		* 	long insert statements -- rather than force naive users to change these parameters, keep likely 
 		* 	packet size low enough 
 		*	// http://dev.mysql.com/doc/refman/5.5/en/packet-too-large.html
@@ -260,6 +260,12 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 
 		} // end not eof loop
 
+
+		/*
+		*
+		* have uploaded staging table, now want to update the upload table with details about the uplad
+		*
+		*/
 		$method = "INSERTS in packets of $rows_per_packet rows via wpdb";
 		$database_insert_count = WIC_DB_Access::table_count ( $table_name ) > 0;
 		if ( $database_insert_count != $insert_count ) {
@@ -517,6 +523,10 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	/*
 	*
 	* support match functions
+	* this includes creation of preliminary tables for use in ultimate upload
+	*    	-- unmatched input records for new constituent creation
+	* 		-- unmatched issue records for new issue creation 
+	* also includes markup of staging table records as matched
 	*/
 	
 		// quick look up
@@ -928,7 +938,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	
 	/*
 	*
-	* Save the new constituents that have been identified through the matching process
+	* Save the new constituents ( previously identified through the matching process )
 	*
 	*/
 	public static function complete_upload_save_new_constituents	( $upload_id, $staging_table, $offset, $chunk_size ) {

@@ -74,6 +74,21 @@ class WIC_Entity_Search_Log extends WIC_Entity_Parent {
 	*	Formatters for search log list
 	*
 	***************************************************************************************************************************************/
+	public static function favorite_formatter ( $favorite ) {
+		$dashicon = $favorite ? '<span class="dashicons dashicons-star-filled"></span>' : '<span class="dashicons dashicons-star-empty"></span>';
+		return ( $dashicon );	
+	}	
+	
+	// update the favorite setting in AJAX call
+	public static function set_favorite ( $search_id, $data ) { 
+		$data = json_decode ( stripslashes ( $data ) );
+		$favorite = $data->favorite ? 1 : 0;		
+		$result = WIC_DB_Access::set_search_favorite ( $search_id, $favorite ); 
+		if ( false === $result ) {
+			echo __( 'Bad result on favorite toggle', 'wp-issues-crm' );		
+		}
+	}
+	
 	public static function serialized_search_array_formatter ( $serialized ) {
 		
 		global $wic_db_dictionary;
