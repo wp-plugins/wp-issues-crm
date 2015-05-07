@@ -4,7 +4,7 @@ Donate link:
 Tags: contact, crm, constituent, customer, issues, list
 Requires at least: 4.0
 Tested up to: 4.2.1
-Stable tag: 2.2.2
+Stable tag: 2.2.2.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -84,6 +84,8 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 
 == Changelog ==
+= 2.2.2.1 =
+* Eliminate use of prepend parameter in spl_autoload_register -- unnecessary and required PHP version 5.3.0; should now be OK with PHP 5.2.4
 = 2.2.2 =
 * Fix bug -- prevent repetitive downloads in certain key sequences
 * Add search favoriting -- suggestion of Brendan Berger
