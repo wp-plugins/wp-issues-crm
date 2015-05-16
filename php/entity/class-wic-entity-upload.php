@@ -588,8 +588,11 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 				
 				// invoke required checking -- does generate errors on empty if field is "individual" required
 				// group required enforced through match and insert steps
-				$error .= $control->required_check();
-
+				// skip email address and phone number here to allow single pass updates
+				$required_field_slug = $control->get_field_slug(); // $column may not equal $control->field->field_slug (which is protected)
+				if ( 'email_address' != $required_field_slug && 'phone_number' != $required_field_slug ) {
+					$error .= $control->required_check();
+				}
 				// do validation for constituent ID field that doesn't require validation in form context since not user supplied
 				// empty will be error for this
 				if ( 'constituent' == $column_map->$column->entity && 'ID' == $column_map->$column->field ) {

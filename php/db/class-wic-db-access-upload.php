@@ -1239,11 +1239,21 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 					$data_object_array['constituent_id']->set_value ( $staging_record->MATCHED_CONSTITUENT_ID );
 					// prepare a query array for those fields used in upload match/dedup checking for multi-value fields 
 					$query_array = array();
+					// set up test for missing email_address or phone_number will not store or update if missing (added to allow these to be blank in validation stage) 
+					$email_phone_missing = '';
 					foreach ( $data_object_array as $field_slug => $control ) { 
 						if ( $control->is_upload_dedup() ) {
 							$query_array = array_merge ( $query_array, $control->create_search_clause ( $search_clause_args ) );
 						}
+						// do the required testing deferred from validation stage
+						if ( 'email_address' == $field_slug  || 'phone_number' == $field_slug ) {
+							$email_phone_missing = $control->required_check();
+						}
 					} 
+					// by pass this entity if missing phone or email number.
+					if ( $email_phone_missing > '' ) {
+						continue; // go to the next entity						
+					}
 					// execute a search for the multivalue entity -- treating it as a top level entity, but query object is OK with that
 					$wic_access_object_array[$entity]->search ( $query_array, $search_parameters );
 					// if matches found, take the first for update purposes 

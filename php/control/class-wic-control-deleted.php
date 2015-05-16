@@ -3,9 +3,6 @@
 * wic-control-deleted.php
 *
 * supports fields of type deleted, which should be configured in dictionary with transient = true (1) 
-*		-- it is possible that other form fields may later be needed as transient (i.e., not saved in database),
-* 				also possible that the term is redundant and there are never any other transient fields, but 
-*				have given it a separate term for stability of the code (transient fields are bypassed in several places)
 *		-- every repeating group should be configured with a deleted type field with field_slug = screen_deleted
 *				( if it is desired to be able to delete rows from the form )
 *		-- the screen_deleted field should be assigned to a group within the entity which will determine its positioning

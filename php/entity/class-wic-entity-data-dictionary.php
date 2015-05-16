@@ -81,9 +81,11 @@ class WIC_Entity_Data_Dictionary extends WIC_Entity_Parent {
 		echo $list;
 	}
 	
-	protected function special_entity_value_hook ( &$wic_access_object ) {
+	protected function special_entity_value_hook ( &$wic_access_object ) { 
 		// field_slug value set in wic-db-access-dictionary->process_save_update_array 
-		$this->data_object_array['field_slug']->set_value( $wic_access_object->field_slug );
+		if ( '' == $this->data_object_array['field_slug']->get_value() ) {
+			$this->data_object_array['field_slug']->set_value( $wic_access_object->field_slug );
+		}
 		// need to bring this back to update form, since not created on save form, but instead by save process
 	}
 		

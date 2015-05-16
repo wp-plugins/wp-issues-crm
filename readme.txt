@@ -4,7 +4,7 @@ Donate link:
 Tags: contact, crm, constituent, customer, issues, list
 Requires at least: 4.0
 Tested up to: 4.2.1
-Stable tag: 2.2.2.1
+Stable tag: 2.2.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -84,6 +84,12 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 
 == Changelog ==
+= 2.2.3 =
+* Move required check for email_address and phone_number from validation stage to final upload stage to allow files missing data on some records to be uploaded in a single pass
+* Allow update of readonly custom fields on upload
+* Allow addition of custom fields while constituent table is empty (previously generated error)
+* Fix bug that hid system name for fields on update of custom fields
+* CSS tweak on option group update form 
 = 2.2.2.1 =
 * Eliminate use of prepend parameter in spl_autoload_register -- unnecessary and required PHP version 5.3.0; should now be OK with PHP 5.2.4
 = 2.2.2 =
