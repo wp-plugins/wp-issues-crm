@@ -820,8 +820,7 @@ input.wic-input.option-label {
 
 #option_value-control-set input.wic-input.value-order {
 	border: none;
-	margin: 10px 5px 0 5px;
-	width: 50px;
+	width: 30px;
 }
 
 
@@ -892,7 +891,7 @@ button.wic-post-list-button.pl-even:hover {
 #wic-post-list ul.wic-post-list-headers {
 	font-weight: 700;
 	list-style: none;
-	padding: .88889% .88889%;
+	padding: 15px .88889%;
 	margin: 0;
 }
 
@@ -900,7 +899,7 @@ button.wic-post-list-button.pl-even:hover {
 	font-size: 1.2em;	
 	font-weight: 700;
 	list-style: none;
-	padding: .88889% .88889%;
+	padding: 15px .88889%;
 	margin: 0;
 }
 
@@ -926,7 +925,7 @@ button.wic-post-list-button {
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
 	margin: 0;
-	padding: .88889% .88889%;
+	padding: 15px .88889%;
 	vertical-align: top;
 	list-style: none;
 	width: 100%;	
@@ -1381,16 +1380,6 @@ label.wic-label.wic-post-export-button {
 .pl-trend-pro { width: 10%; }
 .pl-trend-con { width: 10%; }
 .pl-trend-post_category { width: 30%; }
-.wic-post-list-header.pl-search_log-entity,
-.wic-post-list-field.pl-search_log-entity {
-	display: none;
-}
-.pl-search_log-user_id{ width:14.1%;}
-.pl-search_log-search_time{ width:14.1%;}
-.pl-search_log-serialized_search_array{ width:42.3%;}
-.pl-search_log-download_time{ width:14.1%;}
-.pl-search_log-result_count { width: 14.1%}
-li.pl-search_log-serialized_search_parameters{ display: none;}
 
 .pl-option_group-option_group_desc{ width:30%;}
 .pl-option_group-enabled{ width:10%;}
@@ -1412,6 +1401,81 @@ li.pl-search_log-serialized_search_parameters{ display: none;}
 .wic-list-legend {
 	margin: 10px 7.11111%;
 }
+
+/* 
+* 
+* special formatting for search_log list 
+*
+*/
+
+/* split list lines into two buttons  -- for other lists, single 100% button*/
+.wic-post-list-button.wic-search-log-list-button {
+	width: 96.444444%
+}
+.wic-favorite-button {
+	border: none;	
+	background: transparent;
+	cursor: pointer;
+	padding: 0;
+	width: 3.555555%;
+}
+
+/* line height setting lines up stars vertically with first line of main button */
+.wic-favorite-button span.dashicons-star-filled {
+	color: #FFD700;
+	font-size: 2em;
+	line-height: 1.8em;
+}
+.wic-favorite-button span.dashicons-star-empty {
+	color: #aaa;
+	font-size: 1.8em;
+	line-height: 1.8em;
+}
+
+/* want main background to show through for the header line in search log */
+li.pl-odd.search_log {
+	background: transparent;
+}
+/* this space now appears in every list, but with zero width */
+div.wic-post-list-headers-spacer {
+	width: 0;
+	margin: 0;
+}
+/* give it width only in search_log to align with button*/
+div.wic-post-list-headers-spacer.search_log {
+	background: transparent;
+	display: inline-block;
+	height: 2em;
+	width: 3.555555%;
+	margin: 0;
+}
+/* wrapped headers in div for styling in search log case */
+div.wic-post-list-headers.search_log {
+	display: inline-block;
+	width: 96.444444%;
+}
+
+/* elements present in sort row and needed for processing, but not displayed */
+.wic-post-list-header.pl-search_log-entity,
+.wic-post-list-field.pl-search_log-entity {
+	display: none;
+}
+.wic-post-list-header.pl-search_log-favorite,
+.wic-post-list-field.pl-search_log-favorite {
+	display: none;
+}
+li.pl-search_log-serialized_search_parameters { 
+	display: none;
+}
+
+/* dislpayed widths set to match button widths scaled by .964444 */
+.pl-search_log-search_time{ width:18.33333%;}
+.pl-search_log-serialized_search_array{ width:29.493%;}
+.pl-search_log-download_time{ width:14.74%;}
+.pl-search_log-result_count { width: 14.74%}
+
+
+
 
 /***
 * Trend form/list styling

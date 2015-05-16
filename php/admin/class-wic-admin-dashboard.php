@@ -82,16 +82,17 @@ class WIC_Admin_Dashboard {
 		$top_menu_buttons = array (
 			array ( 'search_log', 'back', '<span class="dashicons dashicons-arrow-left-alt"></span>' , __( 'Previous search or item', 'wp-issues-crm' ), $disable_backward ),
 			array ( 'search_log', 'forward', '<span class="dashicons dashicons-arrow-right-alt"></span>', __( 'Next search or item', 'wp-issues-crm' ), $disable_forward ),
+			
 			// go to constituent options
-			array ( 'constituent', 	'new_blank_form',	'<span class="dashicons dashicons-plus-alt"></span><span class="dashicons dashicons-smiley">' , __( 'New constituent.', 'wp-issues-crm' ), false ), // new
+			array ( 'constituent', 	'new_blank_form',	'<span class="dashicons dashicons-plus-alt"></span><span class="dashicons dashicons-smiley"></span>' , __( 'New constituent.', 'wp-issues-crm' ), false ), // new
 			array ( 'constituent', 	'new_form',		'<span class="dashicons dashicons-search"></span><span class="dashicons dashicons-smiley"></span>', __( 'Search constituents.', 'wp-issues-crm' ), false ), // search
 			array ( 'dashboard', 	'my_cases',	 '<span class="dashicons dashicons-star-filled"></span><span class="dashicons dashicons-smiley"></span>', __( 'Constituents assigned to me.', 'wp-issues-crm' ), false  ),
-			// array ( 'constituent', 	'get_latest',	'<span class="dashicons dashicons-smiley"></span><span class="dashicons dashicons-arrow-left-alt"></span>', __( 'Last constituent.', 'wp-issues-crm' ), false ), // new
+			
 			// go to issue options
 			array ( 'issue', 			'new_blank_form',	'<span class="dashicons dashicons-plus-alt"></span><span class="dashicons dashicons-format-aside"></span>', __( 'New issue.', 'wp-issues-crm' ), false ),
 			array ( 'issue', 			'new_form',		'<span class="dashicons dashicons-search"></span><span class="dashicons dashicons-format-aside"></span>', __( 'Search for issues.', 'wp-issues-crm' ), false ),
 			array ( 'dashboard', 	'my_issues',	'<span class="dashicons dashicons-star-filled"></span><span class="dashicons dashicons-format-aside"></span>', __( 'Issues assigned to me.', 'wp-issues-crm' ), false ),
-			// array ( 'issue', 			'get_latest',	'<span class="dashicons dashicons-format-aside"></span><span class="dashicons dashicons-arrow-left-alt"></span>', __( 'Last issue.', 'wp-issues-crm' ), false ),
+
 			// analyze/download			
 			array ( 'trend', 			'new_form',		'<span class="dashicons dashicons-chart-line"></span>', __( 'Get activity/issue counts.', 'wp-issues-crm' ), false ), 
 			// go to search history

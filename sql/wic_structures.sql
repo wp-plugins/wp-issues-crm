@@ -187,6 +187,7 @@ CREATE TABLE wp_wic_phone (
 
 CREATE TABLE wp_wic_search_log (
   ID bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  favorite tinyint(1) NOT NULL,
   user_id bigint(20) NOT NULL,
   search_time varchar(20) NOT NULL,
   entity varchar(30) NOT NULL,
@@ -196,7 +197,8 @@ CREATE TABLE wp_wic_search_log (
   result_count bigint(20) NOT NULL,
   PRIMARY KEY (ID),
   KEY user_entity_time (user_id,entity,search_time),
-  KEY user_time (user_id,search_time)
+  KEY user_time (user_id,search_time),
+  KEY user_favorite_time (user_id,favorite,search_time)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 CREATE TABLE wp_wic_upload (
