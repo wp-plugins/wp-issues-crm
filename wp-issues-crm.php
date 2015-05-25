@@ -3,7 +3,7 @@
  * Plugin Name: WP Issues CRM
  * Plugin URI: http://wp-issues-crm.com 
  * Description: Constituent Relationship Management for organizations that respond to constituents.  Organizes constituent contacts ( calls, etc. ) around Wordpress posts and categories. 
- * Version: 2.2.1
+ * Version: 2.2.4.1
  * Author: Will Brownsberger
  * Author URI: http://willbrownsberger.com
  * Text Domain: wp-issues-crm
@@ -40,7 +40,7 @@
 
 // set database version global;
 global $wp_issues_crm_db_version;
-$wp_issues_crm_db_version = '2.2';
+$wp_issues_crm_db_version = '2.2.2'; // no change in tag/2.2.2.1 or tag/2.2.3 or tag/2.2.4
 
 
 // check for database install or updates -- note that the 'plugins_loaded' hook fires before is_admin is set, so too late if put in admin_setup
@@ -55,7 +55,7 @@ register_activation_hook ( __FILE__, array ( 'WIC_Admin_Setup', 'wic_set_up_role
 
 // if is_admin, load necessary ( and only necessary ) components in admin
 if ( is_admin() ) { 
-	if ( ! spl_autoload_register('wp_issues_crm_autoloader', true, true ) ) { // true throw errors, true, prepend
+	if ( ! spl_autoload_register('wp_issues_crm_autoloader' ) ) { // omit parameters --- no need to prepend which would force PHP Version 5.3.0
 		die ( __( 'Fatal Error: Unable to register wp_issues_crm_autoloader in wp-issues-crm.php', 'wp-issues-crm' ) );	
 	};
 	$wic_admin_setup = new WIC_Admin_Setup;
