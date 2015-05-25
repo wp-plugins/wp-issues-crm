@@ -4,7 +4,7 @@ Donate link:
 Tags: contact, crm, constituent, customer, issues, list
 Requires at least: 4.0
 Tested up to: 4.2.2
-Stable tag: 2.2.4
+Stable tag: 2.2.4.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -85,6 +85,9 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 
 == Changelog ==
+= 2.2.4.1 =
+* Add FAQ link to constituent forms.
+* CSS tweaks
 = 2.2.4 =
 * Add responsive CSS to support small screens (<960px) for most used functions -- issue/constituent add/search/update and also trends and search log
 * Hide upload, storage, field and option management on small screen devices (<960px) -- complexity not amenable to small screens; also greater security risks to allow these functions on mobile devices

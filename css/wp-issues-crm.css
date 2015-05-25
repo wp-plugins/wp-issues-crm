@@ -1647,7 +1647,6 @@ td.wic-statistic  {
 	#wic-form-sidebar-groups {
 		border: none;
 		display: inline-block;
-		height: initial;
 		overflow-y: visible;
 		overflow-x: visible;
 		margin: 0;
@@ -1731,7 +1730,7 @@ td.wic-statistic  {
 	}
 
 	.wic-input.extension {
-		visibility: hidden;
+		display: none;
 	} 
 
 	
@@ -1753,6 +1752,7 @@ td.wic-statistic  {
 	.wic-input.activity-date {
 		width: 38%;
 	}
+	
 	.wic-field-subgroup-activity_issue .wic-input.issue,
 	#wic-field-subgroup-activity_issue .wic-input.issue {
 		width: 67.4%;
@@ -1846,9 +1846,15 @@ td.wic-statistic  {
 		margin-bottom: 0;
 	}	
 
+	#wic-form-constituent-save .wic-input.activity-date,
 	#wic-form-constituent-update .wic-input.activity-date {
-		width: 38%;
+		width: 30%;
 	}
+	
+	.wic-form-button.wic-activity-issue-link-button {
+		width: 26%;
+		margin: 0 .05%;
+	}	
 	
 	.wic-input.mark-deleted {
 		width: 38%;
