@@ -3,8 +3,8 @@ Contributors: Will Brownsberger
 Donate link: 
 Tags: contact, crm, constituent, customer, issues, list
 Requires at least: 4.0
-Tested up to: 4.2.1
-Stable tag: 2.2.3
+Tested up to: 4.2.2
+Stable tag: 2.2.4
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -15,7 +15,8 @@ CRM for offices that use Wordpress as their central communication tool, but have
 WP Issues CRM is a constituent/customer relationship management database designed for organizations that use Wordpress
 to organize their content, but have constituencies broader than their Wordpress user universe.  It uses the post and category structure of 
 Wordpress to define and classify issues, but uses custom tables for high performance access to a larger constituent database.  It offers
-easy uploading for initial conversion and for automation of data input.  It also offers easy downloading for outgoing communications.
+easy uploading for initial conversion and for automation of data input.  It also offers easy downloading for outgoing communications. 
+Main forms are mobile friendly (responsive CSS). 
 
 == Installation ==
 
@@ -84,6 +85,10 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 
 == Changelog ==
+= 2.2.4 =
+* Add responsive CSS to support small screens (<960px) for most used functions -- issue/constituent add/search/update and also trends and search log
+* Hide upload, storage, field and option management on small screen devices (<960px) -- complexity not amenable to small screens; also greater security risks to allow these functions on mobile devices
+* Other CSS tweaks for useability
 = 2.2.3 =
 * Move required check for email_address and phone_number from validation stage to final upload stage to allow files missing data on some records to be uploaded in a single pass
 * Allow update of readonly custom fields on upload
