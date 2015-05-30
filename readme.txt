@@ -4,7 +4,7 @@ Donate link:
 Tags: contact, crm, constituent, customer, issues, list
 Requires at least: 4.0
 Tested up to: 4.2.2
-Stable tag: 2.2.4.1
+Stable tag: 2.2.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -85,6 +85,8 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 
 == Changelog ==
+= 2.2.5 =
+* Add hook to support exclusion of private posts from front end even for administrators when serving infinite scroll in theme Responsive Tabs
 = 2.2.4.1 =
 * Add FAQ link to constituent forms.
 * CSS tweaks
