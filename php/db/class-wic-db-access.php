@@ -249,7 +249,19 @@ abstract class WIC_DB_Access {
 		if ( 1 != $update_result ) {
 			WIC_Function_Utilities::wic_error ( 'Unknown database error in posting download event to search log.', __FILE__, __LINE__, __METHOD__, true );
 		}	
+		// mark any downloaded search as favorite
+		self::set_search_favorite( $id, 1 );
 	}		
+
+	// update favorite bit -- only used for search log
+	public static function set_search_favorite ( $id, $favorite ) {
+		global $wpdb;
+		$table = $wpdb->prefix . 'wic_search_log';
+		$sql = "UPDATE $table SET favorite = $favorite WHERE ID = $id";
+		$result = $wpdb->query( $sql );			
+		return ( $result);
+	} 
+
 
 
 	/****************************************************************************************

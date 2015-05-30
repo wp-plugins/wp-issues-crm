@@ -27,7 +27,9 @@ class WIC_Form_Constituent_Search extends WIC_Form_Parent  {
 			'button_label'					=> __('Search', 'wp-issues-crm')
 		);	
 		$buttons .= $this->create_wic_form_button ( $button_args_main );
-	
+		
+		$buttons .=	'<a target = "_blank" href="http://wp-issues-crm.com/?page_id=155">' . __( 'Constituent FAQ', 'wp-issues-crm' ) . '</a>';
+			
 		return $buttons;
 		
 	}
