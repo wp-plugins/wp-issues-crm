@@ -363,7 +363,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	
 	private function null_to_empty ( $value ) {
 		$value = ( '\N' == $value  ||  'NULL' == $value || NULL === $value ) ? '' : $value;
-		return $value; 
+		return ( trim ( $value ) ); // discard trailing/leading white spaces for all values 
 	}	
 	
 	// limit column name to letters, digits and underscore

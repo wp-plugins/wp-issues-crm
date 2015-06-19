@@ -24,7 +24,7 @@ class WIC_List_Search_Log extends WIC_List_Parent {
    	
    	// create a new WIC access object and search for the id's
   		$wic_query2 = WIC_DB_Access_Factory::make_a_db_access_object( $wic_query->entity );
-		$wic_query2->list_by_id ( $id_list, 'DESC' ); 
+		$wic_query2->list_by_id ( $id_list ); 
 		
 		// loop through the rows and output a list item for each
 		foreach ( $wic_query2->result as $row_array ) { 
