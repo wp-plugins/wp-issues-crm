@@ -67,6 +67,7 @@ abstract class WIC_DB_Access {
 		if ( isset ( $search_parameters['log_search'] ) ) {	
 			if ( $search_parameters['log_search'] ) { 
 				global $wpdb;
+				$search_log_table = $wpdb->prefix . 'wic_search_log';
 				$user_id = get_current_user_id();
 	
 				$search = serialize( $meta_query_array );
@@ -74,7 +75,7 @@ abstract class WIC_DB_Access {
 				
 				$sql = $wpdb->prepare(
 					"
-					INSERT INTO wp_wic_search_log
+					INSERT INTO $search_log_table
 					( user_id, search_time, entity, serialized_search_array,  serialized_search_parameters, result_count  )
 					VALUES ( $user_id, NOW(), %s, %s, %s, %s)
 					", 
@@ -217,8 +218,9 @@ abstract class WIC_DB_Access {
 	public static function get_search_from_search_log ( $id ) {
 		
 		global $wpdb;
+		$search_log_table = $wpdb->prefix . 'wic_search_log';
 		
-		$search_object = $wpdb->get_row ( "SELECT * from wp_wic_search_log where id = $id " );
+		$search_object = $wpdb->get_row ( "SELECT * from $search_log_table where id = $id " );
 		
 		$return = array (
 			'user_id' => $search_object->user_id,
@@ -236,9 +238,11 @@ abstract class WIC_DB_Access {
 	*/
 	public static function mark_search_as_downloaded ( $id ) {
 		global $wpdb;
+		$search_log_table = $wpdb->prefix . 'wic_search_log';
+		
 		$sql = $wpdb->prepare (
 			"
-			UPDATE wp_wic_search_log
+			UPDATE $search_log_table
 			SET download_time = %s
 			WHERE id = %s
 			",
@@ -249,7 +253,19 @@ abstract class WIC_DB_Access {
 		if ( 1 != $update_result ) {
 			WIC_Function_Utilities::wic_error ( 'Unknown database error in posting download event to search log.', __FILE__, __LINE__, __METHOD__, true );
 		}	
+		// mark any downloaded search as favorite
+		self::set_search_favorite( $id, 1 );
 	}		
+
+	// update favorite bit -- only used for search log
+	public static function set_search_favorite ( $id, $favorite ) {
+		global $wpdb;
+		$search_log_table = $wpdb->prefix . 'wic_search_log';
+		$sql = "UPDATE $search_log_table SET favorite = $favorite WHERE ID = $id";
+		$result = $wpdb->query( $sql );			
+		return ( $result);
+	} 
+
 
 
 	/****************************************************************************************

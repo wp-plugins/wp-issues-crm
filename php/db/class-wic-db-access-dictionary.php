@@ -17,15 +17,18 @@ class WIC_DB_Access_Dictionary Extends WIC_DB_Access_WIC {
 		
 		// check used custom field names on constituent table
 		$table1 = $wpdb->prefix . 'wic_constituent';
-		$table_rows = $wpdb->get_results (
+		$table_columns = $wpdb->get_results (
 			"
-			SELECT * FROM $table1 WHERE 1
-			LIMIT 0, 1		
-			", ARRAY_A
+			SHOW COLUMNS FROM $table1 
+			"
 		);	
-		$column_names = array_keys ( $table_rows[0] );
+
+		$column_names = array();
+		foreach ( $table_columns as $table_column ) {
+			$column_names[] = $table_column->Field;		
+		}
 		$filtered_column_names = array_filter ( $column_names, array ( $this, 'filter_custom_columns' ) );
-		
+
 		// determine new field name 
 		if ( count ( $filtered_column_names ) > 0 ) {
 			rsort ( $filtered_column_names );
