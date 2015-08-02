@@ -8,16 +8,18 @@ class WIC_Control_Range extends WIC_Control_Parent {
 	
 	protected $value_lo = '';
 	protected $value_hi = '';	
-	
+
 	public function search_control () { // no option to suppress on search -- don't use a range control if suppressing on search
 		$final_control_args = $this->default_control_args;
 		$final_control_args['readonly'] = false;
 		$final_control_args['value'] = $this->value_lo;
+		$final_control_args['placeholder'] = $this->default_control_args['placeholder'] > '' ? $this->default_control_args['placeholder'] . ' (low) ' : ''; 
 		$field_slug_base = $final_control_args['field_slug'];
 		$final_control_args['field_slug'] = $field_slug_base . '[lo]';	
 		$control = $this->create_control( $final_control_args ) ;
 		$final_control_args['field_label'] = ' <=> ';	
 		$final_control_args['value'] = $this->value_hi;	
+		$final_control_args['placeholder'] = $this->default_control_args['placeholder'] > '' ? $this->default_control_args['placeholder'] . ' (high) ' : '';
 		$final_control_args['field_slug'] = $field_slug_base . '[hi]';
 		$final_control_args['label_class'] = 'wic-label-2';  
 		$control .= $this->create_control( $final_control_args ) ;
