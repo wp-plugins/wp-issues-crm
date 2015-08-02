@@ -16,7 +16,7 @@ class WIC_Admin_Settings {
 
 	// sets up WP settings interface	
 	public function __construct() { // class instantiated in plugin main 
-		add_action('admin_init', array ( $this, 'settings_setup') );
+		add_action( 'admin_init', array ( $this, 'settings_setup') );
 		$this->plugin_options = get_option( 'wp_issues_crm_plugin_options_array' );
 	}	
 	
@@ -25,7 +25,7 @@ class WIC_Admin_Settings {
 		
 		// registering only one setting, which will be an array -- will set up nonces when called
 		register_setting(
-			'wp_issues_crm_plugin_options', // Option Group
+			'wp_issues_crm_plugin_options', // Option Group (have only one option)
 			'wp_issues_crm_plugin_options_array', // Option Name
 			array ( $this, 'sanitize' ) // Sanitize call back
 		);
@@ -150,11 +150,25 @@ class WIC_Admin_Settings {
             'postal_address_interface' // settings section within page
        ); 
 
-
-    
-	// Uninstall Settings (legend only)
+		// financial transactions settings 
       add_settings_section(
-            'uninstal', // setting ID
+            'enable_financial_activities', // setting ID
+            'Enable Financial Activities', // Title
+            array( $this, 'enable_financial_activities_legend_callback' ), // Callback
+            'wp_issues_crm_settings_page' // page ID ( a group of settings sections)
+        ); 
+
+      add_settings_field(
+            'financial_activity_types', // field id
+            'Financial Activity Type Codes', // field label
+            array( $this, 'financial_activity_types_callback' ), // field call back 
+            'wp_issues_crm_settings_page', // page 
+            'enable_financial_activities' // settings section within page
+       ); 
+    
+		// Uninstall Settings (legend only)
+      add_settings_section(
+            'uninstall', // setting ID
             'Uninstalling WP Issues CRM', // Title
             array( $this, 'uninstall_legend' ), // Callback
             'wp_issues_crm_settings_page' // page ID ( a group of settings sections)
@@ -313,20 +327,40 @@ class WIC_Admin_Settings {
 
 	// setting field call back
 	public function user_name_for_postal_address_interface_callback() {
+		$value = isset( $this->plugin_options['user_name_for_postal_address_interface'] ) ? $this->plugin_options['user_name_for_postal_address_interface']: '';
 		printf( '<input type="text" id="user_name_for_postal_address_interface" name="wp_issues_crm_plugin_options_array[user_name_for_postal_address_interface]"
-				value ="%s" />', $this->plugin_options['user_name_for_postal_address_interface'] );
-	
-	}
+				value ="%s" />', $value );
+		}
 
 	public function do_zip_code_format_check_callback() {
 		printf( '<input type="checkbox" id="do_zip_code_format_check" name="wp_issues_crm_plugin_options_array[do_zip_code_format_check]" value="%s" %s />',
             1, checked( '1', isset ( $this->plugin_options['do_zip_code_format_check'] ), false ) );
 	}
+	/*
+	*
+	* Financial Activity Types Callback
+	*
+	*/
+	// section legend call back
+	public function enable_financial_activities_legend_callback() {
+		echo 
+		'<p>' . __( 'WP Issues CRM can be used to track financial transactions. Simply enter below the Activity Type codes <em>separated by commas</em> for which amounts should be recorded.' , 'wp-issues-crm' ) . '</p>' . 
+		'<p>' . __( 'For example, if you defined Activity Type Options "Check Contribution" coded as "CH" and "Online Contribution" coded as "OC", you would enter them below like so (no quotation marks):' , 'wp-issues-crm' ) . ' <code>CH,OC</code>' . '</p>' . 
+		'<p>' . __( 'Activities of these types will then be stored and displayed with an amount field formatted as currency.' , 'wp-issues-crm' ) .  '</p>' ;
+	}
+	
+	// setting field call back
+	public function financial_activity_types_callback() { 
+		$value = isset ( $this->plugin_options['financial_activity_types'] ) ? $this->plugin_options['financial_activity_types'] : '';
+		printf( '<input type="text" id="financial_activity_types" name="wp_issues_crm_plugin_options_array[financial_activity_types]"
+				value ="%s" />', $value );
+	}
+
 
 
 	/*
 	*
-	* Uninstal Legend
+	* Uninstall Legend
 	*
 	*/
 	// section legend call back
@@ -374,7 +408,7 @@ class WIC_Admin_Settings {
 		if( isset( $input['user_name_for_postal_address_interface'] ) ) {
             $new_input['user_name_for_postal_address_interface'] = sanitize_text_field( $input['user_name_for_postal_address_interface'] );
       } 
-    		if( isset( $input['do_zip_code_format_check'] ) ) {
+    	if( isset( $input['do_zip_code_format_check'] ) ) {
             $new_input['do_zip_code_format_check'] = absint( $input['do_zip_code_format_check'] );
       } 
   		if( isset( $input['access_level_required'] ) ) {
@@ -383,7 +417,17 @@ class WIC_Admin_Settings {
 		if( isset( $input['access_level_required_downloads'] ) ) {
             $new_input['access_level_required_downloads'] = sanitize_text_field( $input['access_level_required_downloads'] );
       }    
-           
+      if( isset( $input['financial_activity_types'] ) ) {
+      	   $type_array = explode ( ',', $input['financial_activity_types'] );
+      	   $clean_type_array = array();
+      	   foreach ( $type_array as $type ) {
+      	   	$clean_type = sanitize_text_field( $type );
+					if ( $clean_type > '' ) { 
+						$clean_type_array[] = $clean_type;
+					}     	   
+      	   } 
+      	   $new_input['financial_activity_types'] = implode (',', $clean_type_array );
+      }  
       return ( $new_input );      
 	}
 

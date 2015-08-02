@@ -5,6 +5,7 @@ CREATE TABLE wp_wic_activity (
   constituent_id bigint(20) unsigned NOT NULL,
   activity_date varchar(10) NOT NULL,
   activity_type varchar(255) DEFAULT NULL,
+  activity_amount decimal(20,2) NOT NULL,
   issue bigint(20) NOT NULL COMMENT 'post_id for associated issue',
   pro_con varchar(255) NOT NULL,
   activity_note text NOT NULL,

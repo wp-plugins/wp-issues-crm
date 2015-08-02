@@ -1,6 +1,6 @@
 /*
 *
-* wic-utilities.js
+* wic-utilities.js (misc ui functions not primarily using jquery -- see also wic-jquery-ui.js)
 *
 */
 
@@ -126,11 +126,11 @@ function moreFields( base ) {
 	insertHere.parentNode.insertBefore( newFields, insertHere );
 	jQuery('#wic-form-constituent-update').trigger('checkform.areYouSure'); /* must also set 'addRemoveFieldsMarksDirty' : true in Are you sure*/
 	jQuery('#wic-form-constituent-save').trigger('checkform.areYouSure');
-	// reactivate datepicker on child fields 	
- 	jQuery( newFields ).find( ".datepicker" ).removeClass('hasDatepicker');	
+	// activate datepicker on child fields (in wic-jquery-ui.js do not activate datepicker unless visible ) 
  	jQuery( newFields ).find( ".datepicker" ).datepicker({
 			 dateFormat: "yy-mm-dd"
-		});
+	}); 
+	setChangedActivityTypeListeners();
 }
 
 // supports moreFields by walking node tree for whole multi-value group to copy in new name/ID values

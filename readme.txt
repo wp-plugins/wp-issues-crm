@@ -31,13 +31,20 @@ with your previous system.
 
 == Frequently Asked Questions ==
 
+= There are no issues in the “Activity issue?” drop down. WTF? =
+
+Not all issues appear in the activity drop down. WP Issues CRM allows you to control the dropdown issues list to suit your workflow:
+
+1. To cause an issue to always appear in the dropdown, go to the issue itself and select “Always appear in issue dropdown” under the Activity Tracking section. Don’t forget to then save the issue.
+1. If you want your last viewed or recently used issues to automatically appear in the drop down, go to Settings and check Allow Issue Preferences. Save Settings. Then go to your own User Preferences. Check “Last viewed” to put your last viewed issue in the drop down. Select a “Last Used” option. In addition to showing open issues (those selected to “Always Appear”), you can show either your most recently used issues or the issues that you have most frequently used among the last 30 activities you have updated.
+1. If you Select “Never appear in issue dropdown” under the Activity Tracking section for an issue, it will never appear in the dropdown, even if it is the last viewed or a recently or frequently used issue.
+
 = Where I can I get support? =
 
 For questions, the best route is the support forum at http://wordpress.org/support/plugin/wp-issues-crm. 
 
 If necessary, please do contact the author at help@wp-issues-crm.com 
 -- we welcome feedback and do want to know how we can continue to improve this product.  
-
 
 = Where can I view documenation? =
 

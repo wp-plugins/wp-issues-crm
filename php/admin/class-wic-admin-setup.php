@@ -77,7 +77,7 @@ class WIC_Admin_Setup {
 			wp_enqueue_script(
 				'wic-jquery-ui',
 				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-jquery-ui.js' , __FILE__ ),
-				array( 'jquery-ui-datepicker', 'jquery-ui-selectmenu','jquery-ui-menu'  )
+				array( 'jquery-ui-datepicker', 'jquery-ui-selectmenu', 'jquery-ui-menu', 'jquery-ui-spinner'  )
 			);
 
 			wp_enqueue_script(

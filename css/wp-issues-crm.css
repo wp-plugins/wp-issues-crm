@@ -450,16 +450,6 @@ a#wic-email-icon-link:hover {
 	display: none;
 }
 
-#wic-field-subgroup-activity,
-.wic-field-subgroup-activity,
-#wic-field-subgroup-activity_issue,
-.wic-field-subgroup-activity_issue,
-#wic-field-subgroup-activity_note,
-#wic-field-subgroup-address_line_1,
-.wic-field-subgroup-address_line_1 {
-	margin: 0 0 10px 0;
-}
-
 .wic-field-subgroup-activity_note {
 	border-bottom: 1px dashed #ccc;
 	padding-bottom: 10px;
@@ -480,6 +470,64 @@ a#wic-email-icon-link:hover {
 	
 }
 
+/* Activity fields */
+#wic-field-subgroup-activity,
+.wic-field-subgroup-activity,
+#wic-field-subgroup-activity_amount,
+.wic-field-subgroup-activity_amount,
+#wic-field-subgroup-activity_issue,
+.wic-field-subgroup-activity_issue,
+#wic-field-subgroup-activity_note,
+#wic-field-subgroup-address_line_1,
+.wic-field-subgroup-address_line_1 {
+	margin: 0 0 10px 0;
+}
+
+#wic-form-constituent-update .wic-multivalue-field-subgroup.wic-field-subgroup-activity,
+#wic-form-constituent-save .wic-multivalue-field-subgroup.wic-field-subgroup-activity {
+	display: inline-block;
+	width: 51.6%;
+}
+
+#wic-form-constituent-update .wic-multivalue-field-subgroup.wic-field-subgroup-activity_amount,
+#wic-form-constituent-save .wic-multivalue-field-subgroup.wic-field-subgroup-activity_amount {
+	display: inline-block;
+	width: 45.6%;
+}
+
+#wic-form-constituent-update .wic-field-subgroup-activity .wic-input-deleted-label,
+#wic-form-constituent-save .wic-field-subgroup-activity .wic-input-deleted-label {
+	margin: 0 5.147% 0 0; 
+}
+
+#wic-form-constituent-update select.wic-input.activity-type,
+#wic-form-constituent-save select.wic-input.activity-type {
+	margin-right: 2.3%;
+	width: 35.55%;
+}
+
+#wic-form-constituent-update .wic-label.activity-date,
+#wic-form-constituent-save .wic-label.activity-date {
+	display: none;
+}
+
+#wic-form-constituent-update .wic-input.activity-date,
+#wic-form-constituent-save .wic-input.activity-date {
+	width: 45%;
+}
+
+#wic-form-constituent-update .wic-input.activity-amount,
+#wic-form-constituent-save .wic-input.activity-amount {
+	width: 47.5%;
+}
+
+#wic-form-constituent-update .wic-form-button.wic-activity-issue-link-button,
+#wic-form-constituent-save .wic-form-button.wic-activity-issue-link-button {
+	overflow-x: hidden;
+	width: 46%;
+}
+
+label.wic-label.activity-amount,
 label.wic-label.activity-type, 
 label.wic-label.issue {
 	display: none;
@@ -493,13 +541,15 @@ label.wic-label.activity-date {
 	padding: 0 .6%;
 }
 
+/* this is the size applicable in the search form -- scaled up in rows in save/update forms */
+.wic-input.activity-amount, 
 .wic-input.activity-date {
-	width: 25%;
+	width: 23.4375%;
 }
 
-/* widen it on update form since lose range and want to line up issue link button */
-#wic-form-constituent-update .wic-input.activity-date {
-	width: 18%;
+.wic-label-2.activity-amount {
+	display: inline-block;
+	padding: 0 1.8% 0 1.0%;
 }
 
 .wic-field-subgroup-activity_issue .wic-input.issue,
@@ -1749,8 +1799,14 @@ td.wic-statistic  {
 		display: none;
 	}
 
-	.wic-input.activity-date {
+	.wic-input.activity-date, 
+	.wic-input.activity-amount {
 		width: 38%;
+	}
+
+	.wic-label-2.activity-amount {
+		display: inline-block;
+		padding: 0 2.2888% 0 1.4%;
 	}
 	
 	.wic-field-subgroup-activity_issue .wic-input.issue,
