@@ -29,7 +29,7 @@ class WIC_Form_Constituent_Update extends WIC_Form_Parent  {
 		$button .=	'<a target = "_blank" href="http://wp-issues-crm.com/?page_id=155">' . __( 'Constituent FAQ', 'wp-issues-crm' ) . '</a>';
 			
 		return ( $button  ) ;
-	}
+	}	
 	
 	// define the form message (return a message)
 	protected function format_message ( &$data_array, $message ) {
@@ -108,9 +108,20 @@ class WIC_Form_Constituent_Update extends WIC_Form_Parent  {
 		return ( WIC_Entity_Comment::create_comment_list ( $doa ) ); 					
 	}
 	
+	protected function post_form_hook ( &$data_array )  {
+		
+		/* get option array */
+		$wic_option_array = get_option('wp_issues_crm_plugin_options_array');
+		
+		/* create json string of array of financial transaction activity_codes */ 
+		$transaction_type_code_string = json_encode ( explode (',' ,  $wic_option_array['financial_activity_types'] ) );
+		
+		echo '<div id="financial_activity_types" class="hidden-template">' . $transaction_type_code_string . '</div>';
+	
+	}	
+	
 	// hooks not implemented
 	protected function supplemental_attributes() {}
 	protected function pre_button_messaging ( &$data_array ){}
-	protected function post_form_hook ( &$data_array ) {}
 	 	
 }

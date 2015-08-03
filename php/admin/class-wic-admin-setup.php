@@ -65,19 +65,13 @@ class WIC_Admin_Setup {
 			wp_enqueue_script(
 				'wic-utilities',
 				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-utilities.js' , __FILE__ ), 
-				array( 'jquery' )
+				array( 'jquery-ui-datepicker', 'jquery-ui-selectmenu', 'jquery-ui-menu', 'jquery-ui-spinner' )
 			);
 
 			wp_enqueue_script(
 				'wic-changed-page',
 				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-changed-page.js' , __FILE__ ), 
 				array( 'jquery' )
-			);
-
-			wp_enqueue_script(
-				'wic-jquery-ui',
-				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-jquery-ui.js' , __FILE__ ),
-				array( 'jquery-ui-datepicker', 'jquery-ui-selectmenu', 'jquery-ui-menu', 'jquery-ui-spinner'  )
 			);
 
 			wp_enqueue_script(
@@ -96,6 +90,13 @@ class WIC_Admin_Setup {
 
 			// page specific scripts
 			if ( isset ( $_GET['page'] ) ) {
+				if ( 'wp-issues-crm-main' == $_GET['page'] ) {
+					wp_enqueue_script(
+						'wic-main',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-main.js' , __FILE__ ),
+						array ( 'jquery' ) 
+					);
+				}
 				if ( 'wp-issues-crm-storage' == $_GET['page'] ) {
 					wp_enqueue_script(
 						'wic-manage-storage',
