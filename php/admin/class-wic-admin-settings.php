@@ -345,8 +345,9 @@ class WIC_Admin_Settings {
 	public function enable_financial_activities_legend_callback() {
 		echo 
 		'<p>' . __( 'WP Issues CRM can be used to track financial transactions. Simply enter below the Activity Type codes <em>separated by commas</em> for which amounts should be recorded.' , 'wp-issues-crm' ) . '</p>' . 
-		'<p>' . __( 'For example, if you defined Activity Type Options "Check Contribution" coded as "CH" and "Online Contribution" coded as "OC", you would enter them below like so (no quotation marks):' , 'wp-issues-crm' ) . ' <code>CH,OC</code>' . '</p>' . 
-		'<p>' . __( 'Activities of these types will then be stored and displayed with an amount field formatted as currency.' , 'wp-issues-crm' ) .  '</p>' ;
+		'<p>' . __( 'For example, if you defined <a href="/wp-admin/admin.php?page=wp-issues-crm-options">Activity Type Options</a> "Check Contribution" coded as "CH" and "Online Contribution" coded as "OC", you would enter them below like so (no quotation marks):' , 'wp-issues-crm' ) . ' <code>CH,OC</code>' . '</p>' . 
+		'<p>' . __( 'Activities of these types will then be stored and displayed with an amount field formatted with two decimal points.' , 'wp-issues-crm' ) .  '</p>' .
+		'<p>' . __( 'Tip: The matching of activity type codes is case sensitive -- "CH" as an Activity Type code will <em>not</em> match "ch" as a financial activity setting.' , 'wp-issues-crm' ) .  '</p>' ;
 	}
 	
 	// setting field call back

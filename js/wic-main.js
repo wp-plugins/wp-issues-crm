@@ -3,7 +3,7 @@
 * wic-main.js (functions supporting page wp-issues-crm-main)
 *
 */
-
+var wicFinancialCodesArray;
 // self-executing anonymous namespace
 ( function() {
 	
@@ -29,50 +29,63 @@
 			wpIssuesCRMAjaxPost( 'search_log', 'set_favorite', searchID, data, function( response ) {
 					if ( favorite ) { 
 						starSpan.removeClass ( "dashicons-star-filled" );
-						starSpan.addClass ( "dashicons-star-empty" )
+						starSpan.addClass ( "dashicons-star-empty" );
 					} else {
 						starSpan.addClass ( "dashicons-star-filled" );
-						starSpan.removeClass ( "dashicons-star-empty" )
+						starSpan.removeClass ( "dashicons-star-empty" );
 					}
 				});						
 		});
 
 		jsonPassedValues = document.getElementById( "financial_activity_types" );
 		if ( null !== jsonPassedValues ) { // only present in constituent search/save/update forms
-			financialCodesArray = JSON.parse( jsonPassedValues.innerHTML );		
-			if ( 1 == financialCodesArray.length && '' == financialCodesArray[0] ) { // no financial types set
-				$( "#wic-form-constituent-search .activity-amount" ).hide();
+			wicFinancialCodesArray = JSON.parse( jsonPassedValues.innerHTML );		
+			if ( 1 == wicFinancialCodesArray.length && '' == wicFinancialCodesArray[0] ) { // no financial types set
+				$( ".activity-amount" ).hide(); 	// css is show -- hide all forms if no financial type set
+			} else { // financial types set -- on add/update forms, need to hide amounts for none financial
+				// run through all the activities and show/hide the amount based on activity-type
+				$(".wic-multivalue-block.activity" ).each( function() {
+					setUpFinancialActivityType( this );
+				})				; 
+	 			// set up delegated event listener for changes to activity type
+	 			$( "#wic-control-activity" ).on( "change", ".activity-type", function ( event ) {
+	 				var changedBlock = $( this ).parents( ".wic-multivalue-block.activity" )[0];
+	 				setUpFinancialActivityType( changedBlock );
+	 			});
+				// set up delegated event listener for changes to activity amount -- alert user of non-numeric value
+	 			$( "#wic-control-activity" ).on( "blur", ".wic-input.activity-amount", function ( event ) {
+					this.value = this.value.replace('$','') // drop dollar signs (convenience for $users)
+	 				if ( isNaN( this.value ) ) { 
+							alert ( "Non-numeric amount -- " + this.value + " -- will be set to zero." );
+							$( this ). val ("0.00" );
+	 				} else {
+	 					this.value = Number( this.value ).toFixed(2) ; 
+	 				}
+	 			});		 					
 			}
-	 		setChangedActivityTypeListeners();
- 		}
+
+ 		} 
 	});
 
 })(); // end anonymous namespace enclosure
 
 
-function setChangedActivityTypeListeners() {
-		jQuery( ".wic-input" ).change(function() {
-			financialCodesArray = JSON.parse( document.getElementById( "financial_activity_types" ).innerHTML );
-			// note financialCodesArray is always an array; if no financial activity codes, array of length 1 with empty string as only value
-			found = testVal.indexOf('cp');
-			if ( '' == testVal[0] ) { alert ( 'indexOfcp:' + found + ' length: ' + testVal.length + ' 0index: ' + testVal[0] ) };
-			console.log ( 'ns' );
-			/* starSpan = $( this ).find("span").first();
-			var buttonValueArray = $( this ).val().split(",");
-			var searchID = buttonValueArray[2];
-			var favorite = starSpan.hasClass ( "dashicons-star-filled" );
-			var data = { favorite : !favorite };
-			console.log ( 'ns' );
-			wpIssuesCRMAjaxPost( 'search_log', 'set_favorite', searchID, data, function( response ) {
-					if ( favorite ) { 
-						starSpan.removeClass ( "dashicons-star-filled" );
-						starSpan.addClass ( "dashicons-star-empty" )
-					} else {
-						starSpan.addClass ( "dashicons-star-filled" );
-						starSpan.removeClass ( "dashicons-star-empty" )
-					}
-				}); */						
-		});
+/*
+* function setUpFinancialActivityType
+* expects an activity multivalue block -- tests activity type and sets up activity-amount
+* note: is called on document ready and sets amount in hidden template to hidden; amount remains hidden when template is shown
+*	 	-- so need not be called on template show
+*		-- can assume that if hidden 
+*/ 
+function setUpFinancialActivityType( activityMultivalueBlock ) {
+ 		var activityType = jQuery( activityMultivalueBlock ).find( ".wic-input.activity-type").val()
+		var isFinancial = ( wicFinancialCodesArray.indexOf( activityType ) > -1 );
+		if ( ! isFinancial ) {
+			jQuery( activityMultivalueBlock ).find( ".wic-input.activity-amount").hide();
+		} else {
+			jQuery( activityMultivalueBlock ).find( ".wic-input.activity-amount").show();			
+		}
+
 }
 
 // automatically set case_status to Open when Assigned
@@ -157,62 +170,5 @@ function hideSelf( rowname ) {
 	sendErrorMessage ( 'Row will be deleted when you save/update.' )
 	window.nextWPIssuesCRMMessage = 'You can proceed.';
 	jQuery('#wic-form-constituent-update').trigger('checkform.areYouSure');
-}
-
-// add new visible rows by copying hidden template
-function moreFields( base ) {
-
-	// counter always unique since gets incremented on add, but not decremented on delete
-	var counter = document.getElementById( base + '-row-counter' ).innerHTML;
-	counter++;
-	document.getElementById( base + '-row-counter' ).innerHTML = counter;
-	
-	var newFields = document.getElementById( base + '[row-template]' ).cloneNode(true);
-	
-	/* set up row paragraph with  id and class */
-	newFields.id = base + '[' + counter + ']' ;
-	newFieldsClass = newFields.className; 
-	newFields.className = newFieldsClass.replace('hidden-template', 'visible-templated-row') ;
-
-	/* walk child nodes of template and insert current counter value as index*/
-	replaceInDescendants ( newFields, 'row-template', counter, base);	
-
-	var insertBase = document.getElementById( base + '[row-template]' );
-	var insertHere = insertBase.nextSibling;
-	insertHere.parentNode.insertBefore( newFields, insertHere );
-	jQuery('#wic-form-constituent-update').trigger('checkform.areYouSure'); /* must also set 'addRemoveFieldsMarksDirty' : true in Are you sure*/
-	jQuery('#wic-form-constituent-save').trigger('checkform.areYouSure');
-	// activate datepicker on child fields (in wic-jquery-ui.js do not activate datepicker unless visible ) 
- 	jQuery( newFields ).find( ".datepicker" ).datepicker({
-			 dateFormat: "yy-mm-dd"
-	}); 
-	setChangedActivityTypeListeners();
-}
-
-// supports moreFields by walking node tree for whole multi-value group to copy in new name/ID values
-function replaceInDescendants ( template, oldValue, newValue, base  ) {
-	var newField = template.childNodes;
-	if ( newField.length > 0 ) {
-		for ( var i = 0; i < newField.length; i++ ) {
-			var theName = newField[i].name;
-			if ( undefined != theName) {
-				newField[i].name = theName.replace( oldValue, newValue );
-			}
-			var theID = newField[i].id;
-			if ( undefined != theID)  {
-				newField[i].id = theID.replace( oldValue, newValue );
-			} 
-			var theFor = newField[i].htmlFor;
-			if ( undefined != theFor)  {
-				newField[i].htmlFor = theFor.replace( oldValue, newValue );
-			} 
-			var theOnClick = newField[i].onclick;
-			if ( undefined != theOnClick)  {
-				newClickVal = 'hideSelf(\'' + base + '[' + newValue + ']' + '\')' ;
-				newField[i].setAttribute( "onClick", newClickVal );
-			} 
-			replaceInDescendants ( newField[i], oldValue, newValue, base )
-		}
-	}
 }
 
