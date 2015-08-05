@@ -21,23 +21,36 @@ abstract class WIC_List_Parent {
 	*/	
 	public function format_entity_list( &$wic_query, $header ) { 
 
-		global $wic_db_dictionary;
-
   		// set up form
-		$output = '<div id="wic-post-list"><form id="wic_constituent_list_form" method="POST">' . 
-			'<div class = "wic-post-field-group wic-group-odd">';
+		$output = '<div id="wic-post-list"><form id="wic_constituent_list_form" method="POST">';
+
 
 		$message = $this->format_message ( $wic_query, $header ); 
 		$output .= '<div id="post-form-message-box" class = "wic-form-routine-guidance" >' . esc_html( $message ) . '</div>';
-		$output .=  $this->get_the_buttons( $wic_query );	
+		$output .= $this->get_the_buttons( $wic_query );	
+		$output .= $this->set_up_rows ( $wic_query );
+		$output .= 	wp_nonce_field( 'wp_issues_crm_post', 'wp_issues_crm_post_form_nonce_field', true, true ) .
+		'</form></div>'; 
+		
+		$output .= 	'<p class = "wic-list-legend">' . __('Search SQL was:', 'wp-issues-crm' )	 .  $wic_query->sql . '</p>';	
 
+		return $output;
+   } // close function
+
+
+	protected function set_up_rows ( &$wic_query ) {
+	
+		$output = '';	
+	
 		// set up args for use in row buttons -- each row is a button
   		$list_button_args = array(
 			'entity_requested'		=> $wic_query->entity,
 			'action_requested'		=> 'id_search',
 		);	
 
+
 		// prepare the list fields for header set up and list formatting
+		global $wic_db_dictionary;
   		$fields =  $wic_db_dictionary->get_list_fields_for_entity( $wic_query->entity );
 	
 		// query entity used in class definition for most elements to support alternative search log styling
@@ -57,13 +70,14 @@ abstract class WIC_List_Parent {
 			'</li>'; // header complete
 		$output .= $this->format_rows( $wic_query, $fields ); // format list item rows from child class	
 		$output .= '</ul>'; // close ul for the whole list
-		$output .= 	wp_nonce_field( 'wp_issues_crm_post', 'wp_issues_crm_post_form_nonce_field', true, true ) .
-		'</form></div>'; 
-		
-		$output .= 	'<p class = "wic-list-legend">' . __('Search SQL was:', 'wp-issues-crm' )	 .  $wic_query->sql . '</p>';	
 
 		return $output;
-   } // close function
+	
+	}
+
+
+
+
    
    // defines standard lookup hierarchy for formats (mirrors look up for dropdowns)
    protected function format_item ( $entity, $list_formatter, $value ) {

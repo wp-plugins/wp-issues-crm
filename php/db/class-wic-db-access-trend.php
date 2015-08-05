@@ -26,63 +26,77 @@ class WIC_DB_Access_Trend Extends WIC_DB_Access {
 		// set global access object 
 		global $wpdb;
 
+		/*
+		*
+		* If trend search mode is cats or issues, doing a query that works back to issues; option handling differs only in class-wic-list-trend.php
+		* But, if trend search mode is activities, retrieving a set of activities -- requires different handling here and in class-wic-list-trend.php
+		*
+		*/
 
 
-		// straight activity query to start
-		$join = $wpdb->prefix . 'wic_activity activity inner join ' . $wpdb->prefix . 'wic_constituent c on c.id = activity.constituent_id';
-
-		// prepare SQL
-		$activity_sql = "
+		// prepare SQL in the alternative (activities or issues)
+		if ( 'activities' == $search_parameters['trend_search_mode'] ) {
+			
+			// just get id's if will be doing download (in download, doing temp table of id's, see also below)
+			// referencing constituent table only to exclude deleted constituents
+			$join = 	$wpdb->prefix . "wic_activity activity inner join " . $wpdb->prefix . "wic_constituent c on c.id = activity.constituent_id"; 
+			if ( 'download' == $search_parameters['select_mode'] ) {
+				$select =  ' activity.ID ';
+			// load necessary fields if displaying list
+			} else {
+				$select =  ' activity_date, activity_type, activity_amount, pro_con, last_name, first_name, constituent_id, post_title '; 
+				$join .= " inner join $wpdb->posts p on activity.issue = p.ID" ;			
+			}
+			
+			// structure sql with the where clause
+			$sql = "
+					SELECT $select from $join 
+					WHERE 1=1 $deleted_clause $where 
+					ORDER BY activity_date desc, activity.last_updated_time 
+					LIMIT 0, 9999999
+					";
+			$sql = ( $where > '' ) ? $wpdb->prepare( $sql, $values ) : $sql;	
+			
+		} else { // issues or issues based cat list
+			$join = $wpdb->prefix . 'wic_activity activity inner join ' . $wpdb->prefix . 'wic_constituent c on c.id = activity.constituent_id';
+			$activity_sql = "
 					SELECT constituent_id, issue, max(pro_con) as pro_con
 					FROM 	$join
 					WHERE 1=1 $deleted_clause $where 
 					GROUP BY $top_entity.constituent_ID, $top_entity.issue
 					LIMIT 0, 9999999
-					";	
-		$activity_sql = ( $where > '' ) ? $wpdb->prepare( $activity_sql, $values ) : $activity_sql;					
-		// $sql group by always returns single row, even if multivalues for some records 
-		$sql =  	"
+						";	
+			$activity_sql = ( $where > '' ) ? $wpdb->prepare( $activity_sql, $values ) : $activity_sql;					
+			// $sql group by always returns single row, even if multivalues for some records 
+			$sql =  	"
 					SELECT p.id, count(constituent_id) as total, sum( if (pro_con = '0', 1, 0) ) as pro,  sum( if (pro_con = '1', 1, 0) ) as con  
 					FROM ( $activity_sql ) as a 
 					INNER JOIN $wpdb->posts p on a.issue = p.ID
 					GROUP BY p.ID
 					ORDER BY count(constituent_id) DESC
 					";
-		$sql_found = "SELECT FOUND_ROWS() as found_count";
-		$this->sql = $sql; 
-		// do search
-		$this->result = $wpdb->get_results ( $sql );
-	 	$this->showing_count = count ( $this->result );
-	 	$this->found_count = count ( $this->result );
-		// set value to say whether found_count is known
-		$this->outcome = true;  // wpdb get_results does not return errors for searches, so assume zero return is just a none found condition (not an error)
-										// codex.wordpress.org/Class_Reference/wpdb#SELECT_Generic_Results 
-		$this->explanation = ''; 
+		}
+
+		// download mode -- creates temp table picked up by export routine ( see also different id only sql above )
+		if ( 'download' == $search_parameters['select_mode'] ) { 
+			$temp_table = $wpdb->prefix . 'wic_temporary_id_list';			
+			$sql = "CREATE temporary table $temp_table " . $sql;
+			$temp_result = $wpdb->query  ( $sql );
+			if ( false === $temp_result ) {
+				WIC_Function_Utilities::wic_error ( sprintf( 'Error in download, likely permission error.' ), __FILE__, __LINE__, __METHOD__, true );
+			}			
+		} else {
+			$this->sql = $sql; 
+			// do search
+			$this->result = $wpdb->get_results ( $sql );
+		 	$this->showing_count = count ( $this->result );
+		 	$this->found_count = count ( $this->result );
+			// set value to say whether found_count is known
+			$this->outcome = true;  // wpdb get_results does not return errors for searches, so assume zero return is just a none found condition (not an error)
+											// codex.wordpress.org/Class_Reference/wpdb#SELECT_Generic_Results 
+			$this->explanation = ''; 
+		}
 	}	
-
-
-	// no parent version of this function
-	public function search_log_last_general ( $user_id ) { 
-		
-		global $wpdb;		
-		$search_log_table = $wpdb->prefix . 'wic_search_log';
-		$entity = $this->entity;
-		
-		$sql = 			
-			"
-			SELECT ID
-			FROM $search_log_table
-			WHERE user_id = $user_id
-				AND entity = '$entity'
-			ORDER	BY time DESC
-			LIMIT 0, 1
-			";
-		
-		$latest_search = $wpdb->get_results ( $sql );
-
-		return ( $latest_search[0]->ID );
-
-	} 	
 
 	// function set up only for download (could convert to list, by adding a list mode setting object properties )
 	public function search_activities_with_category_slice ( $meta_query_array, $category_contributors ) { 

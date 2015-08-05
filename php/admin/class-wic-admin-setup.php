@@ -193,6 +193,8 @@ class WIC_Admin_Setup {
 	public function do_download () { 
 		if ( isset( $_POST['wic-post-export-button'] ) && ! isset( $_POST['wic_form_button'] ) ) {
 			WIC_List_Constituent_Export::do_constituent_download( $_POST['wic-post-export-button'], $_POST['search_id'] );	
+		} elseif ( isset( $_POST['wic-activity-export-button'] ) && ! isset( $_POST['wic_form_button'] ) ) {
+			WIC_List_Activity_Export::do_activity_download( $_POST['wic-activity-export-button'] );	
 		} elseif ( isset( $_POST['wic-category-export-button'] ) ) { 
 			WIC_List_Constituent_Export::do_constituent_category_download( $_POST['wic-category-export-button'] );	
 		} elseif ( isset ( $_POST['wic-staging-table-download-button'] ) ) {

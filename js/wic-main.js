@@ -57,10 +57,10 @@ var wicFinancialCodesArray;
 					this.value = this.value.replace('$','') // drop dollar signs (convenience for $users)
 	 				if ( isNaN( this.value ) ) { 
 							alert ( "Non-numeric amount -- " + this.value + " -- will be set to zero." );
-							$( this ). val ("0.00" );
+							this.value = "0.00";
 	 				} else {
-	 					this.value = Number( this.value ).toFixed(2) ; 
-	 				}
+	 					this.value = ( this.value == '' ? '' : Number( this.value ).toFixed(2) ) ; 
+	 				} 
 	 			});		 					
 			}
 

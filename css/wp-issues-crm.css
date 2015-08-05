@@ -1425,10 +1425,13 @@ label.wic-label.wic-post-export-button {
 .pl-constituent-phone{ width:15%;}
 .pl-constituent-email{ width:28%;}
 .pl-constituent-city{ width:20%;}
-.pl-activity-activity_date{ width:19%;}
+.pl-activity-activity_date{ width:10%;}
 .pl-activity-activity_type{ width:10%;}
+.pl-activity-activity_amount{ width:10%; text-align: right; }
+.pl-activity-constituent_id{ width: 20%; margin-left: 1%; }
+.pl-activity-issue{ width: 39%; }
+.pl-activity-pro_con{ width:10%; }
 .pl-activity-activity_issue_id{ width:61%;}
-.pl-activity-activity_pro_con{ width:10%;}
 .pl-issue-issue_staff{ width:13.8%;}
 .pl-issue-wic_live_issue{ width:7.1%;}
 .pl-issue-follow_up_status{ width:7.1%;}

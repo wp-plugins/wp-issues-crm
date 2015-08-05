@@ -50,23 +50,37 @@ class WIC_Entity_Trend extends WIC_Entity_Parent {
 	// handle search results
 	protected function handle_search_results ( $wic_query, $not_found_form, $found_form ) {
 		$sql = $wic_query->sql;
+		$trend_search_mode = $this->data_object_array['trend_search_mode']->get_value();
 		if ( 0 == $wic_query->found_count ) {
 			$message = __( 'No activity found matching search criteria.', 'wp-issues-crm' );
 			$message_level =  'error';
 			$form = new $not_found_form;
 			$form->layout_form ( $this->data_object_array, $message, $message_level, $sql );			
 		} else { 
-			$message = sprintf( __( 'Issues with activity matching selection criteria -- found %s.' , 'wp-issues-crm' ), $wic_query->found_count );
+			$message_text = 'activities' == $trend_search_mode ? 'Activities' : 'Issues with activity';
+			$message = sprintf( __( $message_text . ' matching selection criteria -- found %s.' , 'wp-issues-crm' ), $wic_query->found_count );
 			$message_level = 'guidance';	
 			$form = new $found_form;
 			$form->layout_form ( $this->data_object_array, $message, $message_level, $sql );
-			$lister_class = 'WIC_List_Trend' ;
-			$lister = new $lister_class;
-			if ( 'issues' == $this->data_object_array['trend_search_mode']->get_value() ) {
-				$list = $lister->format_entity_list( $wic_query, '' );
-			} else {
-				$list = $lister->category_stats( $wic_query, '' );			
+			
+			// use trend lister for cats and issues; activity lister for activities			
+			switch ( $trend_search_mode ) {
+				case 'cats':
+					$lister_class = 'WIC_List_Trend';
+					$lister_function = 'category_stats';
+					break;
+				case 'issues':
+					$lister_class = 'WIC_List_Trend';		
+					$lister_function = 'format_entity_list';
+					break;		
+				case 'activities':
+					$lister_class = 'WIC_List_Activity';	
+					$lister_function = 'format_entity_list';
+					break;								
 			}
+
+			$lister = new $lister_class;
+			$list = $lister->$lister_function( $wic_query, ''); 
 			echo $list;	
 		}
 	}
