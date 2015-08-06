@@ -14,7 +14,8 @@
 class WIC_DB_Access_Factory {
 
 	static private $entity_model_array = array (
-		'activity' 		=> 'WIC_DB_Access_WIC',
+		'activity' 		=> 'WIC_DB_Access_WIC', 		// multivalue save update activity
+		'activities'	=> 'WIC_DB_Access_Activity',  // list activities
 		'address'		=> 'WIC_DB_Access_WIC',
 		'comment' 		=> 'WIC_DB_Access_WIC',
 		'constituent' 	=> 'WIC_DB_Access_WIC',	

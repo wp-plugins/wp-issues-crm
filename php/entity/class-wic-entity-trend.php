@@ -56,13 +56,8 @@ class WIC_Entity_Trend extends WIC_Entity_Parent {
 			$message_level =  'error';
 			$form = new $not_found_form;
 			$form->layout_form ( $this->data_object_array, $message, $message_level, $sql );			
-		} else { 
-			$message_text = 'activities' == $trend_search_mode ? 'Activities' : 'Issues with activity';
-			$message = sprintf( __( $message_text . ' matching selection criteria -- found %s.' , 'wp-issues-crm' ), $wic_query->found_count );
-			$message_level = 'guidance';	
-			$form = new $found_form;
-			$form->layout_form ( $this->data_object_array, $message, $message_level, $sql );
-			
+		} else {
+			// get lister class in place before running list, so that can use message function 
 			// use trend lister for cats and issues; activity lister for activities			
 			switch ( $trend_search_mode ) {
 				case 'cats':
@@ -78,8 +73,15 @@ class WIC_Entity_Trend extends WIC_Entity_Parent {
 					$lister_function = 'format_entity_list';
 					break;								
 			}
-
 			$lister = new $lister_class;
+			$message = $lister->format_message( $wic_query ); // hoisting message (normally w/i lister form) out of the lister to top of search form
+			$message_level = 'guidance';	
+			
+			// do trend search form
+			$form = new $found_form;
+			$form->layout_form ( $this->data_object_array, $message, $message_level, $sql );
+			
+			// do activity list below form
 			$list = $lister->$lister_function( $wic_query, ''); 
 			echo $list;	
 		}

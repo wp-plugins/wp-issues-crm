@@ -37,6 +37,7 @@ var wicFinancialCodesArray;
 				});						
 		});
 
+		// manage financial activity types on update forms
 		jsonPassedValues = document.getElementById( "financial_activity_types" );
 		if ( null !== jsonPassedValues ) { // only present in constituent search/save/update forms
 			wicFinancialCodesArray = JSON.parse( jsonPassedValues.innerHTML );		
@@ -63,8 +64,17 @@ var wicFinancialCodesArray;
 	 				} 
 	 			});		 					
 			}
-
  		} 
+ 		
+		// manage presentation of financial data on activity_lists
+		haveFinancialActivityTypesDiv = document.getElementById( "have_financial_activity_types" );
+		if ( null !== haveFinancialActivityTypesDiv ) { // only present in constituent search/save/update forms
+			haveFinancialActivityTypes = haveFinancialActivityTypesDiv.innerHTML ;		
+			if ( 'no' == haveFinancialActivityTypes ) { // no financial types set and/or no financial types among found activities
+				$( ".pl-activity-activity_amount" ).hide(); 	// css is show -- hide all forms if no financial type set
+			}
+ 		} 
+
 	});
 
 })(); // end anonymous namespace enclosure

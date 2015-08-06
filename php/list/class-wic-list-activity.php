@@ -22,7 +22,9 @@ class WIC_List_Activity extends WIC_List_Parent {
 		$output .= 	wp_nonce_field( 'wp_issues_crm_post', 'wp_issues_crm_post_form_nonce_field', true, true ) .
 		'</form></div>'; 
 		
-		$output .= 	'<p class = "wic-list-legend">' . __('Search SQL was:', 'wp-issues-crm' )	 .  $wic_query->sql . '</p>';	
+		$output .= 	'<p class = "wic-list-legend">' . __('Search SQL was:', 'wp-issues-crm' )	 .  $wic_query->sql . '</p>';
+		$have_financial_activity_types = $wic_query->financial_activities_in_results ? 'yes' : 'no';
+		$output .=  '<div id="have_financial_activity_types" class="hidden-template">' . $have_financial_activity_types. '</div>';	
 
 		return $output;
    } // close function
@@ -93,9 +95,19 @@ class WIC_List_Activity extends WIC_List_Parent {
 		return ( $buttons );
 	}
 
-
-
-	protected function format_message( &$wic_query, $header='' ) {}
+	// format message -- used by entities showing forms above the list ( see, e.g., entity_trend )
+	public function format_message( &$wic_query, $header='' ) {
+	
+		$financial_total = $wic_query->financial_activities_in_results ? sprintf ( __( ' Total amount for found activities is %1$s.', 'wp-issues-crm'), $wic_query->amount_total ) : '';	
+	
+		if ( $wic_query->found_count <= $wic_query->retrieve_limit ) {
+			$header_message = $header . sprintf ( __( 'Found %1$s activities.', 'wp-issues-crm'), $wic_query->showing_count ) . $financial_total;		
+		} else {
+			$header_message = $header . sprintf ( __( 'Found total of %1$s activities, showing search maximum -- %2$s.', 'wp-issues-crm'),
+				 $wic_query->found_count, $wic_query->showing_count ) . $financial_total; 		
+		}
+		return $header_message;
+	}
 
 }	
 
