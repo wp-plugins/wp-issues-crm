@@ -118,7 +118,7 @@ class WIC_Entity_Activity extends WIC_Entity_Multivalue {
 		*/
 		$current_activity_type = $this->data_object_array['activity_type']->get_value();
 		$wic_option_array = get_option('wp_issues_crm_plugin_options_array'); 
-		$financial_types_array = explode (',' , $wic_option_array['financial_activity_types'] );
+		$financial_types_array = explode (',' , isset ( $wic_option_array['financial_activity_types'] ) ? $wic_option_array['financial_activity_types'] : '') ;
 		if ( 1 == count( $financial_types_array) && '' == $financial_types_array[0] ) { // no financial types set
 			$this->data_object_array['activity_amount']->set_input_class_to_hide_element();	
 		} elseif ( $not_a_search ) {

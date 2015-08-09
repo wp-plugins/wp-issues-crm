@@ -51,8 +51,7 @@ class WIC_List_Activity extends WIC_List_Parent {
 
 		// get financial activity types to avoid showing nonsensical zero amounts
 		$wic_option_array = get_option('wp_issues_crm_plugin_options_array'); 
-		$financial_types_array = explode (',' , $wic_option_array['financial_activity_types'] );
-
+		$financial_types_array = explode (',' , isset ( $wic_option_array['financial_activity_types'] ) ? $wic_option_array['financial_activity_types'] : '') ;
 		foreach ( $wic_query->result as $row_array ) {
 
 			$row= '';

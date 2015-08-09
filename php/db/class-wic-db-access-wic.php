@@ -356,7 +356,7 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 				$sub_field_list = ''; 
 				foreach ( $sub_fields as $sub_field ) {
 					if ( 'ID' != $sub_field->field_slug ) { 
-						$sub_field_list .= ( '' == $sub_field_list ) ? $field->field_slug . '.' : ', \', \', ' . $field->field_slug . '.' ;
+						$sub_field_list .= ( '' == $sub_field_list ) ? $field->field_slug . '.' : ',\'| \',' . $field->field_slug . '.' ;
 						$sub_field_list .= $sub_field->field_slug;
 					}
 				}

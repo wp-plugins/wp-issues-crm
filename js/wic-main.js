@@ -201,7 +201,7 @@ function setUpNameAndAddressAutocomplete ( element ) {
 	acElement = jQuery ( element );
 	acElement.autocomplete ({
 			delay: 200, 	// default = 200
-			minLength: 2,	// default = 1
+			minLength: 3,	// default = 1
 		  	source: function( request, responseAC ) { 
 		  		// note that this call uses arguments in ways inconsistent with their labeling in wpIssuesCRMAjaxPost (but no type violations
 		  		wpIssuesCRMAjaxPost( 'autocomplete', 'db_pass_through',  element.id, request.term, function( response ) {

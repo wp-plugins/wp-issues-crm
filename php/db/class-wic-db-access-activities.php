@@ -74,7 +74,7 @@ class WIC_DB_Access_Activities Extends WIC_DB_Access {
 			// prepare 'IN' phrase
 			$in_phrase = '';			
 			$wic_option_array = get_option('wp_issues_crm_plugin_options_array');
-			$financial_activity_type_array = $wic_option_array['financial_activity_types'] > '' ? explode ( ',' ,  $wic_option_array['financial_activity_types'] ) : '' ;
+			$financial_activity_type_array = explode (',' , isset ( $wic_option_array['financial_activity_types'] ) ? $wic_option_array['financial_activity_types'] : '') ;
 			$formatted_financial_activity_type_string = '';			
 			if ( '' != $financial_activity_type_array ) {
 				foreach ( $financial_activity_type_array as $type ) {

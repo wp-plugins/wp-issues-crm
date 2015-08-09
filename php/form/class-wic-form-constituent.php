@@ -32,7 +32,7 @@ class WIC_Form_Constituent extends WIC_Form_Parent  {
 		$wic_option_array = get_option('wp_issues_crm_plugin_options_array');
 		
 		/* create json string of array of financial transaction activity_codes */ 
-		$transaction_type_code_string = json_encode ( explode (',' , $wic_option_array['financial_activity_types'] ) );
+		$transaction_type_code_string = json_encode ( explode (',' , isset ( $wic_option_array['financial_activity_types'] ) ? $wic_option_array['financial_activity_types'] : '') );
 		
 		echo '<div id="financial_activity_types" class="hidden-template">' . $transaction_type_code_string . '</div>';
 		
