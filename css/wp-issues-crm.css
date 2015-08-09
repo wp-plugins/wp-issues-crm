@@ -1424,12 +1424,12 @@ label.wic-label.wic-post-export-button {
 }
 
 /* list element widths */
-.pl-constituent-first_name{ width:14%;}
-.pl-constituent-middle_name{ width:14%;}
-.pl-constituent-last_name{ width:14%;}
-.pl-constituent-phone{ width:15%;}
-.pl-constituent-email{ width:28%;}
-.pl-constituent-city{ width:20%;}
+.pl-constituent-first_name{ width:12%; overflow-x: hidden;}
+.pl-constituent-middle_name{ width:12%; overflow-x: hidden;}
+.pl-constituent-last_name{ width:12%; overflow-x: hidden;}
+.pl-constituent-phone{ width:14%; overflow-x: hidden;}
+.pl-constituent-email{ width:25%; overflow-x: hidden;}
+.pl-constituent-address{ width:25%; overflow-x: hidden; }
 .pl-activity-activity_date{ width:10%;}
 .pl-activity-activity_type{ width:10%;}
 .pl-activity-activity_amount{ width:10%; text-align: right; }
@@ -1865,7 +1865,10 @@ td.wic-statistic  {
 	/* list element widths for constituent search results*/	
 	.pl-constituent-first_name,
 	.pl-constituent-last_name { 
-		width: 38%;
+		width: 30%;
+	}
+	.pl-constituent-address { 
+		width: 40%;
 	}
 	li.wic-post-list-header.pl-constituent-middle_name, 
 	li.wic-post-list-field.pl-constituent-middle_name,

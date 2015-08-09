@@ -137,10 +137,31 @@ class WIC_Entity_Activity extends WIC_Entity_Multivalue {
 		// conversely, if using autocomplete, hide the select element (remains the database referenced element while hidden)		
 		} else {  
 			$this->data_object_array['issue']->set_input_class_to_hide_element();
-		}  		
-		 	
-	}  
-
-
-
-}
+			// also, populate the displayed value in issue_autocomplete if exist			
+			if ( $not_a_search ) {
+				$issue = $this->data_object_array['issue']->get_value();
+				if ( $issue > '' ) {
+					$wic_query = WIC_DB_Access_Factory::make_a_db_access_object( "issue" );
+					$search_parameters = array(
+						'select_mode' => '*',
+						'show_deleted' => true,
+						'retrieve_limit' => 1,		
+						'log_search' => false,
+						'old_search_id' => 0, 
+					);
+					$query_clause =  array ( // double layer array to standardize a return that allows multivalue fields
+						array (
+							'table'	=> 'issue',
+							'key' 	=> 'ID',
+							'value'	=> $issue,
+							'compare'=> '=',
+							'wp_query_parameter' => 'p',
+						)
+					);
+					$wic_query->search ( $query_clause, $search_parameters );
+					$this->data_object_array['issue_autocomplete']->set_value( $wic_query->result[0]->post_title );
+				} // $issue > ''
+			} // $not a search
+		}  // using autocomplete		
+	}  // function show hide activity elements
+} // class

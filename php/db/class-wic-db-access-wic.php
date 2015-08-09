@@ -356,10 +356,11 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 				$sub_field_list = ''; 
 				foreach ( $sub_fields as $sub_field ) {
 					if ( 'ID' != $sub_field->field_slug ) { 
-						$sub_field_list .= ( '' == $sub_field_list ) ? $field->field_slug . '.' : ', ' . $field->field_slug . '.' ;
+						$sub_field_list .= ( '' == $sub_field_list ) ? $field->field_slug . '.' : ', \', \', ' . $field->field_slug . '.' ;
 						$sub_field_list .= $sub_field->field_slug;
 					}
 				}
+
 				// concat multivalues for single row display
 				$select_list .= ' GROUP_CONCAT( DISTINCT ' . $sub_field_list . ' SEPARATOR \', \' ) AS ' . $field->field_slug;
 				$join .= ' LEFT JOIN ' .  $wpdb->prefix . 'wic_' . $field->field_slug . ' ' . $field->field_slug . ' ON ' . 

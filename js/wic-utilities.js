@@ -30,7 +30,7 @@ function sendErrorMessage ( messageText ) {
 	message.innerHTML = messageText;
 	message.className = 'wic-form-errors-found';
 
-	timeout = window.setTimeout ( restoreMessage, 12000 ); 
+	timeout = window.setTimeout ( restoreMessage, 10000 ); 
 }
 
 function restoreMessage (  ) {
@@ -67,8 +67,16 @@ function moreFields( base ) {
  	jQuery( newFields ).find( ".datepicker" ).datepicker({
 			 dateFormat: "yy-mm-dd"
 	}); 
- 	setUpActivityIssueAutocomplete( jQuery( newFields ).find( ".wic-multivalue-block.activity" )[0] );
+ 	
+ 	if ( wicUseActivityIssueAutocomplete ) {
+ 		setUpActivityIssueAutocomplete( jQuery( newFields ).find( ".wic-multivalue-block.activity" )[0] );
+	}
 
+	if ( wicUseNameAndAddressAutocomplete ) {
+		jQuery( newFields ).find (".address-line, .email-address" ).each ( function () {
+			setUpNameAndAddressAutocomplete( this );			
+		});		
+	}
 }
 
 // supports moreFields by walking node tree for whole multi-value group to copy in new name/ID values
