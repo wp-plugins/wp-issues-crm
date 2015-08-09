@@ -351,6 +351,10 @@ input.wic-input-deleted {
 .hidden-template {
 	display: none;
 }
+/* styling for elements that are hidden by php logic (see class-wic-control-parent.php ) */
+.hidden-element {
+	display: none;
+}
 
 .visible-template {
 	display: block;
@@ -547,13 +551,14 @@ label.wic-label.activity-date {
 	width: 23.4375%;
 }
 
-.wic-label-2.activity-amount {
+wic-label-2.activity-amount {
 	display: inline-block;
 	padding: 0 1.8% 0 1.0%;
 }
 
 .wic-field-subgroup-activity_issue .wic-input.issue,
-#wic-field-subgroup-activity_issue .wic-input.issue {
+#wic-field-subgroup-activity_issue .wic-input.issue,
+.issue-autocomplete {
 	width: 73.5%;
 }
 
@@ -1573,12 +1578,13 @@ button#wic-inner-field-group-userid-toggle-button {
 	display: none;
 }
 
-
+button#wic-inner-field-group-disable_autocomplete-toggle-button,
 button#wic-inner-field-group-user-toggle-button,
 button#wic-inner-field-group-startup-toggle-button {
 	margin: 20px 0 10px 11.11111%;
 }
 
+#wic-field-group-disable_autocomplete .wic-form-field-group-legend,
 #wic-field-group-startup .wic-form-field-group-legend,
 #wic-field-group-user .wic-form-field-group-legend  {
 	margin-left: 11.11111%;

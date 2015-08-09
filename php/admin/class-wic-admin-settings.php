@@ -104,16 +104,16 @@ class WIC_Admin_Settings {
        // Preference Settings
       add_settings_section(
             'preference_settings', // setting ID
-            'Preference Settings', // Title
+            'Activity Issue Assignment Settings', // Title
             array( $this, 'preference_settings_legend' ), // Callback
             'wp_issues_crm_settings_page' // page ID ( a group of settings sections)
         ); 
 
 		// naming of the callback with array elements (in the callbacks) is what ties the option array together 		
       add_settings_field(
-            'allow_issue_dropdown_preferences', // field id
-            'Allow issue preferences', // field label
-            array( $this, 'allow_issue_dropdown_preferences_callback' ), // field call back 
+            'disallow_activity_issue_search', // field id
+            'Disallow instant issue search', // field label
+            array( $this, 'disallow_activity_issue_search_callback' ), // field call back 
             'wp_issues_crm_settings_page', // page 
             'preference_settings' // settings section within page
        ); 
@@ -286,17 +286,23 @@ class WIC_Admin_Settings {
 	*/
 	// section legend call back
 	public function preference_settings_legend() {
-		echo '<p>' . __( 'By default, when users add new activities for a constituent, the drop down for "Activity Issue?" includes only those set as 
-		"Open for WP Issues CRM" in the Activity Tracking box on the Issue form.', 'wp-issues-crm' ) .  '</p>' . 
-		'<p>' . __( 'If the setting below is checked, then users can choose preferences to see additional issues in the drop down: (a) the issue that 
-		they have most recently edited; and/or (b) the most recent or most frequent issues that they have added to activities.  These additional issues
-		will appear whether or not they are affirmatively "Open for WP Issues CRM", but will not appear if they are "Closed for WP Issues CRM".', 'wp-issues-crm' ) . '</p>';
+		echo '<p>' . __( 'On constituent screens, when activities are added or updated, they associated issue must be identified -- 
+		for example, an activity could be of type "EMail" about an issue titled "Education".', 'wp-issues-crm' ). '</p>' .
+		'<p>' . __( 'By default, the Activity Issue field will instantly retrieve issues matching what the user types (for example, typing "edu" would 
+		show issues with titles	including the word "education").  The user must select one of the retrieved issues.  The retrieval will prioritize issues 
+		that have been set in the Activity Tracking section (on the issue screen) as "Always appear in issue drop down" and will exclude issues set 
+		to "never appear".  Issues that have not been set either way will be retrieved but as lower priority.', 'wp-issues-crm') . '</p>' .  
+		'<p>' . __('By checking the box below, you can disable this built-in search feature and force users to select from a defined drop down including only 
+		issues set as "Always appear in issue dropdown" in the Activity Tracking section on the Issue form.  This approach controls user choices as
+		might be necessary in a larger office.', 'wp-issues-crm' ) .  '</p>' . 
+		'<p>' . __( 'Note that even if you allow searching for issues, users will have the option to choose the simpler non-searchable select dropdown and
+		to set preferences for what appears in that drop down.', 'wp-issues-crm' ) . '</p>';
 	}
 
 	// setting field call back	
-	public function allow_issue_dropdown_preferences_callback() {
-		printf( '<input type="checkbox" id="allow_issue_dropdown_preferences" name="wp_issues_crm_plugin_options_array[allow_issue_dropdown_preferences]" value="%s" %s />',
-            1, checked( '1', isset ( $this->plugin_options['allow_issue_dropdown_preferences'] ), false ) );
+	public function disallow_activity_issue_search_callback() {
+		printf( '<input type="checkbox" id="disallow_activity_issue_search" name="wp_issues_crm_plugin_options_array[disallow_activity_issue_search]" value="%s" %s />',
+            1, checked( '1', isset ( $this->plugin_options['disallow_activity_issue_search'] ), false ) );
 	}
 
 	/*
@@ -400,8 +406,8 @@ class WIC_Admin_Settings {
   		if( isset( $input['hide_private_posts'] ) ) {
             $new_input['hide_private_posts'] = absint( $input['hide_private_posts'] );
       } 
-  		if( isset( $input['allow_issue_dropdown_preferences'] ) ) {
-            $new_input['allow_issue_dropdown_preferences'] = absint( $input['allow_issue_dropdown_preferences'] );
+  		if( isset( $input['disallow_activity_issue_search'] ) ) {
+            $new_input['disallow_activity_issue_search'] = absint( $input['disallow_activity_issue_search'] );
       } 
 		if( isset( $input['use_postal_address_interface'] ) ) {
             $new_input['use_postal_address_interface'] = absint( $input['use_postal_address_interface'] );

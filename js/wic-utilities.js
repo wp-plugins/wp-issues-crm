@@ -67,6 +67,7 @@ function moreFields( base ) {
  	jQuery( newFields ).find( ".datepicker" ).datepicker({
 			 dateFormat: "yy-mm-dd"
 	}); 
+ 	setUpActivityIssueAutocomplete( jQuery( newFields ).find( ".wic-multivalue-block.activity" )[0] );
 
 }
 

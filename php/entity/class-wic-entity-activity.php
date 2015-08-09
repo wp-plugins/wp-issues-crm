@@ -10,12 +10,21 @@
 class WIC_Entity_Activity extends WIC_Entity_Multivalue {
 
 	public function update_row() {
+		$this->show_hide_activity_elements( true );
 		$new_update_row_object = new WIC_Form_Activity_Update ( $this->entity, $this->entity_instance );
 		$new_update_row = $new_update_row_object->layout_form( $this->data_object_array, null, null );
 		return $new_update_row;
 	}
 
+	public function save_row() {
+		$this->show_hide_activity_elements( true );
+		return ( parent::save_row() );	
+	}
 
+	public function search_row() {
+		$this->show_hide_activity_elements( false );
+		return ( parent::search_row() );	
+	}
 
 	protected function set_entity_parms( $args ) {
 		extract ( $args );
@@ -42,9 +51,11 @@ class WIC_Entity_Activity extends WIC_Entity_Multivalue {
 		// variable tested to see if need to add an already save activity's issue to the array
 		$value_in_option_list = false;	
 		
-		// are user preferences enabled?
+		// is activity issue search allowed for users?  if so, apply preferences in defining drop down selection
+		// these will apply whether or not user has chosen the search dropdown or the simple drop down
+		// if search drop down, these preferences will only define priorities; 
 		$wic_option_array = get_option('wp_issues_crm_plugin_options_array');
-		if ( isset ( $wic_option_array['allow_issue_dropdown_preferences'] ) ) {
+		if ( ! isset ( $wic_option_array['disallow_activity_issue_search'] ) ) {
 			// if user prefers, add next the last issue viewed by user or modified by user (if not author may not show as mod)
 			if ( WIC_DB_Access_WP_User::get_wic_user_preference( 'show_viewed_issue' ) )	{	
 				$args = array ( 'id_requested' => $user_id ); // spoof a button handoff by the request handler
@@ -96,6 +107,40 @@ class WIC_Entity_Activity extends WIC_Entity_Multivalue {
 		
 		return ( $issues_array );
 	}
+
+
+	// handle special variable display properties in activity rows -- 
+	// better here than in js (avoid visual bounce)
+	protected function show_hide_activity_elements ( $not_a_search = true ) {
+
+		/*
+		* if no financial activity types or type of current record is not financial, hide amount control
+		*/
+		$current_activity_type = $this->data_object_array['activity_type']->get_value();
+		$wic_option_array = get_option('wp_issues_crm_plugin_options_array'); 
+		$financial_types_array = explode (',' , $wic_option_array['financial_activity_types'] );
+		if ( 1 == count( $financial_types_array) && '' == $financial_types_array[0] ) { // no financial types set
+			$this->data_object_array['activity_amount']->set_input_class_to_hide_element();	
+		} elseif ( $not_a_search ) {
+			$current_activity_type = $this->data_object_array['activity_type']->get_value();
+			if ( ! in_array ( $current_activity_type, $financial_types_array ) ) {
+				$this->data_object_array['activity_amount']->set_input_class_to_hide_element();
+			}			
+		}
+		 
+		/*
+		* if not using autocomplete mode for activity (i.e., disallowed or user opted out) hide the autocomplete control (it will not be referenced)
+		*/
+		if ( isset( $wic_option_array['disallow_activity_issue_search'] ) || 
+				( 1 == WIC_DB_Access_WP_User::get_wic_user_preference( 'activity_issue_simple_dropdown' ) ) ) {
+			$this->data_object_array['issue_autocomplete']->set_input_class_to_hide_element();
+		// conversely, if using autocomplete, hide the select element (remains the database referenced element while hidden)		
+		} else {  
+			$this->data_object_array['issue']->set_input_class_to_hide_element();
+		}  		
+		 	
+	}  
+
 
 
 }

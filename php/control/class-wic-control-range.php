@@ -21,7 +21,7 @@ class WIC_Control_Range extends WIC_Control_Parent {
 		$final_control_args['value'] = $this->value_hi;	
 		$final_control_args['placeholder'] = $this->default_control_args['placeholder'] > '' ? $this->default_control_args['placeholder'] . ' (high) ' : '';
 		$final_control_args['field_slug'] = $field_slug_base . '[hi]';
-		$final_control_args['label_class'] = 'wic-label-2';  
+		$final_control_args['label_class'] .= ' wic-label-2';  // done as addition to preserve possible hidden-element class dynamically added
 		$control .= $this->create_control( $final_control_args ) ;
 		return ( $control );
 	}
@@ -89,7 +89,7 @@ class WIC_Control_Range extends WIC_Control_Parent {
 					'table'	=> $this->field->entity_slug,
 					'key' => $this->field->field_slug,
 					'value'	=> $this->value_lo,
-					'compare'=> '>',
+					'compare'=> '>=',
 					'wp_query_parameter' => $this->field->wp_query_parameter,
 					)
 				);
@@ -99,7 +99,7 @@ class WIC_Control_Range extends WIC_Control_Parent {
 					'table'	=> $this->field->entity_slug,
 					'key' => $this->field->field_slug,
 					'value'	=> $this->value_hi,
-					'compare'=> '<',
+					'compare'=> '<=',
 					'wp_query_parameter' => $this->field->wp_query_parameter,
 					)
 				);

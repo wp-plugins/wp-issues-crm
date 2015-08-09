@@ -94,7 +94,7 @@ class WIC_Admin_Setup {
 					wp_enqueue_script(
 						'wic-main',
 						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-main.js' , __FILE__ ),
-						array ( 'jquery' ) 
+						array ( 'jquery', 'jquery-ui-autocomplete'  ) 
 					);
 				}
 				if ( 'wp-issues-crm-storage' == $_GET['page'] ) {

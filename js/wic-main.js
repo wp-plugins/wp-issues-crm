@@ -4,10 +4,33 @@
 *
 */
 var wicFinancialCodesArray;
+var wicUseActivityIssueAutocomplete = false;
+var wicUseNameAndAddressAutocomplete = false;
 // self-executing anonymous namespace
 ( function() {
 	
+	
 	jQuery(document).ready(function($) {
+
+		// set global use autocomplete flags
+		var useActivityIssueAutocompleteFlag = document.getElementById( "use_activity_issue_autocomplete" ); // if have one have both flags
+		if ( null !== useActivityIssueAutocompleteFlag ) { 		// only present in constituent search/save/update forms
+			wicUseActivityIssueAutocomplete = ( 'yes' == useActivityIssueAutocompleteFlag.innerHTML ) ;
+			var useNameAndAddressAutocompleteFlag = document.getElementById( "use_name_and_address_autocomplete" );
+			wicUseNameAndAddressAutocomplete = ( 'yes' == useNameAndAddressAutocompleteFlag.innerHTML ); 
+	 	} 
+
+		// test the set flag and call function for activities showing in form (will need to call again when adding activities)
+		if ( wicUseActivityIssueAutocomplete ) {
+			// covering update form initialization -- must also call this function when adding activity rows to save or update forms)
+			$(":visible.wic-multivalue-block.activity" ).each( function() {
+				setUpActivityIssueAutocomplete( this );
+			})
+			// covering search and search again forms		
+			$("#wic-field-subgroup-activity_issue" ).each( function() {
+				setUpActivityIssueAutocomplete( this );
+			})			
+		}
 
 		// set up post export button as selectmenu that submits form it is on change
 		$( "#wic-post-export-button" ).selectmenu();  	
@@ -41,17 +64,11 @@ var wicFinancialCodesArray;
 		jsonPassedValues = document.getElementById( "financial_activity_types" );
 		if ( null !== jsonPassedValues ) { // only present in constituent search/save/update forms
 			wicFinancialCodesArray = JSON.parse( jsonPassedValues.innerHTML );		
-			if ( 1 == wicFinancialCodesArray.length && '' == wicFinancialCodesArray[0] ) { // no financial types set
-				$( ".activity-amount" ).hide(); 	// css is show -- hide all forms if no financial type set
-			} else { // financial types set -- on add/update forms, need to hide amounts for none financial
-				// run through all the activities and show/hide the amount based on activity-type
-				$(".wic-multivalue-block.activity" ).each( function() {
-					setUpFinancialActivityType( this );
-				})				; 
+			if ( '' < wicFinancialCodesArray[0] ) { // financial types set (min length is one with a blank element)
 	 			// set up delegated event listener for changes to activity type
 	 			$( "#wic-control-activity" ).on( "change", ".activity-type", function ( event ) {
 	 				var changedBlock = $( this ).parents( ".wic-multivalue-block.activity" )[0];
-	 				setUpFinancialActivityType( changedBlock );
+	 				showHideFinancialActivityType( changedBlock );
 	 			});
 				// set up delegated event listener for changes to activity amount -- alert user of non-numeric value
 	 			$( "#wic-control-activity" ).on( "blur", ".wic-input.activity-amount", function ( event ) {
@@ -66,28 +83,17 @@ var wicFinancialCodesArray;
 			}
  		} 
  		
-		// manage presentation of financial data on activity_lists
-		haveFinancialActivityTypesDiv = document.getElementById( "have_financial_activity_types" );
-		if ( null !== haveFinancialActivityTypesDiv ) { // only present in constituent search/save/update forms
-			haveFinancialActivityTypes = haveFinancialActivityTypesDiv.innerHTML ;		
-			if ( 'no' == haveFinancialActivityTypes ) { // no financial types set and/or no financial types among found activities
-				$( ".pl-activity-activity_amount" ).hide(); 	// css is show -- hide all forms if no financial type set
-			}
- 		} 
-
 	});
 
 })(); // end anonymous namespace enclosure
 
 
 /*
-* function setUpFinancialActivityType
-* expects an activity multivalue block -- tests activity type and sets up activity-amount
-* note: is called on document ready and sets amount in hidden template to hidden; amount remains hidden when template is shown
-*	 	-- so need not be called on template show
-*		-- can assume that if hidden 
+* function showHideFinancialActivityType
+* expects an activity multivalue block -- tests activity type and shows/hides activity-amount 
+* (visibility comes right from server; need function only on change of activity_type)
 */ 
-function setUpFinancialActivityType( activityMultivalueBlock ) {
+function showHideFinancialActivityType( activityMultivalueBlock ) {
  		var activityType = jQuery( activityMultivalueBlock ).find( ".wic-input.activity-type").val()
 		var isFinancial = ( wicFinancialCodesArray.indexOf( activityType ) > -1 );
 		if ( ! isFinancial ) {
@@ -97,6 +103,20 @@ function setUpFinancialActivityType( activityMultivalueBlock ) {
 		}
 
 }
+
+
+/* work in progres here */
+function setUpActivityIssueAutocomplete( activityMultivalueBlock ) {
+	var activityIssue = jQuery( activityMultivalueBlock ).find( ".wic-input.issue");
+	var activityIssueAutocomplete = jQuery( activityMultivalueBlock ).find( ".wic-input.issue-autocomplete");
+	activityIssueAutocomplete.autocomplete({
+  		source: [ "c++", "java", "php", "coldfusion", "javascript", "asp", "ruby" ]
+	});
+}
+
+
+
+
 
 // automatically set case_status to Open when Assigned
 function changeCaseStatus() {

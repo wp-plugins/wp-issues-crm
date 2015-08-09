@@ -11,6 +11,21 @@ class WIC_List_Activity extends WIC_List_Parent {
 	*
 	*/
 	
+	protected function list_entity_field_filter ( $fields, &$wic_query ) {
+		$filtered_fields = array();
+		if ( false === $wic_query->financial_activities_in_results ) {
+			foreach ( $fields as $field ) {
+				if ( 'activity_amount' != $field->field_slug ) {
+					$filtered_fields[] = $field;				
+				}			
+			}
+			return ( $filtered_fields );		
+		} else {
+			return ( $fields );		
+		}
+			
+	}	
+	
 	public function format_entity_list( &$wic_query, $header ) { 
 
 		$wic_query->entity = 'activity'; // came in as trend
@@ -23,8 +38,6 @@ class WIC_List_Activity extends WIC_List_Parent {
 		'</form></div>'; 
 		
 		$output .= 	'<p class = "wic-list-legend">' . __('Search SQL was:', 'wp-issues-crm' )	 .  $wic_query->sql . '</p>';
-		$have_financial_activity_types = $wic_query->financial_activities_in_results ? 'yes' : 'no';
-		$output .=  '<div id="have_financial_activity_types" class="hidden-template">' . $have_financial_activity_types. '</div>';	
 
 		return $output;
    } // close function
@@ -36,8 +49,9 @@ class WIC_List_Activity extends WIC_List_Parent {
 		$output = '';
 		$line_count = 1;
 
-		// check current user so can highlight assigned cases
-		$current_user_id = get_current_user_id();
+		// get financial activity types to avoid showing nonsensical zero amounts
+		$wic_option_array = get_option('wp_issues_crm_plugin_options_array'); 
+		$financial_types_array = explode (',' , $wic_option_array['financial_activity_types'] );
 
 		foreach ( $wic_query->result as $row_array ) {
 
@@ -46,15 +60,17 @@ class WIC_List_Activity extends WIC_List_Parent {
 			$row_class = ( 0 == $line_count % 2 ) ? "pl-even" : "pl-odd";
 			
 			$row .= '<ul class = "wic-post-list-line">';			
-				foreach ( $fields as $field ) {
+				foreach ( $fields as $field ) { 
 					// showing fields other than ID with positive listing order ( in left to right listing order )
 					if ( 'ID' != $field->field_slug && $field->listing_order > 0 ) {
 						$row .= '<li class = "wic-post-list-field pl-' . $wic_query->entity . '-' . $field->field_slug . ' "> ';
 							if ( 'constituent_id' == $field->field_slug ) {
 								$row .= $row_array->last_name . ', ' . $row_array->first_name;							
 							} elseif ( 'issue' == $field->field_slug ) {
-								$row .= $row_array->post_title;							
-							} else {
+								$row .= $row_array->post_title;
+							} elseif ( 'activity_amount' == $field->field_slug ) {								
+								$row .= in_array ( $row_array->activity_type, $financial_types_array ) ? $row_array->activity_amount : '--'; 							
+							} else  {
 								$row .=  $this->format_item ( $wic_query->entity, $field->list_formatter, $row_array->{$field->field_slug} ) ;
 							}
 						$row .= '</li>';			

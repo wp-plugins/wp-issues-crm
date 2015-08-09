@@ -68,6 +68,11 @@ abstract class WIC_Control_Parent {
 		$this->value = $value;	
 	}
 	
+	public function set_input_class_to_hide_element() {
+		$this->default_control_args['input_class'] .= ' hidden-element ';
+		$this->default_control_args['label_class'] .= ' hidden-element ';
+	}	
+	
 	public function get_value () {
 		return $this->value;	
 	}

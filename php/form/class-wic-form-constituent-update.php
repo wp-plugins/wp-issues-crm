@@ -5,15 +5,10 @@
 *
 */
 
-class WIC_Form_Constituent_Update extends WIC_Form_Parent  {
+class WIC_Form_Constituent_Update extends WIC_Form_Constituent  {
 
 	// no header tabs
 	protected function format_tab_titles( &$data_array ){}
-
-	// associate form with entity in data dictionary
-	protected function get_the_entity() {
-		return ( 'constituent' );	
-	}
 
 	// define the top row of buttons (return a row of wic_form_button s)
 	protected function get_the_buttons ( &$data_array ) {
@@ -108,17 +103,6 @@ class WIC_Form_Constituent_Update extends WIC_Form_Parent  {
 		return ( WIC_Entity_Comment::create_comment_list ( $doa ) ); 					
 	}
 	
-	protected function post_form_hook ( &$data_array )  {
-		
-		/* get option array */
-		$wic_option_array = get_option('wp_issues_crm_plugin_options_array');
-		
-		/* create json string of array of financial transaction activity_codes */ 
-		$transaction_type_code_string = json_encode ( explode (',' ,  $wic_option_array['financial_activity_types'] ) );
-		
-		echo '<div id="financial_activity_types" class="hidden-template">' . $transaction_type_code_string . '</div>';
-	
-	}	
 	
 	// hooks not implemented
 	protected function supplemental_attributes() {}

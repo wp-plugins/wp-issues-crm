@@ -5,12 +5,7 @@
 *
 */
 
-class WIC_Form_Constituent_Search extends WIC_Form_Parent  {
-	
-	// associate form with entity in data dictionary
-	protected function get_the_entity() {
-		return ( 'constituent' );	
-	}
+class WIC_Form_Constituent_Search extends WIC_Form_Constituent  {
 
 	// no header tabs
 	protected function format_tab_titles( &$data_array ){}
@@ -80,18 +75,7 @@ class WIC_Form_Constituent_Search extends WIC_Form_Parent  {
 		return ( 'save_options' != $group->group_slug && 'comment' != $group->group_slug );	
 	}	
 
-	/* use the post_form_hook to put a json string in the form identifying financial transaction activity type codes */
-	protected function post_form_hook ( &$data_array )  {
-		
-		/* get option array */
-		$wic_option_array = get_option('wp_issues_crm_plugin_options_array');
-		
-		/* create json string of array of financial transaction activity_codes */ 
-		$transaction_type_code_string = json_encode ( explode (',' , $wic_option_array['financial_activity_types'] ) );
-		
-		echo '<div id="financial_activity_types" class="hidden-template">' . $transaction_type_code_string . '</div>';
 
-	}
 
 	// hooks not implemented
 	protected function supplemental_attributes() {}

@@ -53,6 +53,9 @@ abstract class WIC_List_Parent {
 		global $wic_db_dictionary;
   		$fields =  $wic_db_dictionary->get_list_fields_for_entity( $wic_query->entity );
 	
+		// filter to give lister ability to suppress header elements
+		$fields = $this->list_entity_field_filter ( $fields, $wic_query );	
+	
 		// query entity used in class definition for most elements to support alternative search log styling
 		$output .= '<ul class = "wic-post-list">' .  				// open ul for the whole list
 			'<li class = "pl-odd ' . $wic_query->entity  .'">' .	// header is a list item with a ul within it
@@ -75,9 +78,10 @@ abstract class WIC_List_Parent {
 	
 	}
 
-
-
-
+	// default is do nothing
+	protected function list_entity_field_filter ( $fields, &$wic_query ) {
+		return ( $fields );	
+	}
    
    // defines standard lookup hierarchy for formats (mirrors look up for dropdowns)
    protected function format_item ( $entity, $list_formatter, $value ) {
@@ -143,5 +147,6 @@ abstract class WIC_List_Parent {
 		
 		return ( $buttons );
 	}
+
 }	
 
