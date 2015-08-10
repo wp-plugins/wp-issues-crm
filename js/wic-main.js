@@ -39,7 +39,7 @@ var wicStandardInputBorder;
 
 		// same for name and addresses
 		if ( wicUseNameAndAddressAutocomplete ) {
-			$( "#last_name, #first_name, :visible.address-line, :visible.email-address " ).each ( function () {
+			$( "#last_name, #first_name, #middle_name, :visible.address-line, :visible.email-address " ).each ( function () {
 				setUpNameAndAddressAutocomplete( this );			
 			});		
 		}
@@ -142,14 +142,20 @@ function setUpActivityIssueAutocomplete( activityMultivalueBlock ) {
 				event.preventDefault();
 				// show the selected item in the visible input (strip the informational add ons)
 				cleanLabel = ui.item.label.substring(0, ui.item.label.lastIndexOf('(') - 1 );
-				//
-				activityIssueAutocomplete.val( cleanLabel );
-				// add the selected option to the hidden select (no harm if added twice -- just need to have it there to successfully assign value)
-				activityIssue.append( jQuery("<option></option>").val( ui.item.value ).text( cleanLabel ) ) ;  
-				// assign post id as value of the hidden select 
-				activityIssue.val( ui.item.value );
-				// reset border color upon a selection 
-				activityIssueAutocomplete.css( 'border-color', wicStandardInputBorder );
+				// test for possibility that user selects the not-found message
+				if ( ui.item.value > -1 ) {
+					activityIssueAutocomplete.val( cleanLabel );
+					// add the selected option to the hidden select (no harm if added twice -- just need to have it there to successfully assign value)
+					activityIssue.append( jQuery("<option></option>").val( ui.item.value ).text( cleanLabel ) ) ;  
+					// assign post id as value of the hidden select 
+					activityIssue.val( ui.item.value );
+					// reset border color upon a selection 
+					activityIssueAutocomplete.css( 'border-color', wicStandardInputBorder );
+				// if user selected not found message, reset phrase and hidden search value
+				} else {
+					activityIssueAutocomplete.val( '' );
+					activityIssue.val( '' );
+				}
 			},
 			change: function ( event, ui ) {
 				/* 
@@ -207,7 +213,13 @@ function setUpNameAndAddressAutocomplete ( element ) {
 		  		wpIssuesCRMAjaxPost( 'autocomplete', 'db_pass_through',  element.id, request.term, function( response ) {
 						responseAC ( response );		          
 		      })
-			},		
+			},
+			select: function ( event, ui ) {
+				event.preventDefault();
+				if ( '. . .' != ui.item.value ) {
+					this.value = ui.item.value; 				
+				}
+			}		
 	});
 
 }

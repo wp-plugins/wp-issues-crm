@@ -106,7 +106,7 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 		$compute_total 	= false;
 		$retrieve_limit 	= '10';
 		$show_deleted		= true;
-		
+
 		extract ( $search_parameters, EXTR_OVERWRITE );
 
 		// implement search parameters

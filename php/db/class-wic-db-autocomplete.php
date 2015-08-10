@@ -22,7 +22,7 @@ class WIC_DB_Autocomplete  {
 		// strip look_up_mode out of $look_up_mode if encumbered by indexing
 		$look_up_mode = strrchr ( $look_up_mode , '[') === false ? $look_up_mode : ltrim( rtrim( strrchr ( $look_up_mode , '['), ']' ), '[' );
 
-		if ( strlen ( $term ) > 2 ) { // protect against short strings that are sanitized blanks  		
+		if ( strlen ( $term ) > 2 ) { // protect against strings that are sanitized to blanks or too short   		
 			
 			switch ( $look_up_mode ) {
 				case 'activity_issue': // retrieve id/title array of in descending order of status
@@ -47,10 +47,14 @@ class WIC_DB_Autocomplete  {
 					foreach ( $results as $result ) {
 						$response[] = new WIC_DB_Activity_Issue_Autocomplete_Object (  $result->post_title, $result->ID );
 					}
+					if ( 0 == count ( $response ) ) {
+						$response = array ( -1, 'No issues/posts including phrase "' . $term . '" in title.');					
+					}
 					echo json_encode ( $response ) ;
 					wp_die();				
 				case 'first_name':
 				case 'last_name':
+				case 'middle_name':
 					$table = $wpdb->prefix . 'wic_constituent';
 					break;
 				case 'email_address':
@@ -67,6 +71,7 @@ class WIC_DB_Autocomplete  {
 				SELECT $look_up_mode from $table
 				WHERE $look_up_mode LIKE %s
 				GROUP BY $look_up_mode
+				LIMIT 0, 20
 				";
 			$values = array ( $term . '%' ); // right wild card only
 			$sql = $wpdb->prepare ( $sql_template, $values );
@@ -74,8 +79,11 @@ class WIC_DB_Autocomplete  {
 			foreach ( $results as $result ) {
 				$response .= '"' . $result->$look_up_mode . '",';				
 			}
+			if ( 20 == count ( $results ) ) {
+				$response .= '". . .",';			
+			} 
 			echo rtrim ( $response, ',' ) . ']';
-		// if underlength sanitized string, just send back empty	 
+		// if sanitized search string is underlength, just send back empty	 
 		} else {
 			echo json_encode ( array() );		
 		}				

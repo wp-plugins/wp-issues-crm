@@ -3,8 +3,8 @@ Contributors: Will Brownsberger
 Donate link: 
 Tags: contact, crm, constituent, customer, issues, list
 Requires at least: 4.0
-Tested up to: 4.2.2
-Stable tag: 2.2.6
+Tested up to: 4.3
+Stable tag: 2.2.7
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -33,7 +33,9 @@ with your previous system.
 
 = There are no issues in the “Activity issue?” drop down. WTF? =
 
-Not all issues appear in the activity drop down. WP Issues CRM allows you to control the dropdown issues list to suit your workflow:
+By default, WP Issues CRM 2.2.7 and higher uses an autocomplete that searches all issue titles (except those closed for assignment).  
+However, if you are using an older version or have chosen to disable this (either globally in settings or as in individual in preferences), then
+not all issues will appear in the activity drop down. WP Issues CRM allows you to control the legacy dropdown issues list to suit your workflow:
 
 1. To cause an issue to always appear in the dropdown, go to the issue itself and select “Always appear in issue dropdown” under the Activity Tracking section. Don’t forget to then save the issue.
 1. If you want your last viewed or recently used issues to automatically appear in the drop down, go to Settings and check Allow Issue Preferences. Save Settings. Then go to your own User Preferences. Check “Last viewed” to put your last viewed issue in the drop down. Select a “Last Used” option. In addition to showing open issues (those selected to “Always Appear”), you can show either your most recently used issues or the issues that you have most frequently used among the last 30 activities you have updated.
@@ -92,6 +94,13 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 
 == Changelog ==
+= 2.2.7 =
+* Add autocomplete for name and address fields
+* Add title search for activity issue field
+* Add ability to track amount fields for activities if financial activity types are defined in settings
+* Show/hide amounts as appropriate for financial and non-financial activity types
+* Add ability to retrieve and download activity detail from the trend search facility 
+* Add street address to constituent lists
 = 2.2.6 =
 * Fix bug affecting multi-user installations -- table in search log database access not multi-user prefixed
 * Automatically trim leading and trailing spaces from staging table values in upload process 

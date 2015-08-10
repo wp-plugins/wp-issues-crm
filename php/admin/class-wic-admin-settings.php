@@ -286,7 +286,7 @@ class WIC_Admin_Settings {
 	*/
 	// section legend call back
 	public function preference_settings_legend() {
-		echo '<p>' . __( 'On constituent screens, when activities are added or updated, they associated issue must be identified -- 
+		echo '<p>' . __( 'On constituent screens, when activities are added or updated, the activity type and associated issue must be identified -- 
 		for example, an activity could be of type "EMail" about an issue titled "Education".', 'wp-issues-crm' ). '</p>' .
 		'<p>' . __( 'By default, the Activity Issue field will instantly retrieve issues matching what the user types (for example, typing "edu" would 
 		show issues with titles	including the word "education").  The user must select one of the retrieved issues.  The retrieval will prioritize issues 
@@ -295,8 +295,7 @@ class WIC_Admin_Settings {
 		'<p>' . __('By checking the box below, you can disable this built-in search feature and force users to select from a defined drop down including only 
 		issues set as "Always appear in issue dropdown" in the Activity Tracking section on the Issue form.  This approach controls user choices as
 		might be necessary in a larger office.', 'wp-issues-crm' ) .  '</p>' . 
-		'<p>' . __( 'Note that even if you allow searching for issues, users will have the option to choose the simpler non-searchable select dropdown and
-		to set preferences for what appears in that drop down.', 'wp-issues-crm' ) . '</p>';
+		'<p>' . __( 'Note that even if you allow searching for issues, users will have the option to choose the simpler non-searchable select dropdown by setting preferences.', 'wp-issues-crm' ) . '</p>';
 	}
 
 	// setting field call back	

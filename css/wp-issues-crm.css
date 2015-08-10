@@ -517,8 +517,8 @@ a#wic-email-icon-link:hover {
 
 #wic-form-constituent-update .wic-input.activity-date,
 #wic-form-constituent-save .wic-input.activity-date {
-	width: 45%;
-}
+	width: 47%;
+} 
 
 #wic-form-constituent-update .wic-input.activity-amount,
 #wic-form-constituent-save .wic-input.activity-amount {
@@ -546,10 +546,14 @@ label.wic-label.activity-date {
 }
 
 /* this is the size applicable in the search form -- scaled up in rows in save/update forms */
-.wic-input.activity-amount, 
-.wic-input.activity-date {
+.wic-input.activity-amount {
 	width: 23.4375%;
 }
+
+.wic-input.activity-date {
+	width: 18.1%;
+}
+
 
 wic-label-2.activity-amount {
 	display: inline-block;
@@ -591,8 +595,10 @@ textarea.wic-input.activity-note {
 }
 
 /* only show mark deleted on update form */
-#wic-form-constituent-save .mark-deleted,
-#wic-form-constituent-search .mark-deleted {
+#wic-form-constituent-save .wic-label.mark-deleted,
+#wic-form-constituent-search .wic-label.mark-deleted,
+#wic-form-constituent-save .wic-input.mark-deleted,
+#wic-form-constituent-search .wic-input.mark-deleted {
 	display: none;
 }
 
@@ -1660,11 +1666,26 @@ td.wic-statistic  {
 *******************************************************************
 *******************************************************************
 *
-* smaller screen styling -- only one degradation step -- at 960px
+* smaller screen styling -- one main degradation step -- at 960px
 *
 *******************************************************************
 *******************************************************************
 *******************************************************************/
+
+/*  problem solving tweaks as necessary at the 1250 step */
+@media only screen and (max-width: 1200px) {
+	#wic-form-constituent-save .wic-multivalue-field-subgroup.wic-field-subgroup-activity,
+	#wic-form-constituent-update .wic-multivalue-field-subgroup.wic-field-subgroup-activity {
+		display: block;
+		width: 100%;
+	}
+
+	#wic-form-constituent-save .wic-multivalue-field-subgroup.wic-field-subgroup-activity_amount,
+	#wic-form-constituent-update .wic-multivalue-field-subgroup.wic-field-subgroup-activity_amount {
+		display: block;
+		width: 100%;
+	}
+}
 @media only screen and (max-width: 960px) {
 
 	/* message box and notices */
@@ -1914,11 +1935,6 @@ td.wic-statistic  {
 		margin-bottom: 0;
 	}	
 
-	#wic-form-constituent-save .wic-input.activity-date,
-	#wic-form-constituent-update .wic-input.activity-date {
-		width: 30%;
-	}
-	
 	.wic-form-button.wic-activity-issue-link-button {
 		width: 26%;
 		margin: 0 .05%;
