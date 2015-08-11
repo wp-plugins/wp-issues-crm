@@ -153,7 +153,7 @@ class WIC_List_Constituent_Export {
 		$temp_table = $wpdb->prefix . 'wic_temporary_id_list';
 		
 		// pass constituent list through repeated chunks to db as temp table
-		$temp_constituent_table = $wpdb->prefix . 'wic_temporary_constituent_list';		
+		$temp_constituent_table = $wpdb->prefix . 'wic_temporary_constituent_list' . time();		
 
 		global $wic_db_dictionary;
 		$custom_fields = $wic_db_dictionary->custom_fields_match_array ();
@@ -252,7 +252,7 @@ class WIC_List_Constituent_Export {
 
 
 
-	private static function do_download_security_checks() {
+	protected static function do_download_security_checks() {
 
 		$wic_plugin_options = get_option( 'wp_issues_crm_plugin_options_array' ); 
 		// if not set, limit access to administrators
@@ -270,7 +270,7 @@ class WIC_List_Constituent_Export {
 	}
 
 	// do_the_export runs the $sql in chunks and exports to filename
-	public static function do_the_export ( $file_name, $sql ) {
+	protected static function do_the_export ( $file_name, $sql ) {
 
 		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 		header('Content-Description: File Transfer');

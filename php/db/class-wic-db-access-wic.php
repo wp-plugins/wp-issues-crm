@@ -106,7 +106,7 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 		$compute_total 	= false;
 		$retrieve_limit 	= '10';
 		$show_deleted		= true;
-		
+
 		extract ( $search_parameters, EXTR_OVERWRITE );
 
 		// implement search parameters
@@ -143,7 +143,7 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 			$compare 		= $where_item['compare'];
 			
 			// set up $where clause with placeholders and array to fill them
-			if ( '=' == $compare || '>' == $compare || '<' == $compare || '!=' == $compare ) {  // straight strict match			
+			if ( '=' == $compare || '!=' == $compare || '>=' == $compare || '<=' == $compare ) {  // straight strict match			
 				$where .= " AND $table.$field_name $compare %s ";
 				$values[] = $where_item['value'];
 			} elseif ( 'like' == $compare ) { // right wild card like match
@@ -356,10 +356,11 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 				$sub_field_list = ''; 
 				foreach ( $sub_fields as $sub_field ) {
 					if ( 'ID' != $sub_field->field_slug ) { 
-						$sub_field_list .= ( '' == $sub_field_list ) ? $field->field_slug . '.' : ', ' . $field->field_slug . '.' ;
+						$sub_field_list .= ( '' == $sub_field_list ) ? $field->field_slug . '.' : ',\'| \',' . $field->field_slug . '.' ;
 						$sub_field_list .= $sub_field->field_slug;
 					}
 				}
+
 				// concat multivalues for single row display
 				$select_list .= ' GROUP_CONCAT( DISTINCT ' . $sub_field_list . ' SEPARATOR \', \' ) AS ' . $field->field_slug;
 				$join .= ' LEFT JOIN ' .  $wpdb->prefix . 'wic_' . $field->field_slug . ' ' . $field->field_slug . ' ON ' . 

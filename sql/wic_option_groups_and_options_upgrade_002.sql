@@ -1,0 +1,2 @@
+INSERT INTO wp_wic_option_value ( parent_option_group_slug, option_value, option_label, value_order, enabled, last_updated_time, last_updated_by) VALUES
+('trend_search_modes', 'activities', 'List activities -- detail', 30, 1, '2015-02-10 13:00:00', 0);
