@@ -101,6 +101,8 @@ this product ourselves on a daily basis and we are committed to continuous long-
 * Show/hide amounts as appropriate for financial and non-financial activity types
 * Add ability to retrieve and download activity detail from the trend search facility 
 * Add street address to constituent lists
+* Admin header changed from h2 to h1 for Wordpress 4.3 compatibility
+* Full testing of plugin with Wordpress 4.3 Release Candidate -- no changes needed
 = 2.2.6 =
 * Fix bug affecting multi-user installations -- table in search log database access not multi-user prefixed
 * Automatically trim leading and trailing spaces from staging table values in upload process 

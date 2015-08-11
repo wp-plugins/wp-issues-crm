@@ -60,7 +60,7 @@ class WIC_DB_Access_Activities Extends WIC_DB_Access {
 		} else {
 			$this->sql = $sql . " LIMIT 0, " . $this->retrieve_limit; 
 			// do search
-			$this->result = $wpdb->get_results ( $sql );
+			$this->result = $wpdb->get_results ( $this->sql ); // use sql with limit
 		 	$this->showing_count = count ( $this->result );
 
 			// set value to say whether found_count is known
@@ -80,8 +80,9 @@ class WIC_DB_Access_Activities Extends WIC_DB_Access {
 				foreach ( $financial_activity_type_array as $type ) {
 					$formatted_financial_activity_type_string .= '\'' . $type . '\',';  								
 				}
-				$formatted_financial_activity_type_string = rtrim( $formatted_financial_activity_type_string, ',' );			
-				$in_phrase = ", sum(if( activity_type IN (" . $formatted_financial_activity_type_string . "),1,0)) as includes_financial_types";	
+				$formatted_financial_activity_type_string = rtrim( $formatted_financial_activity_type_string, ',' );	
+				// the CAST and COLLATE syntax makes the IN operator case sensitive -- this is the standard		
+				$in_phrase = ", sum(if( CAST(activity_type AS CHAR CHARACTER SET latin1) COLLATE latin1_general_cs IN (" . $formatted_financial_activity_type_string . "),1,0)) as includes_financial_types";	
 				$summary_select .= $in_phrase;
 			}			
 
