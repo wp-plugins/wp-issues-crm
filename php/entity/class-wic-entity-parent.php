@@ -104,9 +104,9 @@ abstract class WIC_Entity_Parent {
 		foreach ( $search['unserialized_search_array'] as $search_array ) { 
 			if ( $search_array['table'] == $this->entity ) {
 				// need to convert range controls that were carried as single values (because only one end entered) back into arrays
-				if ( '>' == $search_array['compare'] ) {
+				if ( '>=' == $search_array['compare'] ) {
 					$key_value_array[$search_array['key']] = array ( $search_array['value'], '' );
-				} else if ( '<' == $search_array['compare'] ) {
+				} else if ( '<=' == $search_array['compare'] ) {
 					$key_value_array[$search_array['key']] = array ( '', $search_array['value'] );
 				// otherwise, just assign values
 				} else { 
@@ -440,11 +440,13 @@ abstract class WIC_Entity_Parent {
 		$this->populate_data_object_array_from_submitted_form();
 		$this->sanitize_values();
 		$wic_query = WIC_DB_Access_Factory::make_a_db_access_object( $this->entity );
+		// note that not all search parameters are relevant to every search form
 		$search_parameters= array(
 			'sort_order' 		=> isset ( $this->data_object_array['sort_order'] ) ? $this->data_object_array['sort_order']->get_value() : '',
 			'compute_total' 	=> isset ( $this->data_object_array['compute_total'] ) ? $this->data_object_array['compute_total']->get_value() : '',
 			'retrieve_limit' 	=> isset ( $this->data_object_array['retrieve_limit'] ) ? $this->data_object_array['retrieve_limit']->get_value() : '',
 			'show_deleted' 	=> isset ( $this->data_object_array['show_deleted'] ) ? $this->data_object_array['show_deleted']->get_value() : '',
+			'trend_search_mode' 	=> isset ( $this->data_object_array['trend_search_mode'] ) ? $this->data_object_array['trend_search_mode']->get_value() : '',
 			'select_mode'		=> 'id',
 			'log_search'		=> true
 			);

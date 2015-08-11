@@ -68,6 +68,11 @@ abstract class WIC_Control_Parent {
 		$this->value = $value;	
 	}
 	
+	public function set_input_class_to_hide_element() {
+		$this->default_control_args['input_class'] .= ' hidden-element ';
+		$this->default_control_args['label_class'] .= ' hidden-element ';
+	}	
+
 	public function get_value () {
 		return $this->value;	
 	}
@@ -92,6 +97,9 @@ abstract class WIC_Control_Parent {
 		return ( 1 == $this->field->upload_dedup );	
 	}
 
+	public function get_field_slug() {
+		return ( $this->field->field_slug );	
+	}
 
 	/**********************************************************************************
 	*
@@ -346,10 +354,14 @@ abstract class WIC_Control_Parent {
 	* create set array or sql statements for saves/updates 
 	*
 	*********************************************************************************/
-	public function create_update_clause () {
-		if ( ( ( ! $this->field->transient ) && ( ! $this->field->readonly ) ) || 'ID' == $this->field->field_slug ) {
+	public function create_update_clause () { 
+		if ( ( ( ! $this->field->transient ) && ( ! $this->field->readonly ) ) 
+				|| 'ID' == $this->field->field_slug 
+				|| 'custom_field_' == substr( $this->field->field_slug, 0, 13 ) ) {
 			// exclude transient and readonly fields.   ID as readonly ( to allow search by ID), but need to pass it anyway.
 			// ID is a where condition on an update in WIC_DB_Access_WIC::db_update
+			// include custom fields since may be readonly but need to update in batch upload; 
+			// -- no harm in including custom fields in form context since controls will be appropriately readonly 
 			$update_clause = array (
 					'key' 	=> $this->field->field_slug,
 					'value'	=> $this->value,

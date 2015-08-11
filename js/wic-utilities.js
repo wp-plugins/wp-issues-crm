@@ -1,100 +1,36 @@
 /*
 *
-* wic-utilities.js
+* wic-utilities.js (generally available ui services and functions)
 *
 */
 
-// automatically set case_status to Open when Assigned
-function changeCaseStatus() {
-	 
-	if( document.getElementById('case_assigned') != undefined && undefined == document.getElementById('wic-form-constituent-search') ) {
-		var assigned = document.getElementById('case_assigned');				
-		var assignedStaff = assigned.options[assigned.selectedIndex].value;
+
+// self-executing anonymous namespace
+( function() {
+	
+	jQuery(document).ready(function($) {
 		
-		if ( assignedStaff > 0 ) {
-			var caseStatus = document.getElementById('case_status');	
-				caseStatus.value = '1';	
-		}
-	}
-}
+		// note that have to reinitialize datepickers for hidden-template fields anyway and cleaner to skip them here (additional initialization in wic-main.js)
+		// alt approach was remove class for datepicker -- jQuery( newFields ).find( ".datepicker" ).removeClass('hasDatepicker');		
+		
+		// set date picker
+	  $(".datepicker").not(":hidden").datepicker({
+	  		 dateFormat: "yy-mm-dd"
+	  	});
 
-// set issue follow_up_status to Open if Assigned
-function changeFollowUpStatus() {
-	if( document.getElementById('issue_staff') != undefined && undefined == document.getElementById('wic-form-issue-search') ) {
-		var assigned = document.getElementById('issue_staff');				
-		var assignedStaff = assigned.options[assigned.selectedIndex].value;
-		if ( assignedStaff > '' ) {
-			var caseStatus = document.getElementById('follow_up_status');	
-				caseStatus.value = 'open';	
-		}
-	}
-}
+	});
 
-// changes the activity issue link on change of the selected issue
-function changeActivityIssueButtonDestination() {
-	// since can't point to button that should change, just update them all
-	var activities = document.getElementsByClassName( 'wic-multivalue-block activity' );
-	var numActivities = activities.length; 
-	for ( i = 0; i < numActivities; i++ ) {
-		var activity_with_button = activities[i].getElementsByClassName ( 'wic-form-button wic-activity-issue-link-button');
-		var activity_with_issue = activities[i].getElementsByClassName ( 'wic-input issue');
-		var activity_issue = activity_with_issue[0];
-		if ( activity_with_button.length > 0 ) {
-			var activity_link_button = activity_with_button[0];
-			if ( activity_issue.value > '' ) {		
-				activity_link_button.value = 'issue,id_search,' + activity_issue.value;
-			} else {
-				activity_link_button.parentNode.removeChild( activity_link_button );			
-			}		
-		} else { // no link button -- create one if have an issue value
-			if ( activity_issue.value > '' ) {	
-				var btn = document.createElement("BUTTON");
-				btn.innerHTML = 'View Issue';
-				btn.className = 'wic-form-button wic-activity-issue-link-button';
-				btn.value = 'issue,id_search,' + activity_issue.value;
-				btn.name  = 'wic_form_button';
-				previousGroup = activity_issue.parentNode.previousSibling;
-				previousGroup.appendChild(btn);	
-				// activity_link_button.value = 'issue,id_search,' + activity_issue.value;
-			} 
-		}
-	}
-}
+})(); // end anonymous namespace enclosure
 
-// show/hide form sections
-function togglePostFormSection( section ) { 
-	var constituentFormSection = document.getElementById ( section );
-	var display = constituentFormSection.style.display;
-	if ('' == display) {
-		display = window.getComputedStyle(constituentFormSection, null).getPropertyValue('display');
-	}
-	var toggleButton	= document.getElementById ( section + "-show-hide-legend" );
-	if ( "block" == display ) {
-		constituentFormSection.style.display = "none";
-		toggleButton.innerHTML = "Show";
-	} else {
-		constituentFormSection.style.display = "block";
-		toggleButton.innerHTML = "Hide";
-	}
-}
 
-// screen delete rows in multivalue fields
-function hideSelf( rowname ) {
-	var row = document.getElementById ( rowname );
-	rowClass =row.className; 
-	row.className = rowClass.replace( 'visible-templated-row', 'hidden-template' ) ;
-	sendErrorMessage ( 'Row will be deleted when you save/update.' )
-	window.nextWPIssuesCRMMessage = 'You can proceed.';
-	jQuery('#wic-form-constituent-update').trigger('checkform.areYouSure');
-}
-
+/* pair of functions for sending a temporary warning message before restoring green light message */
 function sendErrorMessage ( messageText ) {
 	var message = document.getElementById( 'post-form-message-box' );
 	permMessage = message.innerHTML
 	message.innerHTML = messageText;
 	message.className = 'wic-form-errors-found';
 
-	timeout = window.setTimeout ( restoreMessage, 12000 ); 
+	timeout = window.setTimeout ( restoreMessage, 10000 ); 
 }
 
 function restoreMessage (  ) {
@@ -102,6 +38,7 @@ function restoreMessage (  ) {
 	message.innerHTML = window.nextWPIssuesCRMMessage;
 	message.className = 'wic-form-good-news';
 }
+
 
 // add new visible rows by copying hidden template
 function moreFields( base ) {
@@ -126,11 +63,20 @@ function moreFields( base ) {
 	insertHere.parentNode.insertBefore( newFields, insertHere );
 	jQuery('#wic-form-constituent-update').trigger('checkform.areYouSure'); /* must also set 'addRemoveFieldsMarksDirty' : true in Are you sure*/
 	jQuery('#wic-form-constituent-save').trigger('checkform.areYouSure');
-	// reactivate datepicker on child fields 	
- 	jQuery( newFields ).find( ".datepicker" ).removeClass('hasDatepicker');	
+	// activate datepicker on child fields (in wic-jquery-ui.js do not activate datepicker unless visible ) 
  	jQuery( newFields ).find( ".datepicker" ).datepicker({
 			 dateFormat: "yy-mm-dd"
-		});
+	}); 
+ 	
+ 	if ( wicUseActivityIssueAutocomplete ) {
+ 		setUpActivityIssueAutocomplete( jQuery( newFields ).find( ".wic-multivalue-block.activity" )[0] );
+	}
+
+	if ( wicUseNameAndAddressAutocomplete ) {
+		jQuery( newFields ).find (".address-line, .email-address" ).each ( function () {
+			setUpNameAndAddressAutocomplete( this );			
+		});		
+	}
 }
 
 // supports moreFields by walking node tree for whole multi-value group to copy in new name/ID values
@@ -160,38 +106,3 @@ function replaceInDescendants ( template, oldValue, newValue, base  ) {
 	}
 }
 
-// test for dup values among option values in option group edit
-function testForDupOptionValues () {
-
-	var optionValues = document.getElementsByClassName( 'wic-input option-value' );
-
-	valuesValues = [];
-	
-	for ( var i = 0; i < optionValues.length; i++ ) {
-		var dbVal = optionValues[i].value;
-		if ( null !== optionValues[i].offsetParent ) {
-			valuesValues.push( optionValues[i].value.trim() );	
-		}
-	} 
-	var sortedValues = valuesValues.sort();
-	
-	var results = [];
-
-	for (var j = 0;  j < sortedValues.length - 1; j++) {
-   	 if (sortedValues[j + 1] == sortedValues[j]) {
-   	 	var displayValue; 
-   	 	if ( '' == sortedValues[j].trim() ) {
-   	 		displayValue = '|BLANK|';
-   	 	} else {
-				displayValue = '"' + sortedValues[j] + '"';   	 	
-   	 	}
-   	 	var errorMessage = 'The database value of each option must be unique.  The value ' + displayValue + ' appears more once.  Delete an extra row using the red <span id="" class="dashicons dashicons-dismiss"></span> next to it.'
-   	 	sendErrorMessage ( errorMessage  )
-			window.nextWPIssuesCRMMessage = 'You can proceed after making values unique.';	
-      	return false;
-    	}
-	}	
-	
-	return true;
-	
-}

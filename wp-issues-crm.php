@@ -3,7 +3,7 @@
  * Plugin Name: WP Issues CRM
  * Plugin URI: http://wp-issues-crm.com 
  * Description: Constituent Relationship Management for organizations that respond to constituents.  Organizes constituent contacts ( calls, etc. ) around Wordpress posts and categories. 
- * Version: 2.2.1
+ * Version: 2.2.7
  * Author: Will Brownsberger
  * Author URI: http://willbrownsberger.com
  * Text Domain: wp-issues-crm
@@ -40,7 +40,7 @@
 
 // set database version global;
 global $wp_issues_crm_db_version;
-$wp_issues_crm_db_version = '2.2';
+$wp_issues_crm_db_version = '2.2.7'; 
 
 
 // check for database install or updates -- note that the 'plugins_loaded' hook fires before is_admin is set, so too late if put in admin_setup
@@ -54,28 +54,38 @@ register_activation_hook ( __FILE__, array ( 'WIC_Admin_Setup', 'wic_set_up_role
 
 
 // if is_admin, load necessary ( and only necessary ) components in admin
+$plugin_options = get_option( 'wp_issues_crm_plugin_options_array' );
 if ( is_admin() ) { 
-	if ( ! spl_autoload_register('wp_issues_crm_autoloader', true, true ) ) { // true throw errors, true, prepend
+	if ( ! spl_autoload_register('wp_issues_crm_autoloader' ) ) { // omit parameters --- no need to prepend which would force PHP Version 5.3.0
 		die ( __( 'Fatal Error: Unable to register wp_issues_crm_autoloader in wp-issues-crm.php', 'wp-issues-crm' ) );	
 	};
 	$wic_admin_setup = new WIC_Admin_Setup;
-// otherwise execute the one function in this plugin that acts directly on the front end 
-} else {
-		$plugin_options = get_option( 'wp_issues_crm_plugin_options_array' );
-		if ( isset ( $plugin_options['hide_private_posts'] ) ) { 
-			// optionally control display of private posts
-			add_action( 'pre_get_posts', 'keep_private_posts_off_front_end_even_for_administrators' );
-		}
+} else { 
+	// if hiding all private posts, even for admin, hook for front end main queries
+	if ( isset ( $plugin_options['hide_private_posts'] ) ) { 
+		// optionally control display of private posts
+		add_action( 'pre_get_posts', 'keep_private_posts_off_front_end_even_for_administrators' );
+	}
 }
 
-// function placed here so will be accessible on front end.
-function keep_private_posts_off_front_end_even_for_administrators( $query ) {
+// ajax version of post hider is added whether or not is_admin, but only executes in theme widgets and ajax add-ons corresponding to main queries 
+if ( isset ( $plugin_options['hide_private_posts'] ) ) { 
+	// special hook for compatibility with responsive tabs theme and other infinite scroll themes-- pass query args, not the query
+	add_filter( 'responsive_tabs_ajax_pre_get_posts', 'keep_private_posts_off_front_end_even_for_administrators_ajax', 10, 1 );
+}
+
+// functions placed here so will be accessible on front end.
+function keep_private_posts_off_front_end_even_for_administrators( $query ) { 
 	if ( ! is_admin() ) { 
 		// note that this does not prevent this plugin or widgets from showing private posts to which logged in user has access
    	$query->set( 'post_status', array( 'publish' ) );			
 	}
 }
-
+function keep_private_posts_off_front_end_even_for_administrators_ajax( $query_args ) {  
+		// note that this does not prevent this plugin or widgets from showing private posts to which logged in user has access
+   	$query_args['post_status'] = 'publish';
+   	return ( $query_args ); 			
+}
 
 // class autoloader is case insensitive, except that it requires WIC_ (sic) as a prefix.
 function wp_issues_crm_autoloader( $class ) {

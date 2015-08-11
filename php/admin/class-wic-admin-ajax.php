@@ -18,12 +18,12 @@ class WIC_Admin_Ajax {
 		// not updating nonce -- relying on availability for some hours, long enough for user to probably refresh screen
 		$nonce = $_POST['wic_ajax_nonce'];
 		if ( ! wp_verify_nonce ( $nonce, 'wic_ajax_nonce' ) ) {
-			 die ( __( 'Bad nonce in AJAX call to WIC_Admin_Ajax', 'wp_issues_crm' ) );		
+			 die ( __( 'Bad or expired nonce in AJAX call to WIC_Admin_Ajax.  Try refreshing page.', 'wp_issues_crm' ) );		
 		}
 		/**
 		* now, for each WP_Issues_CRM Ajax Call type, check security and route
 		*	
-		* note: choosing note to consistently instantiate an entity for AJAX calls -- keep as light as possible
+		* note: choosing not to consistently instantiate an entity for AJAX calls -- keep as light as possible
 		*
 		* on client side, sending:
 		*	var postData = {
@@ -39,6 +39,8 @@ class WIC_Admin_Ajax {
 
 		if ( 'upload' == $_POST['entity'] ) {
 			$required_capability = 'activate_plugins';		
+		} elseif ( 'search_log' == $_POST['entity'] || 'autocomplete' == $_POST['entity'] ) {
+			$required_capability = '';		
 		}
 		self::ajax_check_capability( $required_capability ); 
 		

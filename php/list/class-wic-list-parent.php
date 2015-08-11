@@ -21,36 +21,14 @@ abstract class WIC_List_Parent {
 	*/	
 	public function format_entity_list( &$wic_query, $header ) { 
 
-		global $wic_db_dictionary;
-
   		// set up form
-		$output = '<div id="wic-post-list"><form id="wic_constituent_list_form" method="POST">' . 
-			'<div class = "wic-post-field-group wic-group-odd">';
+		$output = '<div id="wic-post-list"><form id="wic_constituent_list_form" method="POST">';
+
 
 		$message = $this->format_message ( $wic_query, $header ); 
 		$output .= '<div id="post-form-message-box" class = "wic-form-routine-guidance" >' . esc_html( $message ) . '</div>';
-		$output .=  $this->get_the_buttons( $wic_query );	
-
-		// set up args for use in row buttons -- each row is a button
-  		$list_button_args = array(
-			'entity_requested'		=> $wic_query->entity,
-			'action_requested'		=> 'id_search',
-		);	
-
-		// prepare the list fields for header set up and list formatting
-  		$fields =  $wic_db_dictionary->get_list_fields_for_entity( $wic_query->entity );
-	
-		$output .= '<ul class = "wic-post-list">' .  // open ul for the whole list
-			'<li class = "pl-odd">' .							// header is a list item with a ul within it
-				'<ul class = "wic-post-list-headers">';				
-					foreach ( $fields as $field ) {
-						if ( $field->field_slug != 'ID' && $field->listing_order > 0 ) {
-							$output .= '<li class = "wic-post-list-header pl-' . $wic_query->entity . '-' . $field->field_slug . '">' . $field->field_label . '</li>';
-						}			
-					}
-			$output .= '</ul></li>'; // header complete
-		$output .= $this->format_rows( $wic_query, $fields ); // format list item rows from child class	
-		$output .= '</ul>'; // close ul for the whole list
+		$output .= $this->get_the_buttons( $wic_query );	
+		$output .= $this->set_up_rows ( $wic_query );
 		$output .= 	wp_nonce_field( 'wp_issues_crm_post', 'wp_issues_crm_post_form_nonce_field', true, true ) .
 		'</form></div>'; 
 		
@@ -58,6 +36,52 @@ abstract class WIC_List_Parent {
 
 		return $output;
    } // close function
+
+
+	protected function set_up_rows ( &$wic_query ) {
+	
+		$output = '';	
+	
+		// set up args for use in row buttons -- each row is a button
+  		$list_button_args = array(
+			'entity_requested'		=> $wic_query->entity,
+			'action_requested'		=> 'id_search',
+		);	
+
+
+		// prepare the list fields for header set up and list formatting
+		global $wic_db_dictionary;
+  		$fields =  $wic_db_dictionary->get_list_fields_for_entity( $wic_query->entity );
+	
+		// filter to give lister ability to suppress header elements
+		$fields = $this->list_entity_field_filter ( $fields, $wic_query );	
+	
+		// query entity used in class definition for most elements to support alternative search log styling
+		$output .= '<ul class = "wic-post-list">' .  				// open ul for the whole list
+			'<li class = "pl-odd ' . $wic_query->entity  .'">' .	// header is a list item with a ul within it
+				// insert spacer for use with search log
+				'<div class = "wic-post-list-headers-spacer ' . $wic_query->entity  .'"></div>' . 				
+				'<div class = "wic-post-list-headers ' . $wic_query->entity  .'">' . '
+					<ul class = "wic-post-list-headers pl-odd ' . $wic_query->entity  .'">';				
+						foreach ( $fields as $field ) {
+							if ( $field->field_slug != 'ID' && $field->listing_order > 0 ) {
+								$output .= '<li class = "wic-post-list-header pl-' . $wic_query->entity . '-' . $field->field_slug . '">' . $field->field_label . '</li>';
+							}			
+						}
+					$output .= '</ul>
+				</div>' . // styling wrapper for the ul (used only in search log case)
+			'</li>'; // header complete
+		$output .= $this->format_rows( $wic_query, $fields ); // format list item rows from child class	
+		$output .= '</ul>'; // close ul for the whole list
+
+		return $output;
+	
+	}
+
+	// default is do nothing
+	protected function list_entity_field_filter ( $fields, &$wic_query ) {
+		return ( $fields );	
+	}
    
    // defines standard lookup hierarchy for formats (mirrors look up for dropdowns)
    protected function format_item ( $entity, $list_formatter, $value ) {
@@ -123,5 +147,6 @@ abstract class WIC_List_Parent {
 		
 		return ( $buttons );
 	}
+
 }	
 
