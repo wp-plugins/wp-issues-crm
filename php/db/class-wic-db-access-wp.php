@@ -106,14 +106,14 @@ class WIC_DB_Access_WP Extends WIC_DB_Access {
 								),
 							'inclusive' => true,	
 						);
-					} elseif ( '<' == $search_clause['compare'] ) {
+					} elseif ( '<=' == $search_clause['compare'] ) {
 						$date_array = array (
 							array(
 								'before' => $search_clause['value'],
 								),
 							'inclusive' => true,	
 						);
-					} elseif ( '>' == $search_clause['compare'] ) {
+					} elseif ( '>=' == $search_clause['compare'] ) {
 						$date_array = array (
 							array(
 								'after' => $search_clause['value'],

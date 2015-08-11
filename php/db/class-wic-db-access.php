@@ -36,7 +36,8 @@ abstract class WIC_DB_Access {
 	*
 	*	Notes on search log usage -- intended scope is only: Form Searches and ID Searches off of Lists
 	*		Limited to constituents and issues. 
-	*		The search_log method is private, so invoked only in this class, and, in fact, only by the primary search method.
+	*		The search_log method is intended to be private, so invoked only in this class, and, in fact, only by the primary search method.
+	*			However, note exception: class-wic-entity-parent.php does need to access the log to spoof search in case of new item saves
 	*
 	*	NOTE: Also log saves as if id searches so can go back to constituent or issue from search	
 	*

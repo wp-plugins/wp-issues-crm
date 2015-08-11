@@ -97,12 +97,14 @@ this product ourselves on a daily basis and we are committed to continuous long-
 = 2.2.7 =
 * Add autocomplete for name and address fields
 * Add title search for activity issue field
-* Add ability to track amount fields for activities if financial activity types are defined in settings
-* Show/hide amounts as appropriate for financial and non-financial activity types
 * Add ability to retrieve and download activity detail from the trend search facility 
+* Add ability to track amount fields for activities if financial activity types are defined in settings
+* Show/hide amounts as appropriate for financial and non-financial activity types in forms and activity new detail list
 * Add street address to constituent lists
+* Make range comparison operators <= and >= instead of < and > in all forms; support operator change in database access and form routines
 * Admin header changed from h2 to h1 for Wordpress 4.3 compatibility
-* Full testing of plugin with Wordpress 4.3 Release Candidate -- no changes needed
+* Alter search history logic so that when viewing multiple entries in succession off a constituent or issue list, the back button will return to list not previous viewed entry
+* Full testing of plugin with Wordpress 4.3 Release Candidate (4.3-RC2-33605) -- no changes needed
 = 2.2.6 =
 * Fix bug affecting multi-user installations -- table in search log database access not multi-user prefixed
 * Automatically trim leading and trailing spaces from staging table values in upload process 

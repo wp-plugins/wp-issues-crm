@@ -143,7 +143,7 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 			$compare 		= $where_item['compare'];
 			
 			// set up $where clause with placeholders and array to fill them
-			if ( '=' == $compare || '>' == $compare || '<' == $compare || '!=' == $compare || '>=' == $compare || '<=' == $compare ) {  // straight strict match			
+			if ( '=' == $compare || '!=' == $compare || '>=' == $compare || '<=' == $compare ) {  // straight strict match			
 				$where .= " AND $table.$field_name $compare %s ";
 				$values[] = $where_item['value'];
 			} elseif ( 'like' == $compare ) { // right wild card like match

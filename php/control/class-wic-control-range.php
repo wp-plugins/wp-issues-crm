@@ -57,11 +57,17 @@ class WIC_Control_Range extends WIC_Control_Parent {
 		
 	}
 
-	public function create_search_clause ( $args ) {
+
+	/*
+	* Note that use of the comparison operators ('<=', '>=') is supported specifically in multiple places
+	*		in WP Issues CRM -- '<' and '>' are not supported.  Database access where clause parsing for
+	*		standard WIC object, the WP object, the activity object all limit the available compare terms.
+	*		Also, the parent entity looks for these comparison operators when restoring search ranges in recreating
+	*		forms from search log entries.
+	*/
+	public function create_search_clause ( $args ) { 
 		
 		extract ( $args, EXTR_OVERWRITE );
-
-
 
 		if ( $dup_check ) { 
 			$query_clause = parent::create_search_clause ( $args );

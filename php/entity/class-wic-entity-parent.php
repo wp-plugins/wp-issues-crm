@@ -104,9 +104,9 @@ abstract class WIC_Entity_Parent {
 		foreach ( $search['unserialized_search_array'] as $search_array ) { 
 			if ( $search_array['table'] == $this->entity ) {
 				// need to convert range controls that were carried as single values (because only one end entered) back into arrays
-				if ( '>' == $search_array['compare'] ) {
+				if ( '>=' == $search_array['compare'] ) {
 					$key_value_array[$search_array['key']] = array ( $search_array['value'], '' );
-				} else if ( '<' == $search_array['compare'] ) {
+				} else if ( '<=' == $search_array['compare'] ) {
 					$key_value_array[$search_array['key']] = array ( '', $search_array['value'] );
 				// otherwise, just assign values
 				} else { 
