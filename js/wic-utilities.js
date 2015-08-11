@@ -67,16 +67,19 @@ function moreFields( base ) {
  	jQuery( newFields ).find( ".datepicker" ).datepicker({
 			 dateFormat: "yy-mm-dd"
 	}); 
- 	
- 	if ( wicUseActivityIssueAutocomplete ) {
- 		setUpActivityIssueAutocomplete( jQuery( newFields ).find( ".wic-multivalue-block.activity" )[0] );
-	}
 
-	if ( wicUseNameAndAddressAutocomplete ) {
-		jQuery( newFields ).find (".address-line, .email-address" ).each ( function () {
-			setUpNameAndAddressAutocomplete( this );			
-		});		
-	}
+	// if have the boolean autocomplete flags set (i.e., wic-main.js is loaded) do the autocomplete listeners; if not (as in Options page), don't need them
+ 	if ( 'boolean' == ( typeof wicUseActivityIssueAutocomplete ) ) {  
+	 	if ( wicUseActivityIssueAutocomplete ) {
+	 		setUpActivityIssueAutocomplete( jQuery( newFields ).find( ".wic-multivalue-block.activity" )[0] );
+		}
+	
+		if ( wicUseNameAndAddressAutocomplete ) {
+			jQuery( newFields ).find (".address-line, .email-address" ).each ( function () {
+				setUpNameAndAddressAutocomplete( this );			
+			});		
+		}
+	} 
 }
 
 // supports moreFields by walking node tree for whole multi-value group to copy in new name/ID values
@@ -106,3 +109,30 @@ function replaceInDescendants ( template, oldValue, newValue, base  ) {
 	}
 }
 
+
+// screen delete rows in multivalue fields
+function hideSelf( rowname ) {
+	var row = document.getElementById ( rowname );
+	rowClass =row.className; 
+	row.className = rowClass.replace( 'visible-templated-row', 'hidden-template' ) ;
+	sendErrorMessage ( 'Row will be deleted when you save/update.' )
+	window.nextWPIssuesCRMMessage = 'You can proceed.';
+	jQuery('#wic-form-constituent-update').trigger('checkform.areYouSure');
+}
+
+// show/hide form sections
+function togglePostFormSection( section ) { 
+	var constituentFormSection = document.getElementById ( section );
+	var display = constituentFormSection.style.display;
+	if ('' == display) {
+		display = window.getComputedStyle(constituentFormSection, null).getPropertyValue('display');
+	}
+	var toggleButton	= document.getElementById ( section + "-show-hide-legend" );
+	if ( "block" == display ) {
+		constituentFormSection.style.display = "none";
+		toggleButton.innerHTML = "Show";
+	} else {
+		constituentFormSection.style.display = "block";
+		toggleButton.innerHTML = "Hide";
+	}
+}

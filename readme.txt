@@ -4,7 +4,7 @@ Donate link:
 Tags: contact, crm, constituent, customer, issues, list
 Requires at least: 4.0
 Tested up to: 4.3
-Stable tag: 2.2.7
+Stable tag: 2.2.71
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,6 +94,9 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 
 == Changelog ==
+= 2.2.71 =
+* Fix missing display of last_updated_time and last_updated_by on Option Group Add screen
+* Fix field delete button in Option Group Add screen 
 = 2.2.7 =
 * Add autocomplete for name and address fields
 * Add title search for activity issue field

@@ -281,30 +281,5 @@ function changeActivityIssueButtonDestination() {
 	}
 }
 
-// show/hide form sections
-function togglePostFormSection( section ) { 
-	var constituentFormSection = document.getElementById ( section );
-	var display = constituentFormSection.style.display;
-	if ('' == display) {
-		display = window.getComputedStyle(constituentFormSection, null).getPropertyValue('display');
-	}
-	var toggleButton	= document.getElementById ( section + "-show-hide-legend" );
-	if ( "block" == display ) {
-		constituentFormSection.style.display = "none";
-		toggleButton.innerHTML = "Show";
-	} else {
-		constituentFormSection.style.display = "block";
-		toggleButton.innerHTML = "Hide";
-	}
-}
 
-// screen delete rows in multivalue fields
-function hideSelf( rowname ) {
-	var row = document.getElementById ( rowname );
-	rowClass =row.className; 
-	row.className = rowClass.replace( 'visible-templated-row', 'hidden-template' ) ;
-	sendErrorMessage ( 'Row will be deleted when you save/update.' )
-	window.nextWPIssuesCRMMessage = 'You can proceed.';
-	jQuery('#wic-form-constituent-update').trigger('checkform.areYouSure');
-}
 
