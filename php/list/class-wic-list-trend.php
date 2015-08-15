@@ -189,7 +189,9 @@ protected function format_rows( &$wic_query, &$fields ) {
 
 	}
 
-	protected function format_message( &$wic_query, $header='' ) {}
+	public function format_message( &$wic_query, $header='' ) {
+		return ( sprintf( __(  'Issues with activities matching selection criteria -- found %s.' , 'wp-issues-crm' ), $wic_query->found_count ) );	
+	}
 
  }	
 

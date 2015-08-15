@@ -10,7 +10,7 @@
 *		-- do raw upload, validating only csv/txt format with consistent column count
 *		-- map fields (fully flexible)
 *		-- validate data
-*			+ IF the field is mapped, all form edits are applied -- sanitization and validation and NOT individual required check; 
+*			+ IF the field is mapped, all form edits are applied -- sanitization and validation and individual required check; 
 *			+ If mapped, a select field must have good values (validation implicit in form context)  
 *			+ Additionally, IF the constituent identity field is mapped it is validated as a good ID
 *			+ SEE ADDITIONAL DISCUSSION BELOW ON REQUIRED DATA 
@@ -22,14 +22,12 @@
 *		-- set defaults for constituent	
 *			+ Determine basic add/update behavior for matched records
 *			+ Allow option to not overwrite good names and addresses with possibly sloppy names and addresses -- set default do not overwrite
-*			+ Only allow defaulting of unmapped fields -- if a column can be replaced in part with defaults, user should unmap it replace it entirely
+*			+ Only allow defaulting of unmapped fields -- if a column can be replaced in part with defaults, user should unmap it and replace it entirely
 *		-- set defaults for activities ( in same tab as constituents )
-*			+ Only allow defaulting of unmapped fields -- if a column can be replaced in part with defaults, user should unmap it replace it entirely
+*			+ Only allow defaulting of unmapped fields -- if a column can be replaced in part with defaults, user should unmap it and replace it entirely
 *			+ If issue number is mapped or is defaulted to non-blank, it controls; otherwise look to title
-*			+ errors: a data entity is included (mapped or defaulted), but required information is neither mapped nor defaulted ( e.g., if address, type and city )
-*					-- note: don't require type online, but in batch mode requiring type through default setting.
-*		-- possible errors/warnings for defaults
-*			+ custom matching, but no fn/ln/email mapped (all will be rejected) or mapped, but warn about non-blanks
+*			+ errors: a data entity is included (mapped or defaulted), but required information is neither mapped nor defaulted 
+*					( e.g., if address, type and city )
 *		-- preupdate as part of update  -- if any unique unmatched
 *			+ save constituent stub
 *			+ save pointer to constituent stub
@@ -37,12 +35,11 @@
 *			+ now, everything is matched, has a constituent stub and that stub has fn or ln or will have email when updates complete
 *		-- actual update
 *			+ if have matched OLD record, must make decision about what to update
-*				* for fn/ln, go by "protect primary identity" indicator, but even if unchecked, update only if existing value non-blank
-*				* for address, if new type add, if existing type, go by "protect identity" indicator, but even unchecked, 
-*						update only if existing value non-blank
-*				* for other constituent information -- demographics and custom -- update if non-blank
+*				* for fn/ln and other constituent record information, go by "protect primary identity" indicator
+*				* for address, if new type add, if existing type, go by "protect identity" indicator
 *				* for email/phone, if new type add, if old type, update if non-blank 
 *				* use defaults consistent with these rules where fields unmapped, as if they were the original values
+*				* note that can set (and default setting is) to prevent overwrite of data with blank data
 *			+ for new records, EZ -- add all; use supplied default
 *
 *		
@@ -55,15 +52,15 @@
 *				* when match indicators reset (on start a rematch), set to validated
 *				* on completion of mapping, set to mapped
 *				* on successful default test, set to defaulted
-*		-- check status in forms
-*				* can always remap if not completed [need to add this check]
+*		-- check status in forms/js
+*				* can always remap if not completed 
 *				* don't show full validation button if not in status mapped.  If staged, error; if other (beyond validation) show 'previously validated'. 
 *				* don't show match button unless validated, already mapped, or already defaulted -- 
 *					-- cannot match do this if only staged
 *					-- can come back to this if already defaulted
 *					-- cannot come back if already completed
 *				* don't show match default form unless matched or already defaulted
-*				-- dilemma: AJAX form updates defaults immediately, but doesn't validate immediately. Don't want to say status 'defaulted' until happy.
+*				-- dilemma: form js updates defaults immediately, but doesn't validate immediately. Don't want to say status 'defaulted' until happy.
 *					at same time, don't want to lose partial updates to defaults if leave form
 *					SO: set reset default object when match is reset -- a new match is required iff any prior remap or rematch 
 *
@@ -175,27 +172,37 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		$this->form_save_update_generic ( false, 'WIC_Form_Upload_Update', 'WIC_Form_Upload_Update' );
 		return;
 	}	
-	
-	// handle a search request for an ID coming from anywhere
+
+	// handle request for upload from list of uploads
 	protected function id_search ( $args ) {
 		$id = $args['id_requested']; 
 		$this->id_search_generic ( $id, 'WIC_Form_Upload_Update', '' , false, false ); 
 		return;		
 	}	
+
+	/* 
+	*
+	* once file has been uploaded into a staging table, 
+	* have a tabbed set of forms for the upload stages
+	*
+	*/
+
 	
-	// show the upload map fields form
+ 
+	protected function details ( $args ) {
+		$this->id_search( $args );
+	}	
+
 	protected function map ( $args ) {
 		$id = $args['id_requested']; 
 		$this->id_search_generic ( $id, 'WIC_Form_Upload_Map', '' , false, false );
 	}
 	
-	// show the validate form -- this is individual field data validation doable only after mapping complete		
 	protected function validate ( $args ) {
 		$id = $args['id_requested']; 
 		$this->id_search_generic ( $id, 'WIC_Form_Upload_Validate', '' , false, false );
 	}			
 	
-	// show the match form		
 	protected function match ( $args ) {
 		$id = $args['id_requested']; 
 		$this->id_search_generic ( $id, 'WIC_Form_Upload_Match', '' , false, false );
@@ -221,7 +228,11 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 		$this->id_search_generic ( $id, 'WIC_Form_Upload_Regrets', '' , false, false );
 	}		
 	
-	// function from parent needs to be overridden to set name value from $_FILES array
+	/*
+	* function from parent needs to be overridden to set name value from $_FILES array
+	* relevant only to the upload save/update forms, the other forms do not look at this field
+	*/
+ 
 	protected function populate_data_object_array_from_submitted_form() {
 
 		$this->initialize_data_object_array();
@@ -238,7 +249,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	
 	/************************************************************************************************
 	*
-	* sanitizor functions invoked by the control sanitizor if present
+	* sanitizor functions invoked by the control sanitizor 
 	*
 	************************************************************************************************/
 	// sanitize the file name	
@@ -289,14 +300,15 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 	}
 	
 	
-	// primary validation function for an incoming file is in control_file, but additional validation requires specifics of the upload request
-	// these are present in the data_object_array, not visible to the control file, so do this here.
+	// primary validation function for an incoming file is in the control classes, but additional validation requires specifics of the upload request
+	// that are present in the data_object_array, not visible to the control classes, so do this here.
 	public function validate_values() {
-					
+		
+		// run through control validation as in standard form			
 		$validation_errors = parent::validate_values(); 
 		$file_name = $this->data_object_array['upload_file']->get_value();
 		
-		 // do additional validation only if passed basic and have file ( don't have file on updates )
+		// do additional validation only if passed basic validation and have a file ( don't have file on updates )
 		if ( '' == $validation_errors && isset ( $_FILES['upload_file'] ) ) {
 
 			// does this at least purport to be a csv file ?
@@ -375,10 +387,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			$this->data_object_array['upload_status']->set_value( $wic_access_object->upload_status );
 		}		
 	}	
-	
-	protected function details ( $args ) {
-		$this->id_search( $args );
-	}	
+
 	
 	/*
 	*
@@ -579,8 +588,11 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 				
 				// invoke required checking -- does generate errors on empty if field is "individual" required
 				// group required enforced through match and insert steps
-				$error .= $control->required_check();
-
+				// skip email address and phone number here to allow single pass updates
+				$required_field_slug = $control->get_field_slug(); // $column may not equal $control->field->field_slug (which is protected)
+				if ( 'email_address' != $required_field_slug && 'phone_number' != $required_field_slug ) {
+					$error .= $control->required_check();
+				}
 				// do validation for constituent ID field that doesn't require validation in form context since not user supplied
 				// empty will be error for this
 				if ( 'constituent' == $column_map->$column->entity && 'ID' == $column_map->$column->field ) {
@@ -812,7 +824,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			'sort_order' 		=> false, 	// don't care for sort
 			'compute_total' 	=> false,	// no need to find total of all dups	
 			'retrieve_limit'	=> 2,			// one dup is too many
-			'show_deleted'		=> true, 	// match deleted records
+			'show_deleted'		=> false, 	// don't match deleted records
 			'log_search' 		=> false,	// don't log the searches
 		);
 

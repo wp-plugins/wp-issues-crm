@@ -5,15 +5,10 @@
 *
 */
 
-class WIC_Form_Constituent_Update extends WIC_Form_Parent  {
+class WIC_Form_Constituent_Update extends WIC_Form_Constituent  {
 
 	// no header tabs
 	protected function format_tab_titles( &$data_array ){}
-
-	// associate form with entity in data dictionary
-	protected function get_the_entity() {
-		return ( 'constituent' );	
-	}
 
 	// define the top row of buttons (return a row of wic_form_button s)
 	protected function get_the_buttons ( &$data_array ) {
@@ -25,9 +20,11 @@ class WIC_Form_Constituent_Update extends WIC_Form_Parent  {
 		);	
 		
 		$button = $this->create_wic_form_button ( $button_args_main );
-
+		
+		$button .=	'<a target = "_blank" href="http://wp-issues-crm.com/?page_id=155">' . __( 'Constituent FAQ', 'wp-issues-crm' ) . '</a>';
+			
 		return ( $button  ) ;
-	}
+	}	
 	
 	// define the form message (return a message)
 	protected function format_message ( &$data_array, $message ) {
@@ -106,9 +103,9 @@ class WIC_Form_Constituent_Update extends WIC_Form_Parent  {
 		return ( WIC_Entity_Comment::create_comment_list ( $doa ) ); 					
 	}
 	
+	
 	// hooks not implemented
 	protected function supplemental_attributes() {}
 	protected function pre_button_messaging ( &$data_array ){}
-	protected function post_form_hook ( &$data_array ) {}
 	 	
 }

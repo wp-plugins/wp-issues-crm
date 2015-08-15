@@ -11,7 +11,7 @@ class WIC_List_Constituent extends WIC_List_Parent {
 	*
 	*
 	*/
-	protected function format_rows( &$wic_query, &$fields ) {
+	protected function format_rows( &$wic_query, &$fields ) { 
 		$output = '';
 		
 				
