@@ -4,7 +4,7 @@ Donate link:
 Tags: contact, crm, constituent, customer, issues, list
 Requires at least: 4.0
 Tested up to: 4.3
-Stable tag: 2.2.8
+Stable tag: 2.2.72
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -94,7 +94,7 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 
 == Changelog ==
-= 2.2.8 =
+= 2.2.72 =
 * Simplify and clean up last_update tracking -- correctly reflect multivalue deletes and carry latest values to forms 
 * Fix select logic for datepicker to apply to initially hidden fields other than the hidden row-templates
 * Adjust match policy on uploads -- no matching to constituents that have been marked deleted 
