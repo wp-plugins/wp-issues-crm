@@ -106,7 +106,9 @@ class WIC_DB_Access_Dictionary Extends WIC_DB_Access_WIC {
 		return ( $fields_using_option );
 	}	
 	
-	protected function db_get_option_value_counts( $field_slug ) {} // not implemented for dictionary
-	
+	// functions not implemented for dictionary access
+	protected function db_get_option_value_counts( $field_slug ) {} 
+	public function db_get_time_stamp ( $id ) {} 
+	protected function db_do_time_stamp ( $table, $id ) {} 
 }
 

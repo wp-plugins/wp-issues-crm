@@ -95,8 +95,9 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 == Changelog ==
 = 2.2.8 =
-* simplify and clean up last_update tracking -- correctly reflect multivalue deletes and carry latest readonly values to forms 
-* fix select logic for datepicker to apply to initially hidden fields 
+* Simplify and clean up last_update tracking -- correctly reflect multivalue deletes and carry latest values to forms 
+* Fix select logic for datepicker to apply to initially hidden fields other than the hidden row-templates
+* Adjust match policy on uploads -- no matching to constituents that have been marked deleted 
 = 2.2.71 =
 * Fix missing display of last_updated_time and last_updated_by on Option Group Add screen
 * Fix field delete button in Option Group Add screen 
