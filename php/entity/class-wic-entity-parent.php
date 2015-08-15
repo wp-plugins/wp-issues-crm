@@ -22,7 +22,7 @@ abstract class WIC_Entity_Parent {
 	protected $made_changes = false;					// after a save_update, were changes made?
 	
 		
-	abstract protected function set_entity_parms ( $args ); // must be included in child to set entity and possibly instance
+	abstract protected function set_entity_parms ( $args ); // must be included in child to set entity and possibly instance 
 	
 	/*
 	*

@@ -19,7 +19,7 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 		global $wpdb;
 		$table  = $wpdb->prefix . 'wic_' . $this->entity;  
 		
-		$set = $this->parse_save_update_array( $save_update_array );
+		$set = $this->parse_save_update_array( $save_update_array ); // adds time stamp variables while formatting set clause
 		// hook for updating parallel table in class extension
 		$set = $this->external_update( $set );
   		$set_clause_with_placeholders = $set['set_clause_with_placeholders'];
@@ -33,9 +33,6 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 		if ( 1 == $save_result ) {
 			$this->outcome = true;		
 			$this->insert_id = $wpdb->insert_id;
-			$this->last_updated_time = $this->get_mysql_time();
-			$this->last_updated_by = get_current_user_id();
-	
 		} else {		
 			$this->outcome = false;
 			$this->explanation = __( 'Unknown database error. Save may not have been successful', 'wp-issues-crm' );
@@ -56,15 +53,15 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 	*
 	*/
 	protected function db_update ( &$save_update_array ) {
-		global $wpdb;
-		$table  = $wpdb->prefix . 'wic_' . $this->entity;
 
 		$have_changed_values = $this->have_changed_values ( $save_update_array );		
 		
-		if ( $have_changed_values // if values have changed, apply the updates
-			|| ( 1 == count ( $save_update_array ) && 'ID' == $save_update_array[0]['key'] ) ) { // or if just passing an ID to do a time stamp
-			// parse the array to set up clause and value array for $wpdp->prepare
-			$set = $this->parse_save_update_array( $save_update_array );
+		// if values have changed, apply the updates
+		if ( $have_changed_values ) {
+			global $wpdb;
+			$table  = $wpdb->prefix . 'wic_' . $this->entity;
+ 			// parse the array to set up clause and value array for $wpdp->prepare
+			$set = $this->parse_save_update_array( $save_update_array ); // adds time stamp variables while formatting set clause
 	  		$set_clause_with_placeholders = $set['set_clause_with_placeholders'];
 			$sql = $wpdb->prepare( "
 					UPDATE $table
@@ -78,8 +75,6 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 			if ( $have_changed_values ) {
 				$this->outcome = ! ( false === $update_result );
 				$this->explanation = ( $this->outcome ) ? '' : __( 'Unknown database error. Update may not have been successful', 'wp-issues-crm' );
-				$this->last_updated_time = $this->get_mysql_time();
-				$this->last_updated_by = get_current_user_id();
 				$this->sql = $sql;
 				$this->made_changes = true; // true even if changes may have failed
 			}
@@ -227,7 +222,8 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 	
 	/*
 	*
-	* parse a save update array into clauses and value array for pre-processing by $wpdb->prepare before a save or update  
+	* parse a save update array into clauses and value array for pre-processing by $wpdb->prepare before a save or update 
+	*  -- with just an ID clause in the array, just sets up to do a time stamp 
 	*
 	*/
 	protected function parse_save_update_array( $save_update_array ) {
@@ -316,16 +312,57 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 		return ( $have_changed_values );
 	} 
 
-
+	/* 
+	* hard delete a record
+	*
+	* this is passed through from parent delete_by_id which is used in WIC_Control_Multivalue->set_value to clean out deleted rows
+	* before populating the data_object_array (in other words before other updates coming from a form are applied) 
+	*/
 	protected function db_delete_by_id ( $id ) {
 		global $wpdb;		
 		$table  = $wpdb->prefix . 'wic_' . $this->entity;
+		$parent_id = $wpdb->get_var( " SELECT " . $this->parent . '_id' . " FROM $table WHERE ID = $id" );
 		$outcome = $wpdb->delete ( $table, array( 'ID' => $id ) );
 		if ( ! ( 1 == $outcome ) ) {
 			WIC_Function_Utilities::wic_error ( sprintf( 'Database error on execution of requested delete of %s.', $this->entity  ), __FILE__, __LINE__, __METHOD__, true );
+			// this time_stamp is necessary because cannot pass change upwards db_delete_by_id invoked at the set value stage in population of multivalue arrays
+		} else {
+			$this->db_do_time_stamp ( $this->parent, $parent_id );		
 		} 
 	}
 
+	/* 
+	* 	do a time stamp -- expects $table to be last part of table name (e.g., as in $this->entity or $this->parent ) 
+	*
+	*	used by the delete function to time stamp parent when deleting child
+	*  also used by the top level entity to do time stamp on parent (e.g. constituent) if child entities (e.g. email) made changes 
+	*/
+ 
+	protected function db_do_time_stamp ( $table, $id ) {
+		global $wpdb;
+		$table  = $wpdb->prefix . 'wic_' . $table;
+		$last_updated_time 	= $this->get_mysql_time();
+		$last_updated_by 		= get_current_user_id();
+		$sql = "UPDATE $table SET last_updated_time = '$last_updated_time', last_updated_by = $last_updated_by WHERE ID = $id";
+		$results = $wpdb->query ( $sql );
+		if ( false === $results ) {
+			WIC_Function_Utilities::wic_error ( sprintf ( 'Time stamp error for %s ID # %s', $this->entity, $id ) , __FILE__, __LINE__, __METHOD__,false );
+		}
+		// no return error handling
+	}
+
+	/* time stamp -- get time stamp from current table for requested id */ 
+	public function db_get_time_stamp ( $id ) { 
+		global $wpdb;
+		$table  = $wpdb->prefix . 'wic_' . $this->entity;
+		return ( $wpdb->get_row ( " SELECT last_updated_by, last_updated_time FROM $table WHERE ID = $id " ) );  		 
+	}
+
+	/* 
+	*
+	* 	retrieve list of results from list of ids -- supports list classes 
+	*
+	*/
 	protected function db_list_by_id ( $id_string ) { 
 
 		global $wpdb;
@@ -391,32 +428,7 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 		$this->explanation = ''; 
 	}
 
-	public function db_updated_last ( $user_id ) {
-		
-		global $wpdb;
-	
-		$table = $wpdb->prefix . 'wic_' . $this->entity;
-		
-		$sql = 
-			"
-			SELECT ID, last_updated_time
-			FROM $table
-			WHERE last_updated_by = $user_id
-			ORDER BY last_updated_time DESC
-			LIMIT 0, 1		
-			";
-			
-		$latest_updated_array = $wpdb->get_results( $sql );
-
-		return ( array (
-			'latest_updated' => $latest_updated_array[0]->ID,
-			'latest_updated_time' =>$latest_updated_array[0]->last_updated_time,
-			)
-		);
-
-	}
-
-	// necessary to have a quick look up that by passes search logging, etc. for use in the search log!
+	// quick look up that by passes search logging, etc. for use in displaying the search log
 	public static function get_constituent_name ( $id ) {
 
 		global $wpdb;
@@ -437,6 +449,7 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 	
 	}	
 
+	// option counts for use in displaying existing option usage in options update screens
 	protected function db_get_option_value_counts( $field_slug ) {
 			
 		global $wpdb;
@@ -450,7 +463,6 @@ class WIC_DB_Access_WIC Extends WIC_DB_Access {
 		return ( $field_value_counts );	
 	
 	} 
-
 
 }
 

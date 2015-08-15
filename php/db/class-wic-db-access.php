@@ -2,8 +2,13 @@
 /*
 *
 * class-wic-db-access.php
-*		intended as wraparound for direct db access objects (implemented as extensions to this.) 
-*		maintains search log (which includes saves) and does all search log data access directly
+*
+*		Parent for direct db access objects (implemented as extensions to this.)
+*			Two major extension _WP for Issue access and _WIC for access to the constituent and subsidiary tables
+* 
+*		Directly maintains search log (which includes saves) 
+*		
+*		Mapping of object type to appropriate extension of this class occurs at instantiation via WIC_DB_Access_Factory 
 *
 */
 
@@ -13,21 +18,42 @@ abstract class WIC_DB_Access {
 	
 	// these properties contain  the results of the db access
 	public $entity;		// top level entity searched for or acted on ( e.g., constituents or issues )
+	public $parent;		// parent entity in form context (not parent class) -- e.g., activity, phone, email, address have constituent as parent
 	public $sql; 			// for search, the query executed;
 	public $result; 		// entity_object_array -- as saved, update or found( possibly multiple ) (each row as object with field_names properties)
 	public $outcome; 		// true or false if error
 	public $explanation; // reason for outcome
 	public $found_count; // integer save/update/search # records found or acted on
 	public $insert_id;	// ID of newly saved entity
-	public $search_id;  // ID of search completed -- search log
+	public $search_id;   // ID of search completed -- search log
 	public $made_changes; // whether there were any changed values and an update was actually applied ($outcome is true, even if this is false)
-								 // note: maintained by the parent entity save_update but  only actually used here as maintained by the multivalue child class
-	public $last_updated_time; // for pass back to screen
-	public $last_updated_by; // for pass back to screen
+								 // note: maintained by the parent entity save_update but only actually used here as maintained by the multivalue child class
+								 // used to bubble change_made fact up from child entity to parent and trigger time stamp	
+
+	// extensions must include these functions
+	abstract public function db_get_time_stamp ( $id );
+	abstract protected function db_do_time_stamp ( $table, $id );
+	abstract protected function db_search ( $meta_query_array, $search_parameters );
+	abstract protected function db_save ( &$meta_query_array );
+	abstract protected function db_update ( &$meta_query_array );
+	abstract protected function db_delete_by_id ( $id );
+	abstract protected function db_get_option_value_counts ( $field_slug );
+
 
 	public function __construct ( $entity ) { 
 		$this->entity = $entity;
 	}		
+
+	/****************************************************************************************
+	*
+	*	log search request and pass through to database specific object search functions
+	*
+	******************************************************************************************/
+	public function search ( $meta_query_array, $search_parameters ) { // receives pre-assembled meta_query_array
+		$this->db_search( $meta_query_array, $search_parameters );
+		$this->search_log( $meta_query_array, $search_parameters );
+		return;
+	}
 
 	/**********************************************************************************************
 	*
@@ -36,7 +62,7 @@ abstract class WIC_DB_Access {
 	*
 	*	Notes on search log usage -- intended scope is only: Form Searches and ID Searches off of Lists
 	*		Limited to constituents and issues. 
-	*		The search_log method is intended to be private, so invoked only in this class, and, in fact, only by the primary search method.
+	*		The search_log method is intended to be invoked only in this class, and, in fact, only by the primary search method.
 	*			However, note exception: class-wic-entity-parent.php does need to access the log to spoof search in case of new item saves
 	*
 	*	NOTE: Also log saves as if id searches so can go back to constituent or issue from search	
@@ -267,18 +293,18 @@ abstract class WIC_DB_Access {
 		return ( $result);
 	} 
 
-
-
-	/****************************************************************************************
+	/**********************************************************************************************************
 	*
-	*	log search request and pass through to database specific object search functions
+	*	Pass through for delete function -- this is the only delete function and its usage differs from other 
+	*		db access functions.  Most are invoked by entity classes.  However, constituents are only soft deleted
+	*		by marking them with the DELETED value.  Issues are not deletable except through  Wordpress admin.
+	*  
+	*		The hard database delete function is used for sub-entities ( e.g. email or activity) and is invoked in 
+	*		WIC_Control_Multivalue -- when a form is received with deleted/hidden elements in it, those are discarded
+	*		as the control object is loaded in the data_object_array.  If they have an ID, they are also physically deleted
+	*		by a call to this function.
 	*
-	******************************************************************************************/
-	public function search ( $meta_query_array, $search_parameters ) { // receives pre-assembled meta_query_array
-		$this->db_search( $meta_query_array, $search_parameters );
-		$this->search_log( $meta_query_array, $search_parameters );
-		return;
-	}
+	**********************************************************************************************************/
 
 	public function delete_by_id ( $id ) {
 		$this->db_delete_by_id ( $id );	
@@ -287,14 +313,16 @@ abstract class WIC_DB_Access {
 
 	/**********************************************************************************************************
 	*
-	*	Main save/update process for WP Issues CRM -- runs across multiple layers, but is controlled by the process below   
+	*	Main save/update process for WP Issues CRM -- runs across multiple layers, but is controlled by the process below 
+	*	Note that this process is invoked by a parent entity after the data_object_array has been assembled; deletes occur in the array 
+	*	assembly process.  
 	*	(1) Top level entity contains an array of controls -- see wic-entity-parent
 	*			+ Basic controls each contain a value which is information about the top level entity like name (not an object property technically, but logically so)
 	*			+ Multivalue controls contain arrays of entities that have a data relationship to the top level entity, like addresses for a constituent 
 	*  (2) Each multivalue entity, e.g., each address is an entity with the same logical structure as the parent entity -- as a class, their entity is
 	*		an extension of the parent entity.
 	*  (3) So when update is submitted for the parent entity . . .
-	*		 (1) The parent entity (e.g. constituent) creates a new instance of this class (actually the _WIC extension of this class ) 
+	*		 (1) The parent entity (e.g. constituent) creates a new instance of this class (actually always an extension of this class ) 
 	*				and passes it a pointer to its array of controls 
 	*      (2) Second this object->save_update asks each of the basic controls to produce a set clause 
 	*		 (3) The set clauses are applied to the database by this object's WIC extension WIC_DB_Access_WIC 
@@ -302,13 +330,20 @@ abstract class WIC_DB_Access {
 	*		 (4) This object->save_update then asks each of the multivalue controls in turn to do an update
 	*		 (5) Each multivalue control object in turn asks each of the row entities in its row array to do a save_update 
 	*		 (6) Each multivalue entities (e.g. address) issues a save update request which comes back through an new instance of this object 
-	*				and does only steps (1) through (3) for that object (assuming no multivalue controls within multivalue controls, not attempted so far in this implementation. 
+	*				and does only steps (1) through (3) for that object ( no multivalue controls within multivalue controls supported)
+	*	(4) Note that deletes of WIC multivalues happens before step 1 as the array is populated from the form.  The delete function timestamps
+	*		 the parent entity at that stage.  . . .
+	*  (5) Timestamping ( last_updated_time, last_updated_by )is handled as follows.
+	*		 - Save/update of parent (e.g., constituent ) timestamps parent, but not any child 
+	*		 - Save/update of child (e.g., email) timestamps that child and also the parent
+	*		 -	Hard delete of child timestamps the parent
+	*		 The first two kinds of time stamp occur through the save_update function; the last through the delete in WIC_Control_Multivalue
 	*
+	*	Note that the assembly of the save update array occurs in this top level database access class because
+	*  updates are handled for particular entities (and this object serves a particular entity).
 	*
-	*	note that the assembly of the save update array occurs in this database access class because
-	*  updates are handled for particular entities (and this object serves a particular entity)
-	*	by contrast, the search array assembly is handled at the entity level because it needs to be able to report up to
-	*  a multivalue control and contribute to a join across multiple entities in addition to the primary object entity  
+	*	By contrast, the search array assembly is handled at the entity level because it needs to be able to report up to
+	*  a multivalue control and contribute to a join across multiple entities.   
 	*
 	**********************************************************************************************************/	
 	public function save_update ( &$doa ) { 
@@ -323,8 +358,8 @@ abstract class WIC_DB_Access {
 			}
 		}
 		// at this stage, the main entity update has occurred and return values for the top level entity have been set (preliminary) 
-		// if main update OK, do multivalue ( child ) updates
-		if ( $this->outcome ) {
+		// if main update OK, pass the array again and do multivalue ( child ) updates
+		if ( $this->outcome ) {  
 			// set the parent entity ID in case of an insert 
 			$id = ( $doa['ID']->get_value() > 0 ) ? $doa['ID']->get_value() : $this->insert_id;
 			$errors = '';
@@ -344,26 +379,14 @@ abstract class WIC_DB_Access {
 				$this->outcome = false;
 				$this->explanation .= $errors;
 			}
-			// am in the multivalue control branch and have done updates -- update the top db object's made_changes property 
-			// and time stamp the calling entity's record with a last updated mark 	
+			
+			// am in the multivalue control branch and may have done multivalue updates
+			// if so, and top entity hasn't already been marked updated, do so (in the object and the database). 	
 			if ( false === $this->made_changes && true === $multivalue_fields_have_changes ) {
 				$this->made_changes = true;
-				// passing a single ID save update array will just do a time stamp
-				$second_save_update_array = array ( 
-					array ( 	'key' 	=> 'ID',
-								'value'	=> $id,
-								'wp_query_parameter' => '',
-								'soundex_enabled' => false,
-							),
-					);
-				// when doing a timestamp, WIC db_update will just do the update and not set other object properties
-				$this->db_update ( $second_save_update_array );
-				// note that this call may generate an error if there were a multivalue field created for an issue; 
-				// non-fatal:  all other updates are already done; no flags set; no tracking of last_updated_by in WP anyway
+				$this->do_time_stamp ( $this->entity, $id ); 
 			}						
-				
 		}
-
 		return;	
 	}
 
@@ -385,7 +408,7 @@ abstract class WIC_DB_Access {
 				$this->db_save ( $save_update_array );
 			}
 		}
-		// don't bother to set the insert id -- no further processign.
+		// don't bother to set the insert id -- no further processing.
 	}
 
 
@@ -437,6 +460,11 @@ abstract class WIC_DB_Access {
 		$this->db_list_by_id ( $id_string );   
 	}
 
+	/*
+	*
+	* miscellaneous functions
+	*
+	*/
 	public static function get_mysql_time() {
 		global $wpdb;
 		$now_object = $wpdb->get_results ( "SELECT NOW() AS now " );
@@ -452,15 +480,6 @@ abstract class WIC_DB_Access {
 		return ( $this->db_get_option_value_counts ( $field_slug ) );	
 	}
 
-	/*
-	*
-	* pass through for updated_last functions
-	*
-	*/
-	public function updated_last ( $user_id ) {
-		return ( $this->db_updated_last ( $user_id ) );
-	}
-
 	public static function table_count ( $table_name ) {
 		global $wpdb;
 		// expects fully qualified table name with prefix
@@ -471,14 +490,15 @@ abstract class WIC_DB_Access {
 		return ( $result[0]->table_count );	
 	}
 
-	abstract protected function db_search ( $meta_query_array, $search_parameters );
-	abstract protected function db_save ( &$meta_query_array );
-	abstract protected function db_update ( &$meta_query_array );
-	abstract protected function db_delete_by_id ( $id );
-	abstract protected function db_updated_last ( $user_id ); 
-	abstract protected function db_get_option_value_counts ( $field_slug );
 
-	
+	/* time stamp -- do time stamp on table */ 
+	protected function do_time_stamp ( $table, $id ) {
+		$this->db_do_time_stamp ( $table, $id );
+	}
+
+	/* time stamp -- get time stamp from entity table for requested id */ 
+	public function get_time_stamp ( $id ) {
+		return ( $this->db_get_time_stamp ( $id ) );  		 
+	}
+
 }
-
-

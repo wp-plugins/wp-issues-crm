@@ -106,9 +106,9 @@ class WIC_DB_Access_WP_User Extends WIC_DB_Access {
 		return ( isset ( $preferences[$preference] ) ?  $preferences[$preference] : false );
 	}
 
-	protected function db_updated_last ( $user_id ) {} // not implemented for users
 	protected function db_get_option_value_counts( $field_slug ) {} // not implemented for users
-
+	public function db_get_time_stamp ( $id ) {} // not implemented for users
+	protected function db_do_time_stamp ( $table, $id ) {} // not imlpemented for users
 
 }
 

@@ -60,9 +60,10 @@ class WIC_Entity_Option_Group extends WIC_Entity_Parent {
 	}
 	
 	// set values from update process to be visible on form after save or update
-	protected function special_entity_value_hook ( &$wic_access_object ) {
-		$this->data_object_array['last_updated_time']->set_value( $wic_access_object->last_updated_time );
-		$this->data_object_array['last_updated_by']->set_value( $wic_access_object->last_updated_by );		
+	protected function special_entity_value_hook ( &$wic_access_object ) { 
+			$time_stamp = $wic_access_object->db_get_time_stamp( $this->data_object_array['ID']->get_value() );
+			$this->data_object_array['last_updated_time']->set_value( $time_stamp->last_updated_time );
+			$this->data_object_array['last_updated_by']->set_value( $time_stamp->last_updated_by );
 	}
 	
 	public static function option_group_slug_sanitizor ( $raw_slug ) { 

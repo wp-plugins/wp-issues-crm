@@ -1324,6 +1324,9 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		return ( $return_result );
 	}
 
+	public function db_get_time_stamp ( $id ) {} // not implemented for uploads
+	protected function db_do_time_stamp ( $table, $id ) {} // not implemented for uploads
+
 }
 
 

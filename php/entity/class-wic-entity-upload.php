@@ -824,7 +824,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 			'sort_order' 		=> false, 	// don't care for sort
 			'compute_total' 	=> false,	// no need to find total of all dups	
 			'retrieve_limit'	=> 2,			// one dup is too many
-			'show_deleted'		=> true, 	// match deleted records
+			'show_deleted'		=> false, 	// don't match deleted records
 			'log_search' 		=> false,	// don't log the searches
 		);
 

@@ -10,11 +10,13 @@
 	
 	jQuery(document).ready(function($) {
 		
-		// note that have to reinitialize datepickers for hidden-template fields anyway and cleaner to skip them here (additional initialization in wic-main.js)
-		// alt approach was remove class for datepicker -- jQuery( newFields ).find( ".datepicker" ).removeClass('hasDatepicker');		
+		// note that have to reinitialize datepickers for hidden-template fields anyway 
+		// cleaner to skip them here (additional initialization in wic-main.js)
+		// alt approach was remove class for datepicker -- jQuery( newFields ).find( ".datepicker" ).removeClass('hasDatepicker');
+		// use name*='row-template' as not selecter  instead of :hidden so that do add datepicker to fields in initially hidden form groups		
 		
 		// set date picker
-	  $(".datepicker").not(":hidden").datepicker({
+	  $(".datepicker").not("[name*='row-template']").datepicker({
 	  		 dateFormat: "yy-mm-dd"
 	  	});
 
