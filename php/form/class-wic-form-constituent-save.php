@@ -16,7 +16,8 @@ class WIC_Form_Constituent_Save extends WIC_Form_Constituent_Update  {
 			'button_class'					=> 'button button-primary wic-form-button',
 			'button_label'					=> __('Save', 'wp-issues-crm')
 		);	
-		return ( $this->create_wic_form_button ( $button_args_main ) ) ;
+		return ( $this->create_wic_form_button ( $button_args_main ) . 
+			'<a target = "_blank" href="http://wp-issues-crm.com/?page_id=155">' . __( 'Constituent FAQ', 'wp-issues-crm' ) . '</a>' ) ;
 	}
 	
 	// group screen

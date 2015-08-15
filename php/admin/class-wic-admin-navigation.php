@@ -48,43 +48,47 @@ class WIC_Admin_Navigation {
 
 	public function do_dashboard (){
 		self::admin_check_security( '' );
-		echo '<div class="wrap"><h2 id="wic-main-header">' . __( 'WP Issues CRM', 'wp-issues-crm' ) . '</h2>';	
+		echo '<div class="wrap"><br/><h1 id="wic-main-header">' . __( 'WP Issues CRM', 'wp-issues-crm' ) . '</h1>';	
 		$wic_admin_dashboard = new WIC_Admin_Dashboard;
 		echo '<div>';
 	}
 	
 	public function do_uploads () {
 		self::admin_check_security( 'activate_plugins' );
-		echo '<div class="wrap"><h2>' . __( 'Upload Data', 'wp-issues-crm' ) . '</h2>';
+		echo '<h3 id = "wp-issues-crm-small-screen-size-plug">' . __( 'Upload management not available on screens below 960px in width.', 'wp-issues-crm' ) . '</h3>';
+		echo '<div class="wrap"><div id = "wp-issues-crm-full-screen"><h1>' . __( 'Upload Data', 'wp-issues-crm' ) . '</h1>';
 			$wic_admin_upload = new WIC_Entity_Upload; 
-		echo '<div>';
+		echo '</div></div>';
 	}
 	
 	public function do_fields () {
 		self::admin_check_security( 'activate_plugins' );
-		echo '<div class="wrap"><h2>' . __( 'Customize Fields', 'wp-issues-crm' ) . '</h2>';
+		echo '<h3 id = "wp-issues-crm-small-screen-size-plug">' . __( 'Field management not available on screens below 960px in width.', 'wp-issues-crm' ) . '</h3>';
+		echo '<div class="wrap"><div id = "wp-issues-crm-full-screen"><h1>' . __( 'Customize Fields', 'wp-issues-crm' ) . '</h1>';
 			$wic_admin_field = new WIC_Entity_Data_Dictionary; 
 				// not to be confused with the data dictionary cache itself, this class is the editor of the dictionary
-		echo '<div>';
+		echo '</div></div>';
 	}
 	
 	public function do_options () {
 		self::admin_check_security( 'activate_plugins' );
-		echo '<div class="wrap"><h2>'  .__( 'Manage Option Groups', 'wp-issues-crm' ) . '</h2>';		
+		echo '<h3 id = "wp-issues-crm-small-screen-size-plug">' . __( 'Options management not available on screens below 960px in width.', 'wp-issues-crm' ) . '</h3>';		
+		echo '<div class="wrap"><div id = "wp-issues-crm-full-screen"><h1>'  .__( 'Manage Option Groups', 'wp-issues-crm' ) . '</h1>';		
 			$wic_admin_option = new WIC_Entity_Option_Group;
-		echo '<div>';
+		echo '</div></div>';
 	}
 	
 	public function do_storage () {
 		self::admin_check_security( 'activate_plugins' );
-		echo '<div class="wrap"><h2>'  .__( 'Manage Storage', 'wp-issues-crm' ) . '</h2>';		
+		echo '<h3 id = "wp-issues-crm-small-screen-size-plug">' . __( 'Storage management not available on screens below 960px in width.', 'wp-issues-crm' ) . '</h3>';		
+		echo '<div class="wrap"><div id = "wp-issues-crm-full-screen"><h1>'  .__( 'Manage Storage', 'wp-issues-crm' ) . '</h1>';		
 			$wic_admin_storage = new WIC_Entity_Manage_Storage;
-		echo '<div>';
+		echo '</div></div>';
 	}
 	
 	public function do_preferences (){ 
 		self::admin_check_security( '' );  
-		echo '<div class="wrap"><h2>' . __( 'User Preferences', 'wp-issues-crm' ) . '</h2>';	
+		echo '<div class="wrap"><h1>' . __( 'User Preferences', 'wp-issues-crm' ) . '</h1>';	
 		$wic_entity_user = new WIC_Entity_User;
 		echo '<div>';
 	}		

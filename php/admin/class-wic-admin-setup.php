@@ -65,19 +65,13 @@ class WIC_Admin_Setup {
 			wp_enqueue_script(
 				'wic-utilities',
 				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-utilities.js' , __FILE__ ), 
-				array( 'jquery' )
+				array( 'jquery-ui-datepicker', 'jquery-ui-selectmenu', 'jquery-ui-menu', 'jquery-ui-spinner' )
 			);
 
 			wp_enqueue_script(
 				'wic-changed-page',
 				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-changed-page.js' , __FILE__ ), 
 				array( 'jquery' )
-			);
-
-			wp_enqueue_script(
-				'wic-jquery-ui',
-				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-jquery-ui.js' , __FILE__ ),
-				array( 'jquery-ui-datepicker', 'jquery-ui-selectmenu','jquery-ui-menu'  )
 			);
 
 			wp_enqueue_script(
@@ -96,6 +90,13 @@ class WIC_Admin_Setup {
 
 			// page specific scripts
 			if ( isset ( $_GET['page'] ) ) {
+				if ( 'wp-issues-crm-main' == $_GET['page'] ) {
+					wp_enqueue_script(
+						'wic-main',
+						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-main.js' , __FILE__ ),
+						array ( 'jquery', 'jquery-ui-autocomplete'  ) 
+					);
+				}
 				if ( 'wp-issues-crm-storage' == $_GET['page'] ) {
 					wp_enqueue_script(
 						'wic-manage-storage',
@@ -190,8 +191,10 @@ class WIC_Admin_Setup {
 
 	// add action to intercept press of download button before any headers sent 
 	public function do_download () { 
-		if ( isset( $_POST['wic-post-export-button'] ) && ! isset( $_POST['wic-form-button'] ) && ! isset( $_POST['wic-post-list-button'] )  ) {
+		if ( isset( $_POST['wic-post-export-button'] ) && ! isset( $_POST['wic_form_button'] ) ) {
 			WIC_List_Constituent_Export::do_constituent_download( $_POST['wic-post-export-button'], $_POST['search_id'] );	
+		} elseif ( isset( $_POST['wic-activity-export-button'] ) && ! isset( $_POST['wic_form_button'] ) ) {
+			WIC_List_Activity_Export::do_activity_download( $_POST['wic-activity-export-button'] );	
 		} elseif ( isset( $_POST['wic-category-export-button'] ) ) { 
 			WIC_List_Constituent_Export::do_constituent_category_download( $_POST['wic-category-export-button'] );	
 		} elseif ( isset ( $_POST['wic-staging-table-download-button'] ) ) {

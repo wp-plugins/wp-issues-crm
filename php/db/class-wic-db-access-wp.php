@@ -106,14 +106,14 @@ class WIC_DB_Access_WP Extends WIC_DB_Access {
 								),
 							'inclusive' => true,	
 						);
-					} elseif ( '<' == $search_clause['compare'] ) {
+					} elseif ( '<=' == $search_clause['compare'] ) {
 						$date_array = array (
 							array(
 								'before' => $search_clause['value'],
 								),
 							'inclusive' => true,	
 						);
-					} elseif ( '>' == $search_clause['compare'] ) {
+					} elseif ( '>=' == $search_clause['compare'] ) {
 						$date_array = array (
 							array(
 								'after' => $search_clause['value'],
@@ -210,6 +210,11 @@ class WIC_DB_Access_WP Extends WIC_DB_Access {
 		$this->process_save_update_array ( $save_update_array );
 	}
 
+	/*
+	*
+	* Save_update_array process -- format array as necessary for interface with WP Objects
+	*
+	*/
 	private function process_save_update_array ( &$save_update_array ) {
 		
 		$id = '';
@@ -258,8 +263,6 @@ class WIC_DB_Access_WP Extends WIC_DB_Access {
 				Do new search on same record to check for possible partial results.', 'wp-issues-crm' );
 		} else {
 			$this->outcome = true;
-			$this->last_updated_time = current_time ( 'timestamp' ); // note that these values not shown in ui for posts anyway
-			$this->last_updated_by = get_current_user_id();				// 
 			// proceed to update meta values -- convention is blank value represented by absence of meta record
 			$result = true; // start with true so that this is the result in no action case;
 			foreach ( $meta_args as $meta_arg ) {
@@ -285,10 +288,15 @@ class WIC_DB_Access_WP Extends WIC_DB_Access {
 		}
 	}
 
-	protected function db_delete_by_id ($id){ // not implemented for posts -- use the WP backend
+	// delete function not implemented for posts -- use the WP Backend
+	protected function db_delete_by_id ($id){ 
 	}
 
-
+	/*
+	*
+	* Used to populate activity issue drop down with open issues
+	*
+	*/
 	public static function get_wic_live_issues () {
 
 		// using direct wpdb query here because wp_query documentation is not consistent with  		
@@ -311,7 +319,12 @@ class WIC_DB_Access_WP Extends WIC_DB_Access {
 		
 		return ( $open_posts ); 
 	}
-	
+
+	/*
+	*
+	* Used to populate activity issue drop down if choose to show frequently or recently used issues
+	*
+	*/
 	public static function get_wic_latest_issues () {
 
 		$user_ID = get_current_user_id();
@@ -355,40 +368,7 @@ class WIC_DB_Access_WP Extends WIC_DB_Access {
 		return ( $latest_issues ); 
 	}
 
-	public function db_updated_last ( $user_id ) {
-		
-		// The Query
-		$args = array (
-			'author'		=> $user_id,
-			'post_status' => array(
-				'publish',
-				'private',
-				),
-			'orderby' 	=> 'modified',
-			'order'		=> 'DESC',
-			'posts_per_page'	=> 1,
-		);
-
-		// note will miss items modified, but not authored by user
-		$last_modified_query = new WP_Query( $args );
-		
-		// The Loop
-		while ( $last_modified_query->have_posts() ) {
-			$last_modified_query->the_post();
-			$latest_updated = get_the_ID();
-			$latest_updated_time = get_the_modified_date('Y-m-d H:i:s'); // . get_the_modified_time( ' H:i:s');
-		}
-		
-		wp_reset_postdata();
-
-		return ( array (
-			'latest_updated' => $latest_updated,
-			'latest_updated_time' =>$latest_updated_time,
-			)
-		);
-
-	}
-
+	// option counts for use in displaying existing option usage in options update screens
 	protected function db_get_option_value_counts( $field_slug ) {
 			
 		global $wpdb;
@@ -412,6 +392,10 @@ class WIC_DB_Access_WP Extends WIC_DB_Access {
 		return ( $field_value_counts );	
 	
 	} 
+
+	/* not implemented for wp type objects */
+	public function db_get_time_stamp ( $id ) {}
+	protected function db_do_time_stamp ( $table, $id ){}
 
 
 }

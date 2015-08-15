@@ -51,7 +51,7 @@ class WIC_Form_User_Update extends WIC_Form_Parent  {
 	// group screen -- don't show dropdown preferences unless global settings allow it
 	protected function group_screen( $group ) { 
 		$wic_plugin_options = get_option( 'wp_issues_crm_plugin_options_array' ); 
-		if ( 'user' == $group->group_slug && isset ( $wic_plugin_options['allow_issue_dropdown_preferences'] ) ) {
+		if ( 'user' == $group->group_slug && ! isset ( $wic_plugin_options['disallow_activity_issue_search'] ) ) {
 			return ( true );	
 		} elseif ( 'user' != $group->group_slug ) {
 			return (true);		

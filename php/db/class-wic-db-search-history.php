@@ -41,10 +41,10 @@ class WIC_DB_Search_History {
 		update_option ( '_wp_issues_crm_individual_search_history_' . $user_id, serialize ( $history_array ) );
 	}	
 	
-	public static function update_search_history( $search_log_id ) {
+	public static function update_search_history( $search_log_id ) { 
 		// adds a search log id to the end of the search history and sets pointer to end of history
 		// called whenever a new search log entry is made or is accessed from the search_log page ( <-<- )
-		$history_array = self::search_history_init();
+		$history_array = self::search_history_init(); 
 		// only add the new entry if it is not already at the end of the list -- 
 		// no need for adjacent dups in the history, but non-adjacent dups make sense
 		$count = count ( $history_array['history'] );
@@ -59,9 +59,21 @@ class WIC_DB_Search_History {
 	} 
 	
 	public static function new_history_branch () {
-		// truncates history at current pointer value (if not front) and sets pointer = to count (in other words beyond end of array)
-		// may be called repeatedly with same result until user does something loggable
-		// called on button presses to dashboard, or new issue/constituent/search
+		/*
+		* truncates history at current pointer value (if not front) and sets pointer = to count (in other words beyond end of array)
+		* may be called repeatedly with same result until user does something loggable
+		* called on button presses to dashboard, or new issue/constituent/search
+		*
+		* since 2.2.7 also called in id_search method in constituent and issue lists
+		* 		this change means that, when viewing an individual issue or constituent after browsing a list, the back button will return to the list
+		* 		instead of to the last viewed entry from the list. the alternative way to accomplish this was to alter the back button in this view 
+		* 		so that it would generate a new loggable event but could not just add a log entry to the back button in all cases, because an addition
+		*		moves pointer to end of list -- one would never actually go back.  One would have to make the back button on an update view from a list
+		*		retrieval conscious that it is from a list retrieval, but this would require a lot of complexity.	
+		*
+		*		note:  not doing starting branch in search_log::id_search -- making a new search log entry retrieval cause a history branch would make sense
+		*		when viewing the search log, but search log list is a top button and can't go back to it anyway, so this wouldn't work 
+		*/
 		$history_array = self::search_history_init();
 		$history_array['history'] = array_slice ( $history_array['history'], 0, $history_array['pointer'] + 1 );
 		$history_array['pointer'] = count ( $history_array['history'] );
@@ -70,6 +82,7 @@ class WIC_DB_Search_History {
 	
 	public static function history_pointer_move ( $forward ) { // takes binary true is forward, back is false
 		// moves pointer forward or backwards and returns history entry at pointer
+		// accessed by back/forward buttons which follow it with an id search 
 		$increment = $forward ? 1 : -1; 
 		$history_array = self::search_history_init();
 		$history_array['pointer'] = $history_array['pointer'] + $increment;

@@ -155,8 +155,6 @@ button.button.button-primary.wic-top-menu-button.back-to-list span.dashicons {
 	box-sizing: border-box;
 	border-left: 1px solid #aaa;
 	display: inline-block;
-	height: 640px;
-	overflow-y: scroll;
 	overflow-x: hidden;
 	padding: 0 30px;
 	vertical-align: top;
@@ -241,12 +239,10 @@ label.wic-label {
 }
 
 /* as in the label between range of dates */
-.wic-label-2 {
-	display: inline-block;
-	padding: 0 2.2888% 0 1.4%;
-	
+label.wic-label.wic-label-2,
+#wic-form-sidebar-groups label.wic-label.wic-label-2{
+	display: none;
 }
-
 
 /* style to line up with labels above it */
 .row-add-button {
@@ -321,6 +317,7 @@ label.wic-label.first-name{
 input.wic-input,
 select.wic-input {
 	margin-right: 1.25%;
+	cursor: pointer;
 }
 
 .wic-multivalue-block {
@@ -353,6 +350,10 @@ input.wic-input-deleted {
 .hidden-template {
 	display: none;
 }
+/* styling for elements that are hidden by php logic (see class-wic-control-parent.php ) */
+.hidden-element {
+	display: none;
+}
 
 .visible-template {
 	display: block;
@@ -370,8 +371,12 @@ select.wic-input.activity-type,
 select.wic-input.address-type,
 select.wic-input.phone-type, 
 select.wic-input.email-type {
-	cursor: pointer;
 	width: 23.4375%;
+} 
+
+input.wic-input.last-updated-time,
+select.wic-input.last-updated-by {
+	width: 20.8%;
 } 
 
 
@@ -452,16 +457,6 @@ a#wic-email-icon-link:hover {
 	display: none;
 }
 
-#wic-field-subgroup-activity,
-.wic-field-subgroup-activity,
-#wic-field-subgroup-activity_issue,
-.wic-field-subgroup-activity_issue,
-#wic-field-subgroup-activity_note,
-#wic-field-subgroup-address_line_1,
-.wic-field-subgroup-address_line_1 {
-	margin: 0 0 10px 0;
-}
-
 .wic-field-subgroup-activity_note {
 	border-bottom: 1px dashed #ccc;
 	padding-bottom: 10px;
@@ -482,30 +477,80 @@ a#wic-email-icon-link:hover {
 	
 }
 
-label.wic-label.activity-type, 
-label.wic-label.issue {
+/* Activity fields */
+#wic-field-subgroup-activity,
+.wic-field-subgroup-activity,
+#wic-field-subgroup-activity_amount,
+.wic-field-subgroup-activity_amount,
+#wic-field-subgroup-activity_issue,
+.wic-field-subgroup-activity_issue,
+#wic-field-subgroup-activity_note,
+#wic-field-subgroup-address_line_1,
+.wic-field-subgroup-address_line_1 {
+	margin: 0 0 10px 0;
+}
+
+#wic-form-constituent-update .wic-multivalue-field-subgroup.wic-field-subgroup-activity,
+#wic-form-constituent-save .wic-multivalue-field-subgroup.wic-field-subgroup-activity {
+	display: inline-block;
+	width: 51.6%;
+}
+
+#wic-form-constituent-update .wic-multivalue-field-subgroup.wic-field-subgroup-activity_amount,
+#wic-form-constituent-save .wic-multivalue-field-subgroup.wic-field-subgroup-activity_amount {
+	display: inline-block;
+	width: 45.6%;
+}
+
+#wic-form-constituent-update .wic-field-subgroup-activity .wic-input-deleted-label,
+#wic-form-constituent-save .wic-field-subgroup-activity .wic-input-deleted-label {
+	margin: 0 5.147% 0 0; 
+}
+
+#wic-form-constituent-update select.wic-input.activity-type,
+#wic-form-constituent-save select.wic-input.activity-type {
+	margin-right: 2.3%;
+	width: 35.55%;
+}
+
+#wic-form-constituent-update .wic-label.activity-date,
+#wic-form-constituent-save .wic-label.activity-date {
 	display: none;
 }
 
+#wic-form-constituent-update .wic-input.activity-date,
+#wic-form-constituent-save .wic-input.activity-date {
+	width: 47%;
+} 
+
+#wic-form-constituent-update .wic-input.activity-amount,
+#wic-form-constituent-save .wic-input.activity-amount {
+	width: 47.5%;
+}
+
+#wic-form-constituent-update .wic-form-button.wic-activity-issue-link-button,
+#wic-form-constituent-save .wic-form-button.wic-activity-issue-link-button {
+	overflow-x: hidden;
+	width: 46%;
+}
+
+label.wic-label.activity-amount,
+label.wic-label.activity-type, 
+label.wic-label.issue,
 label.wic-label.activity-date {
-	display: inline-block;
-	min-width: 0px;
-	text-align: left;
-	vertical-align: top;
-	padding: 0 .6%;
+	display: none;
 }
 
-.wic-input.activity-date {
-	width: 25%;
-}
-
-/* widen it on update form since lose range and want to line up issue link button */
-#wic-form-constituent-update .wic-input.activity-date {
-	width: 18%;
+/* this is the size applicable in the search form -- scaled up in rows in save/update forms */
+.wic-input.activity-amount,
+.wic-input.activity-date,
+.wic-input.last-updated-by {
+	width: 23.4375%;
 }
 
 .wic-field-subgroup-activity_issue .wic-input.issue,
-#wic-field-subgroup-activity_issue .wic-input.issue {
+#wic-field-subgroup-activity_issue .wic-input.issue,
+.issue-autocomplete {
 	width: 73.5%;
 }
 
@@ -538,8 +583,10 @@ textarea.wic-input.activity-note {
 }
 
 /* only show mark deleted on update form */
-#wic-form-constituent-save .mark-deleted,
-#wic-form-constituent-search .mark-deleted {
+#wic-form-constituent-save .wic-label.mark-deleted,
+#wic-form-constituent-search .wic-label.mark-deleted,
+#wic-form-constituent-save .wic-input.mark-deleted,
+#wic-form-constituent-search .wic-input.mark-deleted {
 	display: none;
 }
 
@@ -636,13 +683,9 @@ ul#constituent-comment-list {
 	width: 100%;
 } 
 
-#wic-form-issue-search #wic-form-sidebar-groups .wic-input.post-date,
-#wic-form-issue-search #wic-form-sidebar-groups .wic-input.review-date,
-#wic-form-constituent-search #wic-form-sidebar-groups .wic-input.case-review-date,
-#wic-form-constituent-search #wic-form-sidebar-groups .wic-input.date-of-birth,
-#wic-form-constituent-search #wic-form-sidebar-groups .wic-input.reg-date, 
-#wic-form-constituent-search #wic-form-sidebar-groups .wic-input.last-updated-time {
-	width: 40%;
+#wic-form-issue-search  #wic-form-sidebar-groups .wic-input.datepicker,
+#wic-form-constituent-search #wic-form-sidebar-groups .wic-input.datepicker {
+	width: 50%;
 	min-width: 0;
 }
 
@@ -721,38 +764,40 @@ div.wic_multi_select {
 .wic-multi-select-label {
 	cursor: pointer;
 	display: inline-block;
-	width: 280px;
+	width: 58%;
 	vertical-align: top;
-	padding-left: 20px;
+	padding-left: 2%;
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
 
 }
 
-.wic-multi-select-depth-1 {
-	padding-left: 20px;
-}
 
-.wic-multi-select-depth-2 {
-	padding-left: 40px;
-}
+	.wic-multi-select-depth-1 {
+		padding-left: 2%;
+	}
 
-.wic-multi-select-depth-3 {
-	padding-left: 60px
-}
+	.wic-multi-select-depth-2 {
+		padding-left: 4%;
+	}
 
-.wic-multi-select-depth-4 {
-	padding-left: 60px
-}
+	.wic-multi-select-depth-3 {
+		padding-left: 6%;
+	}
 
-.wic-multi-select-depth-5 {
-	padding-left: 60px
-}
+	.wic-multi-select-depth-4 {
+		padding-left: 8%;
+	}
 
-.wic-multi-select-depth-6 {
-	padding-left: 60px
-}
+	.wic-multi-select-depth-5 {
+		padding-left: 10%;
+	}
+
+	.wic-multi-select-depth-6 {
+		padding-left: 12%;
+	}
+
 
 #wic-issue-post-edit-link {
 	display: inline-block;
@@ -820,8 +865,7 @@ input.wic-input.option-label {
 
 #option_value-control-set input.wic-input.value-order {
 	border: none;
-	margin: 10px 5px 0 5px;
-	width: 50px;
+	width: 30px;
 }
 
 
@@ -892,7 +936,7 @@ button.wic-post-list-button.pl-even:hover {
 #wic-post-list ul.wic-post-list-headers {
 	font-weight: 700;
 	list-style: none;
-	padding: .88889% .88889%;
+	padding: 15px .88889%;
 	margin: 0;
 }
 
@@ -900,7 +944,7 @@ button.wic-post-list-button.pl-even:hover {
 	font-size: 1.2em;	
 	font-weight: 700;
 	list-style: none;
-	padding: .88889% .88889%;
+	padding: 15px .88889%;
 	margin: 0;
 }
 
@@ -926,7 +970,7 @@ button.wic-post-list-button {
 	-moz-box-sizing: border-box;
 	box-sizing: border-box;
 	margin: 0;
-	padding: .88889% .88889%;
+	padding: 15px .88889%;
 	vertical-align: top;
 	list-style: none;
 	width: 100%;	
@@ -1140,6 +1184,16 @@ ul#system-settings-list{
 	margin: 0 1.5% 10px 0;
 	padding: 2px 2px 10px 2px; 
 	width: 23.5%;
+}
+
+.wic-draggable,
+.wic-droppable,
+.wic-sortable {
+   -ms-user-select: none; /* IE 10+ */
+   -moz-user-select: -moz-none;
+   -khtml-user-select: none;
+   -webkit-user-select: none;
+   user-select: none;
 }
 
 .wic-draggable.moving-draggable {
@@ -1360,16 +1414,19 @@ label.wic-label.wic-post-export-button {
 }
 
 /* list element widths */
-.pl-constituent-first_name{ width:14%;}
-.pl-constituent-middle_name{ width:14%;}
-.pl-constituent-last_name{ width:14%;}
-.pl-constituent-phone{ width:15%;}
-.pl-constituent-email{ width:28%;}
-.pl-constituent-city{ width:20%;}
-.pl-activity-activity_date{ width:19%;}
+.pl-constituent-first_name{ width:12%; overflow-x: hidden;}
+.pl-constituent-middle_name{ width:12%; overflow-x: hidden;}
+.pl-constituent-last_name{ width:12%; overflow-x: hidden;}
+.pl-constituent-phone{ width:14%; overflow-x: hidden;}
+.pl-constituent-email{ width:25%; overflow-x: hidden;}
+.pl-constituent-address{ width:25%; overflow-x: hidden; }
+.pl-activity-activity_date{ width:10%;}
 .pl-activity-activity_type{ width:10%;}
+.pl-activity-activity_amount{ width:10%; text-align: right; }
+.pl-activity-constituent_id{ width: 20%; margin-left: 1%; }
+.pl-activity-issue{ width: 39%; }
+.pl-activity-pro_con{ width:10%; }
 .pl-activity-activity_issue_id{ width:61%;}
-.pl-activity-activity_pro_con{ width:10%;}
 .pl-issue-issue_staff{ width:13.8%;}
 .pl-issue-wic_live_issue{ width:7.1%;}
 .pl-issue-follow_up_status{ width:7.1%;}
@@ -1381,16 +1438,6 @@ label.wic-label.wic-post-export-button {
 .pl-trend-pro { width: 10%; }
 .pl-trend-con { width: 10%; }
 .pl-trend-post_category { width: 30%; }
-.wic-post-list-header.pl-search_log-entity,
-.wic-post-list-field.pl-search_log-entity {
-	display: none;
-}
-.pl-search_log-user_id{ width:14.1%;}
-.pl-search_log-search_time{ width:14.1%;}
-.pl-search_log-serialized_search_array{ width:42.3%;}
-.pl-search_log-download_time{ width:14.1%;}
-.pl-search_log-result_count { width: 14.1%}
-li.pl-search_log-serialized_search_parameters{ display: none;}
 
 .pl-option_group-option_group_desc{ width:30%;}
 .pl-option_group-enabled{ width:10%;}
@@ -1412,6 +1459,81 @@ li.pl-search_log-serialized_search_parameters{ display: none;}
 .wic-list-legend {
 	margin: 10px 7.11111%;
 }
+
+/* 
+* 
+* special formatting for search_log list 
+*
+*/
+
+/* split list lines into two buttons  -- for other lists, single 100% button*/
+.wic-post-list-button.wic-search-log-list-button {
+	width: 96.444444%
+}
+.wic-favorite-button {
+	border: none;	
+	background: transparent;
+	cursor: pointer;
+	padding: 0;
+	width: 3.555555%;
+}
+
+/* line height setting lines up stars vertically with first line of main button */
+.wic-favorite-button span.dashicons-star-filled {
+	color: #FFD700;
+	font-size: 2em;
+	line-height: 1.8em;
+}
+.wic-favorite-button span.dashicons-star-empty {
+	color: #aaa;
+	font-size: 1.8em;
+	line-height: 1.8em;
+}
+
+/* want main background to show through for the header line in search log */
+li.pl-odd.search_log {
+	background: transparent;
+}
+/* this space now appears in every list, but with zero width */
+div.wic-post-list-headers-spacer {
+	width: 0;
+	margin: 0;
+}
+/* give it width only in search_log to align with button*/
+div.wic-post-list-headers-spacer.search_log {
+	background: transparent;
+	display: inline-block;
+	height: 2em;
+	width: 3.555555%;
+	margin: 0;
+}
+/* wrapped headers in div for styling in search log case */
+div.wic-post-list-headers.search_log {
+	display: inline-block;
+	width: 96.444444%;
+}
+
+/* elements present in sort row and needed for processing, but not displayed */
+.wic-post-list-header.pl-search_log-entity,
+.wic-post-list-field.pl-search_log-entity {
+	display: none;
+}
+.wic-post-list-header.pl-search_log-favorite,
+.wic-post-list-field.pl-search_log-favorite {
+	display: none;
+}
+li.pl-search_log-serialized_search_parameters { 
+	display: none;
+}
+
+/* dislpayed widths set to match button widths scaled by .964444 */
+.pl-search_log-search_time{ width:18.33333%;}
+.pl-search_log-serialized_search_array{ width:29.493%;}
+.pl-search_log-download_time{ width:14.74%;}
+.pl-search_log-result_count { width: 14.74%}
+
+
+
 
 /***
 * Trend form/list styling
@@ -1446,12 +1568,13 @@ button#wic-inner-field-group-userid-toggle-button {
 	display: none;
 }
 
-
+button#wic-inner-field-group-disable_autocomplete-toggle-button,
 button#wic-inner-field-group-user-toggle-button,
 button#wic-inner-field-group-startup-toggle-button {
 	margin: 20px 0 10px 11.11111%;
 }
 
+#wic-field-group-disable_autocomplete .wic-form-field-group-legend,
 #wic-field-group-startup .wic-form-field-group-legend,
 #wic-field-group-user .wic-form-field-group-legend  {
 	margin-left: 11.11111%;
@@ -1520,18 +1643,424 @@ td.wic-statistic  {
 	max-height: initial;
 }
 
-@media only screen and (max-width: 960px) {
-	#wic-form-main-groups, 
-	#wic-form-sidebar-groups {
-		border: none;
+#wp-issues-crm-small-screen-size-plug {
+	display: none;
+}
+/******************************************************************
+*******************************************************************
+*******************************************************************
+*
+* smaller screen styling -- one main degradation step -- at 960px
+*
+*******************************************************************
+*******************************************************************
+*******************************************************************/
+
+/*  problem solving tweaks as necessary at the 1250 step */
+@media only screen and (max-width: 1200px) {
+	button.wic-form-button.wic-activity-issue-link-button {
+		display: none;
+	}
+
+	#wic-form-constituent-save .wic-multivalue-field-subgroup.wic-field-subgroup-activity,
+	#wic-form-constituent-update .wic-multivalue-field-subgroup.wic-field-subgroup-activity {
+		display: block;
 		width: 100%;
-		height: initial;	
-		max-height: initial; 
-	} 	
-	
-	#wic-form-sidebar-groups {
-		margin-left: 20%;
-		padding: 0;
-		width: 80%;	
+	}
+
+	#wic-form-constituent-save .wic-multivalue-field-subgroup.wic-field-subgroup-activity_amount,
+	#wic-form-constituent-update .wic-multivalue-field-subgroup.wic-field-subgroup-activity_amount {
+		display: block;
+		width: 100%;
 	}
 }
+@media only screen and (max-width: 960px) {
+
+	/* message box and notices */
+	#post-form-message-box {
+		margin: 10px 0;
+		padding: 10px 0;
+	}
+
+
+	/* buttons */
+	button.button.button-primary.wic-form-button {
+		font-size: 1.0em;
+		margin-right: 2%;
+		width: 38%;
+	}
+
+	button.button.button-primary.wic-top-menu-button {
+		display: inline-block;
+		margin: 0 2% 10px 0;
+		padding: 3px 0 0 0;
+		width: 18%;
+	}
+
+	button.button.button-primary.wic-top-menu-button.wic-nav-button {
+		width: 18%;
+	}
+
+	.wic-post-form .wic-form-button {
+		margin: 0 0 10px 0;
+	}
+
+	.wic-post-form .second-position {
+		margin: 0 2% 10px 0;
+	} 
+
+
+	/* form groups */
+	#wic-form-main-groups,
+	#wic-form-sidebar-groups {
+		border: none;
+		display: inline-block;
+		overflow-y: visible;
+		overflow-x: visible;
+		margin: 0;
+		padding: 0 0.5%;
+		width: 100%; 
+	}
+	
+	/* label */
+	label.wic-label {
+		display: block;
+		margin: 0;
+		padding: 0;
+		text-align: left;
+	}
+
+	input.wic-input,
+	select.wic-input {
+		margin-right: 2%;
+	}
+
+	.wic-multivalue-control-set {
+		width: 100%;
+	}
+
+
+
+	/********************************************************
+	* Individual field styling in constituent forms
+	*********************************************************/
+
+	#wic-control-first-name {
+		margin-right: 2%;
+		width: 38%;
+	}
+
+	#wic-control-middle-name{
+		display: none;
+	}
+
+	#wic-control-last-name {
+		margin-right: 2%;
+		width: 58%;	
+	}
+
+	.wic-input.last-name,
+	.wic-input.first-name {
+		width: 100%;
+		margin-bottom: 0;
+	}
+
+	select.wic-input.activity-type,
+	select.wic-input.address-type,
+	select.wic-input.phone-type, 
+	select.wic-input.email-type {
+		margin-right: 2%;	
+		width: 38%;
+	} 
+
+
+	.wic-input.phone-number,
+	.wic-input.email-address,
+	.wic-input.address-line {
+		margin-right: 2%;
+		width: 57.25%;
+	}
+
+	.wic-input.state,
+	.wic-input.zip {
+		width: 27.4%;
+	} 
+
+	.wic-input.city {
+		width: 38%;
+	
+	}
+
+	.wic-input.extension {
+		display: none;
+	} 
+
+	
+	#wic-form-constituent-search .wic-input.phone,
+	#wic-form-constituent-search .wic-input.email-address,
+	#wic-form-constituent-search .wic-input.city {
+		margin-bottom: 0;
+	}
+
+	label.wic-label.activity-date {
+		display: none;
+	}
+
+	
+	.wic-field-subgroup-activity_issue .wic-input.issue, 
+	#wic-field-subgroup-activity_issue .wic-input.issue, 
+	.issue-autocomplete {
+   	 width: 67%;
+	}
+	
+	.wic-input.pro-con {
+		width: 26%;
+		min-width: 0px; 
+	} 
+	
+	input.wic-input.activity-note, 
+	textarea.wic-input.activity-note {
+		width: 98%;
+		min-width: 0px;
+	}
+
+	input.wic-input.last-updated-time,
+	select.wic-input.last-updated-by {
+		width: 38%;
+	} 
+
+
+	#wic-form-sidebar-groups #wic-inner-field-group-search_parms-toggle-button, 
+	#wic-form-sidebar-groups .field-group-show-hide-button,
+	.field-group-show-hide-button {
+		font-size: 1em;
+		margin: 5px 0;
+	}
+
+	#wic-post-export-button-button {
+		margin: 0 2% -5px 0;
+		padding: 0;
+	}
+	
+	#wic-post-export-button {
+		width: 58%;
+	}
+	
+	/* list element widths for constituent search results*/	
+	.pl-constituent-first_name,
+	.pl-constituent-last_name { 
+		width: 30%;
+	}
+	.pl-constituent-address { 
+		width: 40%;
+	}
+	li.wic-post-list-header.pl-constituent-middle_name, 
+	li.wic-post-list-field.pl-constituent-middle_name,
+	li.wic-post-list-header.pl-constituent-phone, 
+	li.wic-post-list-field.pl-constituent-phone,
+	li.wic-post-list-header.pl-constituent-email, 
+	li.wic-post-list-field.pl-constituent-email {
+		display: none;
+	}	
+	.pl-constituent-city{ width:16%;}
+	
+	/*
+	* Individual Sytling for update form
+	*/
+
+	/* style to line up with labels above it */
+	.row-add-button {
+		margin: 0 0 10px 0;
+	}	
+	.wic-input-deleted-label {
+		margin: 0 1% 0 0;
+	}
+	/* 
+	* make these a little smaller on update/save forms 
+	* to allow room for delete button (27px) 
+	*/
+	#wic-form-constituent-save .wic-input.phone-type,
+	#wic-form-constituent-save select.wic-input.activity-type,
+	#wic-form-constituent-save .wic-input.address-type,
+	#wic-form-constituent-save .wic-input.email-type,
+	#wic-form-constituent-update .wic-input.phone-type,
+	#wic-form-constituent-update select.wic-input.activity-type,
+	#wic-form-constituent-update .wic-input.address-type,
+	#wic-form-constituent-update .wic-input.email-type {
+		width: 30%;
+	} 
+	#wic-form-constituent-update .wic-input.address-line {
+		width: 57%;
+	}
+	
+	#wic-form-constituent-update .wic-field-subgroup-activity .wic-input-deleted-label,
+	#wic-form-constituent-save .wic-field-subgroup-activity .wic-input-deleted-label {
+		margin: 0 1% 0 0; 
+	}
+	
+	#wic-form-constituent-update .wic-input.activity-date,
+	#wic-form-constituent-save .wic-input.activity-date,
+	#wic-form-constituent-update .wic-input.activity-amount,
+	#wic-form-constituent-save .wic-input.activity-amount {
+		width: 45%;
+	}
+	
+	#wic-form-constituent-save select.wic-input.activity-type,	
+	#wic-form-constituent-update select.wic-input.activity-type {
+		margin-bottom: 10px;
+	}	
+
+	.wic-form-button.wic-activity-issue-link-button {
+		width: 26%;
+		margin: 0 .05%;
+	}	
+	
+	.wic-input.mark-deleted {
+		width: 38%;
+	}
+	
+	#wic-field-group-comment {
+		padding: 0;
+		margin: 0;
+	}
+
+	li.constituent-comment-issue {
+		width: 55%;
+	}
+
+	#bottom-button-group {
+		margin-top: 20px;
+	}
+	.wic-form-legend {
+		margin: 10px 0;
+	}
+	/*
+	* Issues styling
+	*/
+	
+	#wic-form-issue-search #post_title,
+	.wic-input.post-title,
+	.wic-input.post-content,
+	.wic-input.tags-input,
+	#wic-post-content-visible,
+	div.wic_multi_select {
+		margin: 0;
+		width: 100%;
+	}
+
+	div.wic_multi_select {
+		height: initial;
+		max-height: 300px;
+	}
+
+	li.wic-post-list-header.pl-issue-issue_staff, 
+	li.wic-post-list-field.pl-issue-issue_staff,	
+	li.wic-post-list-header.pl-issue-follow_up_status, 
+	li.wic-post-list-field.pl-issue-follow_up_status,
+	li.wic-post-list-header.pl-issue-post_category, 
+	li.wic-post-list-field.pl-issue-post_category,
+	li.wic-post-list-header.pl-issue-post_status, 
+	li.wic-post-list-field.pl-issue-post_status {
+		display: none;
+	}	
+	.pl-issue-wic_live_issue{ width:38%;}
+	.pl-issue-post_title{ width:58%;}
+
+	/***
+	* Trend form/list styling
+	*
+	*/
+
+	#wic-form-trend-search label.wic-label.activity-type, 
+	#wic-form-trend-search-again label.wic-label.activity-type,
+	#wic-form-trend-search label.wic-label.activity-date, 
+	#wic-form-trend-search-again label.wic-label.activity-date {
+		display: block;
+		margin: 0;
+		text-align: left;
+	}
+
+	#wic-inner-field-group-trend select.wic-input.activity-type, 
+	#wic-inner-field-group-trend input.wic-input.activity-date, 
+	#wic-inner-field-group-trend select.wic-input.last-updated-by {
+		width: 38%;
+	}
+	
+	#wic-inner-field-group-trend select.wic-input.trend-search-mode {
+		width: 100%; 
+		overflow: hidden;
+	}
+
+	li.wic-post-list-header.pl-trend-pro, 
+	li.wic-post-list-field.pl-trend-pro,
+	li.wic-post-list-header.pl-trend-con, 
+	li.wic-post-list-field.pl-trend-con,
+	li.wic-post-list-header.pl-trend-post_category, 
+	li.wic-post-list-field.pl-trend-post_category {
+		display: none;
+	}	
+	.pl-trend-id { width: 78%; }
+	.pl-trend-total { width: 18%; }
+
+	.wic-list-legend {
+		margin: 10px 0;
+	}
+	
+	/* 
+	* 
+	* special formatting for search_log list 
+	*
+	*/
+
+	/* split list lines into two buttons  -- for other lists, single 100% button*/
+	.wic-post-list-button.wic-search-log-list-button {
+		width: 100%;
+	}
+	.wic-favorite-button {
+		display: none;
+	}
+
+	div.wic-post-list-headers-spacer.search_log {
+		display: none;
+	}
+	/* wrapped headers in div for styling in search log case */
+	div.wic-post-list-headers.search_log {
+		display: inline-block;
+		width: 100%;
+	}
+
+	.wic-post-list-header.pl-search_log-search_time
+	.wic-post-list-field.pl-search_log-search_time,
+	.wic-post-list-header.pl-search_log-search_time,
+	.wic-post-list-field.pl-search_log-search_time,
+	.wic-post-list-header.pl-search_log-download_time,
+	.wic-post-list-field.pl-search_log-download_time {
+		display: none;
+	}
+
+
+	/* dislpayed widths set to match button widths scaled by .964444 */
+	.pl-search_log-serialized_search_array{ width:78%;}
+	.pl-search_log-result_count { width: 16%}
+
+	button#wic-inner-field-group-user-toggle-button,
+	button#wic-inner-field-group-startup-toggle-button {
+		margin: 20px 0 10px 0;
+	}
+	
+	#wic-field-group-startup .wic-form-field-group-legend,
+	#wic-field-group-user .wic-form-field-group-legend  {
+		margin-left: 0;
+	}
+
+	#wp-issues-crm-small-screen-size-plug {
+		color: red;
+		display: block;
+	}
+
+	#wp-issues-crm-full-screen {
+		display: none;	
+	}
+
+}
+	

@@ -6,11 +6,18 @@
 *
 */
 
-class WIC_DB_Access_Trend Extends WIC_DB_Access {
+class WIC_DB_Access_Trend Extends WIC_DB_Access_Activities {
+	
+	public $amount_total;	
 	
 	// implements trend search variables as activity search variables and then aggregates
 
 	protected function db_search( $meta_query_array, $search_parameters ) { 
+
+		if ( 'activities' == $search_parameters['trend_search_mode'] ) {
+			parent::db_search( $meta_query_array, $search_parameters );
+			return;		
+		}
 
 		// parse activities where clause
 		$where_clause = $this->parse_activities_where_clause ( $meta_query_array ); 
@@ -26,29 +33,31 @@ class WIC_DB_Access_Trend Extends WIC_DB_Access {
 		// set global access object 
 		global $wpdb;
 
+		/*
+		*
+		* If trend search mode is cats or issues, doing a query that works back to issues; option handling differs only in class-wic-list-trend.php
+		* But, if trend search mode is activities, retrieving a set of activities -- requires different handling here and in class-wic-list-trend.php
+		*
+		*/
 
-
-		// straight activity query to start
 		$join = $wpdb->prefix . 'wic_activity activity inner join ' . $wpdb->prefix . 'wic_constituent c on c.id = activity.constituent_id';
-
-		// prepare SQL
 		$activity_sql = "
-					SELECT constituent_id, issue, max(pro_con) as pro_con
-					FROM 	$join
-					WHERE 1=1 $deleted_clause $where 
-					GROUP BY $top_entity.constituent_ID, $top_entity.issue
-					LIMIT 0, 9999999
+				SELECT constituent_id, issue, max(pro_con) as pro_con
+				FROM 	$join
+				WHERE 1=1 $deleted_clause $where 
+				GROUP BY $top_entity.constituent_ID, $top_entity.issue
+				LIMIT 0, 9999999
 					";	
 		$activity_sql = ( $where > '' ) ? $wpdb->prepare( $activity_sql, $values ) : $activity_sql;					
 		// $sql group by always returns single row, even if multivalues for some records 
 		$sql =  	"
-					SELECT p.id, count(constituent_id) as total, sum( if (pro_con = '0', 1, 0) ) as pro,  sum( if (pro_con = '1', 1, 0) ) as con  
-					FROM ( $activity_sql ) as a 
-					INNER JOIN $wpdb->posts p on a.issue = p.ID
-					GROUP BY p.ID
-					ORDER BY count(constituent_id) DESC
-					";
-		$sql_found = "SELECT FOUND_ROWS() as found_count";
+				SELECT p.id, count(constituent_id) as total, sum( if (pro_con = '0', 1, 0) ) as pro,  sum( if (pro_con = '1', 1, 0) ) as con  
+				FROM ( $activity_sql ) as a 
+				INNER JOIN $wpdb->posts p on a.issue = p.ID
+				GROUP BY p.ID
+				ORDER BY count(constituent_id) DESC
+				";
+
 		$this->sql = $sql; 
 		// do search
 		$this->result = $wpdb->get_results ( $sql );
@@ -58,31 +67,8 @@ class WIC_DB_Access_Trend Extends WIC_DB_Access {
 		$this->outcome = true;  // wpdb get_results does not return errors for searches, so assume zero return is just a none found condition (not an error)
 										// codex.wordpress.org/Class_Reference/wpdb#SELECT_Generic_Results 
 		$this->explanation = ''; 
+		
 	}	
-
-
-	// no parent version of this function
-	public function search_log_last_general ( $user_id ) { 
-		
-		global $wpdb;		
-		$search_log_table = $wpdb->prefix . 'wic_search_log';
-		$entity = $this->entity;
-		
-		$sql = 			
-			"
-			SELECT ID
-			FROM $search_log_table
-			WHERE user_id = $user_id
-				AND entity = '$entity'
-			ORDER	BY time DESC
-			LIMIT 0, 1
-			";
-		
-		$latest_search = $wpdb->get_results ( $sql );
-
-		return ( $latest_search[0]->ID );
-
-	} 	
 
 	// function set up only for download (could convert to list, by adding a list mode setting object properties )
 	public function search_activities_with_category_slice ( $meta_query_array, $category_contributors ) { 
@@ -124,39 +110,10 @@ class WIC_DB_Access_Trend Extends WIC_DB_Access {
 	}
 
 
-	// utility
-	private function parse_activities_where_clause( $meta_query_array ) {
-		// prepare $where clause
-		$where = '';
-		$values = array();
-		// explode the meta_query_array into where string and array ready for wpdb->prepare
-		foreach ( $meta_query_array as $where_item ) {
-
-			$field_name		= $where_item['key'];
-			$table 			= 'activity';
-			$compare 		= $where_item['compare'];
-			
-			// set up $where clause with placeholders and array to fill them
-			if ( '=' == $compare || '>' == $compare || '<' == $compare || '!=' == $compare ) {  // straight strict match			
-				$where .= " AND $table.$field_name $compare %s ";
-				$values[] = $where_item['value'];
-			} elseif ( 'BETWEEN' == $compare ) { // date range
-				$where .= " AND $table.$field_name >= %s AND $table.$field_name <= %s" ;  			
-				$values[] = $where_item['value'][0];
-				$values[] = $where_item['value'][1];
-			} else {
-				WIC_Function_Utilities::wic_error ( sprintf( 'Incorrect compare settings for field %1$s.', $this->field->field_slug ), __FILE__, __LINE__, __METHOD__, true );
-			}
-		}
-	
-		return ( array ( 'where' => $where, 'values' => $values ) );
-	}
-
 	/* required functions not implemented */
 	protected function db_save ( &$meta_query_array ) {}
 	protected function db_update( &$meta_query_array ) {  }
 	protected function db_delete_by_id ( $args ){}
-	protected function db_updated_last ( $arts ) {}
 	protected function db_get_option_value_counts( $field_slug ) {} // not implemented for trends
 
 }
