@@ -17,6 +17,7 @@ class WIC_DB_Access_Factory {
 		'activity' 		=> 'WIC_DB_Access_WIC', 		// multivalue save update activity
 		'activities'	=> 'WIC_DB_Access_Activity',  // list activities
 		'address'		=> 'WIC_DB_Access_WIC',
+		'advanced_search' => 'WIC_DB_Access_Advanced_Search',
 		'comment' 		=> 'WIC_DB_Access_WIC',
 		'constituent' 	=> 'WIC_DB_Access_WIC',	
 		'data_dictionary' => 'WIC_DB_Access_Dictionary',
@@ -37,7 +38,8 @@ class WIC_DB_Access_Factory {
 	static private $entity_parent_array = array (
 		'activity' 		=> 'constituent', 
 		'activities'	=> '',
-		'address'		=> 'constituent', 
+		'address'		=> 'constituent',
+		'advanced_search' => '', 
 		'comment' 		=> '',
 		'constituent' 	=> '',	
 		'data_dictionary' => '',

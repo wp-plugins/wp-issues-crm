@@ -418,4 +418,85 @@ class WIC_DB_Dictionary {
 		return ( $custom_fields_match_array );
 	}
 
+	/*
+	*
+	* Field inventories for advanced search forms (handles entity constituent and activity)
+	*
+	*/
+	private function get_search_fields_array( $entity ) {
+		$search_fields_array = array();
+		foreach ( $this->field_rules_cache as $field ) {	
+			if ( $entity == $field->entity_slug ) {
+				if ( 'multivalue' == $field->field_type ) { // this branch only relevant for $entity == 'constituent', no activity multivalue fields 
+					if ( 'activity' != $field->field_slug ) {					
+						$search_fields_array = array_merge ( $search_fields_array, $this->get_search_fields_array ( $field->field_slug ) );
+					}			
+				} else {
+					if ( 	0 == $field->transient  && 																		// exclude transients 
+							'constituent_id' != $field->field_slug &&														// exclude link fields
+							( 'constituent' == $field->entity_slug || 'ID' != $field->field_slug )  && 		// exclude lower entity ID fields
+							( false === in_array ( $field->field_slug, 
+								array ( 'activity_type', 'phone_type', 'email_type', 'address_type' ) ) ) 	// exclude types */
+						) {
+							$search_fields_array[$field->entity_slug . $field->field_label . $field->field_slug ] = array(
+								'ID'					=>	$field->ID,
+								'entity_slug'		=> $field->entity_slug,
+								'field_slug'		=> $field->field_slug,
+								'field_type'		=>	$field->field_type,
+								'field_label'		=>	$field->field_label,
+								'option_group'		=>	$field->option_group
+							);
+					}
+				}
+			}
+		} 
+		return ( $search_fields_array );
+	} 
+
+	private function get_sorted_search_fields_array ( $entity ) {
+		
+		$search_fields_array = $this->get_search_fields_array( $entity ); 
+		ksort ( $search_fields_array );
+		$sorted_return_array = array();
+		foreach ( $search_fields_array as $key => $field_array ) {
+			$sorted_return_array[] = $field_array;		
+		} 
+		return ( $sorted_return_array );		
+	
+	}
+
+	public function get_search_field_options ( $entity ) {
+		
+		$entity_fields_array = $this->get_sorted_search_fields_array( $entity );
+
+		// note: do not supply a blank value -- this assures that obviates need for field validation
+		$entity_fields_select_array = array();
+		foreach ( $entity_fields_array as $entity_field ) {
+			$entity_fields_select_array[] = array (
+					'value' => $entity_field['ID'],
+					'label' => $entity_field['field_label'] . ' -- ' . $entity_field['entity_slug'] . ':' . $entity_field['field_slug']
+				);
+		}
+
+		return ( $entity_fields_select_array );	
+	
+	}
+
+	public function get_field_rules_by_id( $id ) {
+		
+		$field_rules_subset = array();
+		// note that $id must exist in field rules cache since using select fields derived from cache		
+		foreach ( $this->field_rules_cache as $field ) {
+			if ( $id == $field->ID ) {
+				return ( 
+					array (
+						'entity_slug'		=> $field->entity_slug,
+						'field_slug'		=> $field->field_slug,
+						'field_type'		=>	$field->field_type,
+					)
+				);
+			}
+		}
+	}
+
 }

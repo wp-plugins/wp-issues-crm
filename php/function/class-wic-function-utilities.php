@@ -11,7 +11,7 @@ class WIC_Function_Utilities { // functions that serve multiple entities
 	// display error message
 	public static function wic_error ( $text, $file, $line, $method, $fatal ) {
 		$fatal_phrase = $fatal ? __( 'WP Issues CRM Fatal Error. ', 'wp-issues-crm' ) : __( 'WP Issues CRM Non Fatal Error. ', 'wp_issues_crm' );
-		$fatal_phrase = $fatal_phrase . __( ' Please report to WP Issues CRM developer by email immediately at help@wp-issues-crm.com or call (in U.S.) 617-771-8274.  Please include the following information: ', 'wp-issues-crm' );
+		$fatal_phrase = $fatal_phrase . __( ' Check any suggested issues below and/or please contact help@wp-issues-crm.com or call (in U.S.) 617-771-8274. ', 'wp-issues-crm' );
 		$error_class  = $fatal ? 'wp-issues-crm-fatal-error' : 'wp-issues-crm-non-fatal-error'; 
 		echo '<div class="' . $error_class . '">' . ' 
 			<h3>' . $fatal_phrase . __( $text, 'wp-issues-crm' ) . '</h3>' .  

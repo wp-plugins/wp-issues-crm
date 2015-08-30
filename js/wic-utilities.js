@@ -70,7 +70,8 @@ function moreFields( base ) {
 			 dateFormat: "yy-mm-dd"
 	}); 
 
-	// if have the boolean autocomplete flags set (i.e., wic-main.js is loaded) do the autocomplete listeners; if not (as in Options page), don't need them
+	// if have the boolean autocomplete flags set (i.e., wic-main.js is loaded) do the autocomplete listeners; 
+	// if not (as in Options page), don't need them
  	if ( 'boolean' == ( typeof wicUseActivityIssueAutocomplete ) ) {  
 	 	if ( wicUseActivityIssueAutocomplete ) {
 	 		setUpActivityIssueAutocomplete( jQuery( newFields ).find( ".wic-multivalue-block.activity" )[0] );
@@ -82,6 +83,11 @@ function moreFields( base ) {
 			});		
 		}
 	} 
+	
+	// initialize type if serving the advanced search form
+	if ( "wic-form-advanced-search" ==  jQuery( newFields ).parents('form').attr('id') ) {
+		swapInSubEntityTypes ( newFields );
+	}
 }
 
 // supports moreFields by walking node tree for whole multi-value group to copy in new name/ID values
@@ -115,11 +121,15 @@ function replaceInDescendants ( template, oldValue, newValue, base  ) {
 // screen delete rows in multivalue fields
 function hideSelf( rowname ) {
 	var row = document.getElementById ( rowname );
-	rowClass =row.className; 
-	row.className = rowClass.replace( 'visible-templated-row', 'hidden-template' ) ;
-	sendErrorMessage ( 'Row will be deleted when you save/update.' )
-	window.nextWPIssuesCRMMessage = 'You can proceed.';
-	jQuery('#wic-form-constituent-update').trigger('checkform.areYouSure');
+	if ( "wic-form-advanced-search" !=  jQuery( row ).parents('form').attr('id') ) {
+		rowClass =row.className; 
+		row.className = rowClass.replace( 'visible-templated-row', 'hidden-template' ) ;
+		sendErrorMessage ( 'Row will be deleted when you save/update.' )
+		window.nextWPIssuesCRMMessage = 'You can proceed.';
+		jQuery('#wic-form-constituent-update').trigger('checkform.areYouSure');
+	} else {
+		jQuery( row ).remove();
+	}
 }
 
 // show/hide form sections

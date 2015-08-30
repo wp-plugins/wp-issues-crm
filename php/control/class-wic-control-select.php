@@ -85,9 +85,12 @@ class WIC_Control_Select extends WIC_Control_Parent {
 
 		$control = '';
 		
-		$control = ( $field_label > '' ) ? '<label class="' . $label_class . ' ' .  esc_attr( $field_slug_css ) . '" for="' . esc_attr( $field_slug ) . '">' . 
+		// $hidden_class = 1 == $hidden ? 'hidden-template' : '';
+		$hidden = 1 == $hidden ? "hidden" : '';		
+		
+		$control = ( $field_label > '' ) ? '<label ' . $hidden . ' class="' . $label_class . ' ' .  esc_attr( $field_slug_css ) . '" for="' . esc_attr( $field_slug ) . '">' . 
 				esc_html( $field_label ) . '</label>' : '';
-		$control .= '<select class="' . esc_attr( $input_class ) . ' ' .  esc_attr( $field_slug_css ) .'" onchange ="' . $onchange . '"id="' . esc_attr( $field_slug ) . '" name="' . esc_attr( $field_slug ) 
+		$control .= '<select  ' . $hidden . ' class="' . esc_attr( $input_class ) . ' '  .  esc_attr( $field_slug_css ) .'" onchange ="' . $onchange . '"id="' . esc_attr( $field_slug ) . '" name="' . esc_attr( $field_slug ) 
 				. '" >' ;
 		$p = '';
 		$r = '';

@@ -7,6 +7,7 @@ var wicFinancialCodesArray;
 var wicUseActivityIssueAutocomplete = false;
 var wicUseNameAndAddressAutocomplete = false;
 var wicStandardInputBorder;
+
 // self-executing anonymous namespace
 ( function() {
 	
@@ -93,9 +94,24 @@ var wicStandardInputBorder;
 	 				} 
 	 			});		 					
 			}
- 		} 
+ 		} 			
  		
-	});
+		// manage display of correct type options for constituent fields in advanced search
+		// set up delegated event listener for changes to constituent field
+ 		$( "#wic-control-advanced-search-constituent" ).on( "change", ".constituent-field", function ( event ) {
+ 			var changedBlock = $( this ).parents( ".wic-multivalue-block.advanced_search_constituent" )[0];
+ 			swapInSubEntityTypes( changedBlock );
+ 		});
+
+		// manage display of combination options in advanced search -- show only if multiple selected
+		// wicShowHideAdvancedSearchCombiners(); // initialize
+		// set up delegated event listener for changes to constituent block
+ 		$( ".wic-multivalue-control-set" ).on( "change", function ( event ) {
+			wicShowHideAdvancedSearchCombiners();
+ 		});
+
+ 		
+	}); // document ready
 
 })(); // end anonymous namespace enclosure
 
@@ -115,6 +131,63 @@ function showHideFinancialActivityType( activityMultivalueBlock ) {
 		}
 
 }
+
+
+// show hide combination options as appropriate -- this is aesthetics ( server parses appropriately regardless )
+function wicShowHideAdvancedSearchCombiners() {
+	
+	// combinations of constituent conditions
+	if ( jQuery( "#advanced_search_constituent-control-set" ).children( ".visible-templated-row" ).length > 1 ) {
+		jQuery( "#wic-control-constituent-and-or" ).children().show();
+	} else {
+		jQuery( "#wic-control-constituent-and-or" ).children().hide();
+	}
+	
+	// combinations of activity conditions
+	if ( jQuery( "#advanced_search_activity-control-set" ).children( ".visible-templated-row" ).length > 1 ) {
+		jQuery( "#wic-control-activity-and-or" ).children().show();
+	} else {
+		jQuery( "#wic-control-activity-and-or" ).children().hide();
+	}
+
+	// combinations of constituent_having conditions
+	if ( jQuery( "#advanced_search_constituent_having-control-set" ).children( ".visible-templated-row" ).length > 1 ) {
+		jQuery( "#wic-control-constituent-having-and-or" ).children().show();
+	} else {
+		jQuery( "#wic-control-constituent-having-and-or" ).children().hide();
+	}
+
+	// combinations of activity conditions
+	if ( 	jQuery( "#advanced_search_activity-control-set" ).children( ".visible-templated-row" ).length > 0 && 
+			jQuery( "#advanced_search_constituent-control-set" ).children( ".visible-templated-row" ).length > 0 ) {
+		jQuery( "#wic-control-activity-and-or-constituent" ).children().show();
+	} else {
+		jQuery( "#wic-control-activity-and-or-constituent" ).children().hide();
+	}
+
+}
+
+/*
+* function swapInSubEntityTypes
+* expects an constituent field multivalue block -- swaps select control options
+*/ 
+function swapInSubEntityTypes( constituentFieldMultivalueBlock ) {
+ 		var newLabel 				= jQuery( constituentFieldMultivalueBlock ).find( ".wic-input.constituent-field :selected").text();
+ 		var fieldEntity 			= newLabel.substring( newLabel.lastIndexOf( ' ' ) + 1, newLabel.lastIndexOf( ':' ) );
+		var targetTypeElement 	= jQuery( constituentFieldMultivalueBlock ).find( ".wic-input.constituent-entity-type");
+		var newTemplate;
+ 		if ( '' != fieldEntity && 'constituent' != fieldEntity ) {
+ 			// have to escape brackets  in jquery with \\ to cause them to be treated as literal
+			var newTemplateIDString = "#" + fieldEntity + '\\[control-template\\]\\[' + fieldEntity + '_type\\]';
+			newTemplate = jQuery( newTemplateIDString );
+ 		} else {
+			newTemplate = jQuery( "#advanced_search_constituent\\[row-template\\]\\[constituent_entity_type\\]" ); 
+ 		}
+ 		// for a select element, the html method is just the options list, so swapping in the options is this simple:
+ 		targetTypeElement.html( newTemplate.html() );
+}
+
+
 
 
 /*

@@ -92,11 +92,12 @@ class WIC_DB_Access_Dictionary Extends WIC_DB_Access_WIC {
 		global $wpdb;
 		$table = $wpdb->prefix . 'wic_data_dictionary';
 		
+		// note that in this query, need to exclude advanced search entity types because have no corresponding db table
 		$sql = $wpdb->prepare ( 
 			"
 			select entity_slug, field_slug, field_label
 			from $table 
-			where option_group = %s and transient = 0
+			where option_group = %s and transient = 0 and locate('advanced_search',entity_slug) = 0
 			",
 			array ( $option_group )
 			);

@@ -296,6 +296,23 @@ class WIC_Control_Multivalue extends WIC_Control_Parent {
 		} 	
 	}
 	
+	// in advanced search, actually want search from each row (in regular search, only taking first)	
+	public function create_advanced_search_clause ( $search_clause_args ) {
+		if ( count ( $this->value ) > 0 ) {
+			$query_clause = array();
+			foreach ( $this->value as $row ) {
+				$query_clause = array_merge( $query_clause, array( array( 'row', $row->assemble_meta_query_array( $search_clause_args ) ) ) );
+			}
+			return ( $query_clause );
+		} else {
+			return ( '' );		
+		} 	
+	}	
+	
+	
+	
+	
+	
 	// for update control is passing request downwards to the rows and asking them to do the updates	
 	public function do_save_updates ( $id  ) {
 		$errors = '';

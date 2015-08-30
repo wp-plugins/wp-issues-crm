@@ -93,6 +93,8 @@ class WIC_Admin_Dashboard {
 			array ( 'issue', 			'new_form',		'<span class="dashicons dashicons-search"></span><span class="dashicons dashicons-format-aside"></span>', __( 'Search for issues.', 'wp-issues-crm' ), false ),
 			array ( 'dashboard', 	'my_issues',	'<span class="dashicons dashicons-star-filled"></span><span class="dashicons dashicons-format-aside"></span>', __( 'Issues assigned to me.', 'wp-issues-crm' ), false ),
 
+			// complex search
+			array ( 'advanced_search', 'new_form',	'<span class="dashicons dashicons-search"></span><span class="dashicons dashicons-search"></span>', __( 'Advanced search.', 'wp-issues-crm' ), false ),
 			// analyze/download			
 			array ( 'trend', 			'new_form',		'<span class="dashicons dashicons-chart-line"></span>', __( 'Get activity/issue counts.', 'wp-issues-crm' ), false ), 
 			// go to search history
