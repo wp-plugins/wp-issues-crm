@@ -68,24 +68,9 @@ class WIC_DB_Access_Activities Extends WIC_DB_Access {
 											// codex.wordpress.org/Class_Reference/wpdb#SELECT_Generic_Results 
 			$this->explanation = '';
 			
-			// do a second query to check sum and presence of financial_activity_types (and get count for free)
-			$summary_select = " count(activity.ID) as activity_count, sum(activity_amount) as total_amount";
+			// prepare to a second query to retrieve totals
+			$summary_select = $this->prepare_select_clause_with_financial_types(); 			
 			
-			// prepare 'IN' phrase
-			$in_phrase = '';			
-			$wic_option_array = get_option('wp_issues_crm_plugin_options_array');
-			$financial_activity_type_array = explode (',' , isset ( $wic_option_array['financial_activity_types'] ) ? $wic_option_array['financial_activity_types'] : '') ;
-			$formatted_financial_activity_type_string = '';			
-			if ( '' != $financial_activity_type_array ) {
-				foreach ( $financial_activity_type_array as $type ) {
-					$formatted_financial_activity_type_string .= '\'' . $type . '\',';  								
-				}
-				$formatted_financial_activity_type_string = rtrim( $formatted_financial_activity_type_string, ',' );	
-				// the CAST and COLLATE syntax makes the IN operator case sensitive -- this is the standard		
-				$in_phrase = ", sum(if( CAST(activity_type AS CHAR CHARACTER SET latin1) COLLATE latin1_general_cs IN (" . $formatted_financial_activity_type_string . "),1,0)) as includes_financial_types";	
-				$summary_select .= $in_phrase;
-			}			
-
 			$summary_sql = " 
 				SELECT $summary_select from $join 
 				WHERE 1=1 $deleted_clause $where
@@ -94,11 +79,7 @@ class WIC_DB_Access_Activities Extends WIC_DB_Access {
 			$summary = $wpdb->get_results ( $summary_sql );
 			$this->found_count = $summary[0]->activity_count;
 			$this->amount_total = $summary[0]->total_amount;
-			if ( '' != $financial_activity_type_array ) { 
-				$this->financial_activities_in_results = $summary[0]->includes_financial_types > 0 ? true : false;
-			} else {
-				$this->financial_activities_in_results = false;
-			}
+			$this->financial_activities_in_results = $summary[0]->includes_financial_types > 0 ? true : false;
 		}
 	}	
 	// utility
@@ -128,6 +109,30 @@ class WIC_DB_Access_Activities Extends WIC_DB_Access {
 	
 		return ( array ( 'where' => $where, 'values' => $values ) );
 	}
+
+	// also used by advanced_search
+	public static function prepare_select_clause_with_financial_types() {
+
+		$summary_select = " count(activity.ID) as activity_count, sum(activity_amount) as total_amount";
+		
+		// prepare 'IN' phrase
+		$in_phrase = '0 as includes_financial_types'; // below, will give this a value > 0 if (a) they are set up and (b) there are some found;			
+		$wic_option_array = get_option('wp_issues_crm_plugin_options_array');
+		$financial_activity_type_array = explode (',' , isset ( $wic_option_array['financial_activity_types'] ) ? $wic_option_array['financial_activity_types'] : '') ;
+		$formatted_financial_activity_type_string = '';			
+		if ( '' != $financial_activity_type_array ) {
+			foreach ( $financial_activity_type_array as $type ) {
+				$formatted_financial_activity_type_string .= '\'' . $type . '\',';  								
+			}
+			$formatted_financial_activity_type_string = rtrim( $formatted_financial_activity_type_string, ',' );	
+			// the CAST and COLLATE syntax makes the IN operator case sensitive -- this is the standard		
+			$in_phrase = ", sum(if( CAST(activity_type AS CHAR CHARACTER SET latin1) COLLATE latin1_general_cs IN (" . $formatted_financial_activity_type_string . "),1,0)) as includes_financial_types";	
+			$summary_select .= $in_phrase;
+		}
+		
+		return ( $summary_select );		
+	}
+
 
 	/* required functions not implemented */
 	protected function db_save ( &$meta_query_array ) {}

@@ -475,8 +475,10 @@ abstract class WIC_Entity_Parent {
 			$this->id_search_generic ( $wic_query->result[0]-> ID, $found_form, $sql, false, $wic_query->search_id );	// do not log second search; use original ID
 		} else {
 			$lister_class = $this->set_lister_class( $this->data_object_array );
-			$lister = new $lister_class;
+			$lister = new $lister_class; 	
 			$list = $lister->format_entity_list( $wic_query, '' );
+			$message = $this->pre_list_message( $lister, $wic_query );
+			echo $message;			
 			echo $list;	
 		}
 	}
@@ -485,6 +487,12 @@ abstract class WIC_Entity_Parent {
 	protected function set_lister_class ( &$data_object_array ) {
 		return ( 'WIC_List_' . $this->entity );	
 	}
+
+	// default is blank; for advanced search, override
+	protected function pre_list_message ( &$lister, &$wic_query ) {
+		return ( '' );	
+	}
+
 
 	// used in reconstructing searches from the search log ( CAN TERMINATE WITHOUT A FORM IF NO FORMAT GIVEN )
 	// in which case, just retrieve ID, not full record

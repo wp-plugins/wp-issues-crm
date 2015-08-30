@@ -220,6 +220,7 @@ class WIC_Admin_Settings {
 			'input_class' 	   => '',
 			'field_slug_css'	=> '',
 			'onchange' 			=> '',
+			'hidden'				=> 0,
 			'field_slug'		=> 'wp_issues_crm_plugin_options_array[access_level_required]',
 			'value'				=> $value ,		
 		);		
@@ -238,6 +239,7 @@ class WIC_Admin_Settings {
 			'option_array'    => $option_array,
 			'input_class' 	   => '',
 			'field_slug_css'	=> '',
+			'hidden'				=> '',
 			'onchange' 			=> '',
 			'field_slug'		=> 'wp_issues_crm_plugin_options_array[access_level_required_downloads]',
 			'value'				=> $value ,		
@@ -350,7 +352,7 @@ class WIC_Admin_Settings {
 	public function enable_financial_activities_legend_callback() {
 		echo 
 		'<p>' . __( 'WP Issues CRM can be used to track financial transactions. Simply enter below the Activity Type codes <em>separated by commas</em> for which amounts should be recorded.' , 'wp-issues-crm' ) . '</p>' . 
-		'<p>' . __( 'For example, if you defined <a href="/wp-admin/admin.php?page=wp-issues-crm-options">Activity Type Options</a> "Check Contribution" coded as "CH" and "Online Contribution" coded as "OC", you would enter them below like so (no quotation marks):' , 'wp-issues-crm' ) . ' <code>CH,OC</code>' . '</p>' . 
+		'<p>' . __( 'For example, if you defined <a href="/wp-admin/admin.php?page=wp-issues-crm-options">Activity Type Options</a> <code>Check Contribution</code> coded as <code>CH</code> and <code>Online Contribution</code> coded as <code>OC</code>, you would enter them below like so:' , 'wp-issues-crm' ) . ' <code>CH,OC</code>' . '</p>' . 
 		'<p>' . __( 'Activities of these types will then be stored and displayed with an amount field formatted with two decimal points.' , 'wp-issues-crm' ) .  '</p>' .
 		'<p>' . __( 'Tip: The matching of activity type codes is case sensitive -- "CH" as an Activity Type code will <em>not</em> match "ch" as a financial activity setting.' , 'wp-issues-crm' ) .  '</p>' ;
 	}

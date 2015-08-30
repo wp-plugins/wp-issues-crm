@@ -31,7 +31,7 @@ class WIC_List_Activity extends WIC_List_Parent {
 		$wic_query->entity = 'activity'; // came in as trend
 
   		// set up form
-		$output = '<div id="wic-post-list"><form id="wic_constituent_list_form" method="POST">';
+		$output = '<div id="wic-post-list"><form id="wic_activity_list_form" method="POST">';
 		$output .= $this->get_the_buttons( $wic_query );	
 		$output .= $this->set_up_rows ( $wic_query );
 		$output .= 	wp_nonce_field( 'wp_issues_crm_post', 'wp_issues_crm_post_form_nonce_field', true, true ) .

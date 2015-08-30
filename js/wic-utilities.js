@@ -84,9 +84,10 @@ function moreFields( base ) {
 		}
 	} 
 	
-	// initialize type if serving the advanced search form
+	// initialize type and refresh contingent displays based on counts if serving the advanced search form
 	if ( "wic-form-advanced-search" ==  jQuery( newFields ).parents('form').attr('id') ) {
 		swapInSubEntityTypes ( newFields );
+		wicShowHideAdvancedSearchCombiners();
 	}
 }
 

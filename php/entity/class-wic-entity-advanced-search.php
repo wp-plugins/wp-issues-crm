@@ -1,7 +1,7 @@
 <?php
 /*
 *
-*	wic-entity-trend.php
+*	wic-entity-advanced-search.php
 *
 *  Essentially, trends are issues, but the search model is different -- driven by WIC Activities
 * 		-- so need this wraparound object
@@ -59,13 +59,20 @@ class WIC_Entity_Advanced_Search extends WIC_Entity_Parent {
 		return ( 'WIC_List_' . $list_type );	
 	}
 
+	protected function pre_list_message ( &$lister, &$wic_query ) {
+		$message = $lister->format_message( $wic_query ); 		
+		return ( '<div id="post-form-message-box" class = "wic-form-routine-guidance" >' . esc_html( $message ) . '</div>' );	
+	}
+
+
+	protected function id_search_generic ( $id, $success_form = '', $sql = '', $log_search = '', $primary_search_id = ''  ) {
+		$args = array ( 'id_requested' => $id );
+		$constituent_entity = new WIC_Entity_Constituent ( 'id_search', $args );	
+	}
+
+
 	
 /*
-	// handle a search request for an ID coming from anywhere (really for own list of issues, pass through to issue entity)
-	protected function id_search ( $args ) {
-		$issue_pass_through_entity = new WIC_Entity_Issue ( 'id_search', $args ) ;	
-		return;		
-	}
 
 
 

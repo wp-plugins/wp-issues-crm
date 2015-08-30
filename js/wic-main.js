@@ -104,7 +104,7 @@ var wicStandardInputBorder;
  		});
 
 		// manage display of combination options in advanced search -- show only if multiple selected
-		// wicShowHideAdvancedSearchCombiners(); // initialize
+		wicShowHideAdvancedSearchCombiners(); // initialize
 		// set up delegated event listener for changes to constituent block
  		$( ".wic-multivalue-control-set" ).on( "change", function ( event ) {
 			wicShowHideAdvancedSearchCombiners();

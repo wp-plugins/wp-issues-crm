@@ -661,36 +661,69 @@ ul#constituent-comment-list {
 * Styling for advanced search form 
 *
 ********************************************************/
+#wic-form-advanced-search #wic-form-main-groups,
+#wic-form-advanced-search-again #wic-form-main-groups {
+	width: 100%;
+}
+
+#wic-form-advanced-search #wic-form-sidebar-groups,
+#wic-form-advanced-search-again #wic-form-sidebar-groups {
+	display: none;
+}
+
+#wic-form-advanced-search label.wic-label, 
+#wic-form-advanced-search-again label.wic-label {
+	min-width: 6.2222222%;
+	margin-right: 0.88888%;
+}
+
 #activity_and_or_constituent,
 #constituent_and_or,
 #activity_and_or,
 #constituent_having_and_or,
+#wic-form-advanced-search-again #wic-form-main-groups .field-group-show-hide-button,
+#wic-form-advanced-search-again #wic-form-main-groups .wic-form-field-group-legend, 
 #wic-form-advanced-search #wic-form-main-groups .field-group-show-hide-button,
 #wic-form-advanced-search #wic-form-main-groups .wic-form-field-group-legend {
-	margin-left: 11.1%
+	margin-left: 7.1%
 }
 
 #wic-form-advanced-search select.wic-input.constituent-field,
-#wic-form-advanced-search select.wic-input.constituent-entity-type,
-#wic-form-advanced-search select.wic-input.constituent-comparison,
-#wic-form-advanced-search select.wic-input.activity-field, 
-#wic-form-advanced-search select.wic-input.activity-type,
-#wic-form-advanced-search select.wic-input.activity-comparison {
-	width: 18%;
-}
-
-#wic-form-advanced-search-again #wic-form-main-groups .field-group-show-hide-button,
-#wic-form-advanced-search-again #wic-form-main-groups .wic-form-field-group-legend {
-	margin-left: 11.1%
-}
-
 #wic-form-advanced-search-again select.wic-input.constituent-field,
-#wic-form-advanced-search-again select.wic-input.constituent-entity-type,
+#wic-form-advanced-search select.wic-input.activity-field, 
+#wic-form-advanced-search-again select.wic-input.activity-field {
+	width: 25%
+}
+
+#wic-form-advanced-search select.wic-input.constituent-comparison,
+#wic-form-advanced-search select.wic-input.activity-comparison,
 #wic-form-advanced-search-again select.wic-input.constituent-comparison,
-#wic-form-advanced-search-again select.wic-input.activity-field, 
-#wic-form-advanced-search-again select.wic-input.activity-type,
 #wic-form-advanced-search-again select.wic-input.activity-comparison {
-	width: 18%;
+	width: 22%;
+}
+
+#wic-form-advanced-search select.wic-input.constituent-entity-type,
+#wic-form-advanced-search select.wic-input.activity-type,
+#wic-form-advanced-search-again select.wic-input.constituent-entity-type,
+#wic-form-advanced-search-again select.wic-input.activity-type {
+	width: 10%
+}
+
+#wic-form-advanced-search label.retrieve-limit,
+#wic-form-advanced-search #retrieve_limit,
+#wic-form-advanced-search label.sort-order,
+#wic-form-advanced-search #sort_order,
+#wic-form-advanced-search label.show-deleted,
+#wic-form-advanced-search #show_deleted,
+#wic-form-advanced-search-again label.retrieve-limit,
+#wic-form-advanced-search-again #retrieve_limit,
+#wic-form-advanced-search-again label.sort-order,
+#wic-form-advanced-search-again #sort_order,
+#wic-form-advanced-search-again label.show-deleted,
+#wic-form-advanced-search-again #show_deleted {
+	display: block;
+	margin-left: 7.111%;
+	text-align: left;
 }
 
 /*******************************************************

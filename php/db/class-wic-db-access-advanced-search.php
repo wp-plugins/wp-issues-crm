@@ -15,6 +15,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 	protected function db_search( $meta_query_array, $search_parameters ) { 
 
 		global $wic_db_dictionary;
+		global $wpdb;
 
 		/*
 		* set up all search parameters
@@ -58,11 +59,9 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 		$this->entity = $activity_or_constituent;
 		
 		// implement basic search parameters
-		$select_list = $activity_or_constituent . '.' . 'ID ';	
 		$sort_clause = $sort_order ? $wic_db_dictionary->get_sort_order_for_entity( $activity_or_constituent ) : '';
 		$order_clause = ( '' == $sort_clause ) ? '' : " ORDER BY $sort_clause "; 
 		$deleted_clause = $show_deleted ? '' : 'AND constituent.mark_deleted != \'deleted\'';
-		$found_rows = $compute_total ? 'SQL_CALC_FOUND_ROWS' : '';
 		// retrieve limit goes directly into SQL
 		 
 		// set global access object 
@@ -81,6 +80,16 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 		$having_values = array();
 		$join = ' ' .	$wpdb->prefix . 'wic_constituent constituent LEFT JOIN ' . 
 							$wpdb->prefix . 'wic_activity activity on activity.constituent_id = constituent.id ';
+
+		// prepare select clause and augment join clause
+		if ( 'constituent' == $activity_or_constituent ) {
+			$select_list = ' constituent.ID ';
+			$found_rows = 'SQL_CALC_FOUND_ROWS';
+		} else {
+			$select_list =  ' activity_date, activity_type, activity_amount, pro_con, last_name, first_name, activity.constituent_id, post_title ';
+			$join .= " inner join $wpdb->posts p on activity.issue = p.ID" ;
+			$found_rows = ''; // in activity retrieval, do secondary search for amount totals			
+		}
 
 		// parse the query_clause_rows into where string and array ready for wpdb->prepare
 		foreach ( $query_clause_rows as $query_clause_row ) { 
@@ -206,9 +215,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 			$values );
 		// $sql group by always returns single row, even if multivalues for some records 
 
-		$sql_found = "SELECT FOUND_ROWS() as found_count";
-		$this->sql = $sql; 
-		
+		$this->sql = $sql; // final retrieval sql
 
 		if ( 'download' == $select_mode ) {
 			$temp_table = $wpdb->prefix . 'wic_temporary_id_list';			
@@ -219,20 +226,46 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 			}			
 		
 		} else {
+
 			// do search
 			$this->result = $wpdb->get_results ( $sql );
 		 	$this->showing_count = count ( $this->result );
-			// only do sql_calc_found_rows on id searches; in other searches, found count will always equal showing count
-			$found_count_object_array = $wpdb->get_results( $sql_found );
-			$this->found_count = $found_count_object_array[0]->found_count;
-			// set value to say whether found_count is known
-			$this->found_count_real = $compute_total;
+			
+			// prepare summaries in different ways for constituent and activity searches
+			if ( 'activity' == $activity_or_constituent ) {
+				
+				$select_list = " activity.ID, activity_amount, activity_type ";
+				$summary_select = WIC_DB_Access_Activities::prepare_select_clause_with_financial_types();
+				$summary_select = str_replace ( 'activity.ID', 'ID', $summary_select ); // compatibility issue 
+				 			
+				$summary_sql = $wpdb->prepare( "
+					SELECT $summary_select FROM( 
+						SELECT $select_list
+						FROM 	$join
+						WHERE 1=%d $deleted_clause $connector ( $activity_where $activity_and_or_constituent $constituent_where )  
+						$group_by
+						$having ) base_query
+					",
+					$values ); 
+	
+				$summary = $wpdb->get_results ( $summary_sql );
+				$this->found_count = $summary[0]->activity_count;
+				$this->amount_total = $summary[0]->total_amount;
+				$this->financial_activities_in_results = $summary[0]->includes_financial_types > 0 ? true : false;
+			}	else {		
+				$sql_found = "SELECT FOUND_ROWS() as found_count"; // summary sql
+				// only do sql_calc_found_rows on id searches; in other searches, found count will always equal showing count
+				$found_count_object_array = $wpdb->get_results( $sql_found );
+				$this->found_count = $found_count_object_array[0]->found_count;
+				// set value to say whether found_count is known
+				$this->found_count_real = true; // always looking for full found count
+			}
 			$this->retrieve_limit = $retrieve_limit;
+				
 			$this->outcome = true;  // wpdb get_results does not return errors for searches, so assume zero return is just a none found condition (not an error)
 											// codex.wordpress.org/Class_Reference/wpdb#SELECT_Generic_Results 
 			$this->explanation = ''; 
 		}
-
 	}	
 
 	/* 

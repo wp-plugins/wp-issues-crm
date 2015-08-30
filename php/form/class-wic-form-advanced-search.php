@@ -34,7 +34,7 @@ class WIC_Form_Advanced_Search extends WIC_Form_Parent  {
 	
 	// define the form message (return a message)
 	protected function format_message ( &$data_array, $message ) {
-		$formatted_message = sprintf ( __('Advanced search.' , 'wp-issues-crm') )  . $message;
+		$formatted_message = sprintf ( __('Advanced search. ' , 'wp-issues-crm') )  . $message;
 		return ( $formatted_message );
 	}
 
