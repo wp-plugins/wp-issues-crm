@@ -28,6 +28,25 @@ class WIC_Entity_Advanced_Search extends WIC_Entity_Parent {
 		return;				
 	}
 
+	//handle a search request coming search log (buttons with search ID go to search log first)
+	protected function redo_search_from_query ( $search ) {  
+		$this->redo_search_from_meta_query ( $search, 'WIC_Form_Advanced_Search_Again','WIC_Form_Advanced_Search_Again' );
+		return;
+	}		
+	
+	// handle a request to return to a search form
+	protected function redo_search_form_from_query ( $search ) { 
+		$this->search_form_from_search_array ( 'WIC_Form_Advanced_Search_Again',  __( 'Redo search.', 'wp-issues-crm'), $search );
+		return;
+	}
+
+
+
+
+
+
+
+
 	
 	// in metaquery array assembly, group multivalue rows into single top-level array entries
 	public function assemble_meta_query_array ( $search_clause_args ) {
@@ -52,16 +71,60 @@ class WIC_Entity_Advanced_Search extends WIC_Entity_Parent {
 
 		return $meta_query_array;
 	}		
-	
-	// set lister class based on list type
-	protected function set_lister_class ( &$data_object_array ) {
-		$list_type = $data_object_array['activity_or_constituent']->get_value();
-		return ( 'WIC_List_' . $list_type );	
+
+	// the reverse process to assembly
+	protected function populate_data_object_array_with_search_parameters ( $search ) { 
+
+		$this->initialize_data_object_array();
+		// reformat $search_parameters array
+		$key_value_array = array();		
+		foreach ( $search['unserialized_search_array'] as $search_array ) { 
+			if ( isset ( $search_array['table'] ) ) { // these are the search connect terms
+				$key_value_array[$search_array['key']] = $search_array['value'];
+			} else { // is a row array
+				$row_field = $search_array[1][0]['table'];				
+				$row_array = array(); 
+				foreach ( $search_array[1] as $term ) {
+					$row_array[$term['key']] = $term['value'];				
+				} 
+				if ( ! isset ( $key_value_array[$row_field] ) ) {
+					$key_value_array[$row_field] = array ( array ( $row_array ) );			
+				} else {
+					$key_value_array[$row_field] = array_merge ( $key_value_array[$row_field], array( $row_array ) );
+				}
+			}
+		}
+
+		// already in key value format
+		$combined_form_values = array_merge ( $key_value_array, $search['unserialized_search_parameters']);
+
+		// pass data object array and see if have values
+		var_dump ( $combined_form_values );
+		foreach ( $this->data_object_array as $field_slug => $control ) { 
+			if ( isset ( $combined_form_values[$field_slug] ) ) {
+					$control->set_value ( $combined_form_values[$field_slug] );
+			}
+		} 
 	}
 
-	protected function pre_list_message ( &$lister, &$wic_query ) {
-		$message = $lister->format_message( $wic_query ); 		
-		return ( '<div id="post-form-message-box" class = "wic-form-routine-guidance" >' . esc_html( $message ) . '</div>' );	
+
+
+
+
+	
+	// set lister class based on entity_retrieved; spoof entity for lister
+	protected function set_lister_class ( &$wic_query ) {
+		$wic_query->entity = $wic_query->entity_retrieved;
+		return ( 'WIC_List_' . $wic_query->entity_retrieved );	
+	}
+
+	protected function pre_list_message ( &$lister, &$wic_query, &$data_object_array ) {
+		if ( 'activity' == $wic_query->entity_retrieved ) {
+			$message = $lister->format_message( $wic_query ); 		
+			return ( '<div id="post-form-message-box" class = "wic-form-routine-guidance" >' . esc_html( $message ) . '</div>' );
+		} else {
+			return ( '' );		
+		}	
 	}
 
 

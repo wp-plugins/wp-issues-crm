@@ -9,7 +9,8 @@
 class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 	
 	public $amount_total;
-	public $financial_activities_in_results;	
+	public $financial_activities_in_results;
+	public $entity_retrieved;	
 	
 	
 	protected function db_search( $meta_query_array, $search_parameters ) { 
@@ -50,18 +51,12 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 			}		
 		} 
 
-		/*
-		*
-		* set entity variable based on search type for downstream use in list
-		* lister looks to $this->entity to choose fields to get; masquerade as constituent or activity object
-		*
-		*/
-		$this->entity = $activity_or_constituent;
-		
+
 		// implement basic search parameters
 		$sort_clause = $sort_order ? $wic_db_dictionary->get_sort_order_for_entity( $activity_or_constituent ) : '';
 		$order_clause = ( '' == $sort_clause ) ? '' : " ORDER BY $sort_clause "; 
 		$deleted_clause = $show_deleted ? '' : 'AND constituent.mark_deleted != \'deleted\'';
+		$this->entity_retrieved = $activity_or_constituent; // saved for setting of entity for listing
 		// retrieve limit goes directly into SQL
 		 
 		// set global access object 
@@ -172,10 +167,12 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 			}	 
 		}
 		
-		// see whether will need a connector between the default where clauses and any addons
-		$connector = 'AND';
+		// see whether will need a connector between the stub where clauses and any addons
+		$connector = 'AND (';
+		$close_paren = ')';
  		if ( '' == $activity_where && '' == $constituent_where ) {
-			 $connector = '';		
+			 $connector = '';
+			 $close_paren = '';	
  		}
 
 		// see whether will need connector between activity and constituent where clauses
@@ -206,7 +203,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 		$sql = $wpdb->prepare( "
 				SELECT $found_rows $select_list
 				FROM 	$join
-				WHERE 1=%d $deleted_clause $connector ( $activity_where $activity_and_or_constituent $constituent_where )  
+				WHERE 1=%d $deleted_clause $connector $activity_where $activity_and_or_constituent $constituent_where $close_paren  
 				$group_by
 				$having
 				$order_clause
@@ -242,7 +239,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 					SELECT $summary_select FROM( 
 						SELECT $select_list
 						FROM 	$join
-						WHERE 1=%d $deleted_clause $connector ( $activity_where $activity_and_or_constituent $constituent_where )  
+						WHERE 1=%d $deleted_clause $connector $activity_where $activity_and_or_constituent $constituent_where $close_paren  
 						$group_by
 						$having ) base_query
 					",
@@ -266,6 +263,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 											// codex.wordpress.org/Class_Reference/wpdb#SELECT_Generic_Results 
 			$this->explanation = ''; 
 		}
+		
 	}	
 
 	/* 

@@ -44,6 +44,7 @@ class WIC_Control_Multivalue extends WIC_Control_Parent {
 	*
 	*/
 	public function set_value ( $value ) { // value is an array created by multi-value field coming back from $_Post
+
 		$this->value = array();
 		$class_name = 'WIC_Entity_' . $this->field->field_slug;
 		$instance_counter = 0;

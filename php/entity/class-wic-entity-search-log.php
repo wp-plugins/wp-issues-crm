@@ -95,10 +95,41 @@ class WIC_Entity_Search_Log extends WIC_Entity_Parent {
 		$search_array = unserialize ( $serialized );
 		$search_phrase = '';
 
+		// first repack search array, exploding any items that are row arrays
+		// two components are labeled as in advanced search array 
+		$unpacked_search_array_definitions = array();
+		$unpacked_search_array_terms = array();
+		foreach ( $search_array as $search_clause ) {
+			if ( isset ( $search_clause[0] ) ) { 
+				$new_clause = array();
+				$row_type = substr( $search_clause[1][0]['table'], 16 );
+				foreach ( $search_clause[1] as $clause_component ) {
+					if ( $row_type . '_field' == $clause_component['key'] ) {
+						$field = $wic_db_dictionary->get_field_rules_by_id( $clause_component['value'] );
+						$new_clause['key']		= $field['field_slug'];
+						$new_clause['table']		= $field['entity_slug'];
+					} elseif ( $row_type . '_comparison' == $clause_component['key']  ) {
+						$new_clause['compare'] = $clause_component['value']; 				
+					} elseif ( $row_type . '_value' == $clause_component['key']  ) { 
+						$new_clause['value']  = $clause_component['value']; 
+					} elseif ( $row_type . '_type' == $clause_component['key']  ) { 
+						$new_clause['type'] =  $clause_component['value']; 
+					} elseif ( $row_type . '_aggregator' == $clause_component['key']  ) { 
+						$new_clause['aggregator'] =  $clause_component['value']; 
+					}										
+				}
+				$unpacked_search_array_terms[] = $new_clause;			
+			} else {
+				$unpacked_search_array_definitions[] = $search_clause;			
+			}		
+		}
+		$search_array = array_merge ( $unpacked_search_array_terms, $unpacked_search_array_definitions );
+
 		if ( count ( $search_array ) > 0 ) { 
 			foreach ( $search_array as $search_clause ) {
 	
-				$value =  $search_clause['value']; // default
+					
+				$value =  isset ( $search_clause['value'] ) ? $search_clause['value'] : '' ; // default
 				$show_item = true; 
 				
 				// look up categories if any for post_category			
@@ -117,8 +148,10 @@ class WIC_Entity_Search_Log extends WIC_Entity_Parent {
 				} elseif ( is_array( $value ) ) {
 					$value = implode ( ',', $value );		
 				} else {
-					$label = $wic_db_dictionary->get_option_label( $search_clause['table'], $search_clause['key'], $value );
-					$value = ( $label > '' ) ? $label : $value;
+					if ( 'advanced_search' != $search_clause['table'] ) { // don't unpack connector terms for advanced search
+						$label = $wic_db_dictionary->get_option_label( $search_clause['table'], $search_clause['key'], $value );
+						$value = ( $label > '' ) ? $label : $value;
+					}
 				}
 				
 				if ( $show_item )	{	
@@ -129,10 +162,12 @@ class WIC_Entity_Search_Log extends WIC_Entity_Parent {
 							$search_phrase = __( ' Constituent -- ', 'wp-issues-crm' ) . esc_html( WIC_DB_Access_WIC::get_constituent_name ( $search_clause['value'] ) );
 						}					
 					} else {  		
-						$search_phrase .= $search_clause['table'] . ': ' . 
+						$search_phrase .= ( 'advanced_search' == $search_clause['table'] ? '' : $search_clause['table'] . ': ' ). 
+							( isset ( $search_clause['type'] )  		? ' of type ' . $search_clause['type'] . ' ' : '' ) .
+							( isset ( $search_clause['aggregator'] ) 	? ' ' . $search_clause['aggregator'] . ' of ' : '' ) .
 							$search_clause['key'] . ' ' . 
 							$search_clause['compare'] . ' ' . 
-							esc_html( $value ) . '. <br />';
+							esc_html( $value ) . '<br />';
 					}
 				}		
 			}
