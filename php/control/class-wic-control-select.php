@@ -36,16 +36,20 @@ class WIC_Control_Select extends WIC_Control_Parent {
 		}
 	}	
 	
+	public function set_options ( $option_group ) {
+		// note: important not to set $this->field->option_group as this points straight back to field_rules_cache
+		// which in turn is a pointer to apparently public $wpdb objects and so is modifiable through layers 
+		$this->default_control_args['option_group'] = $option_group;
+	}	
+	
 	protected function create_options_array ( $control_args ) {
-
+		
 		global $wic_db_dictionary;
 		extract ( $control_args, EXTR_SKIP );
 				
-		
 		$entity_class = 'WIC_Entity_' . $this->field->entity_slug;
 		$function_class = 'WIC_Function_Utilities';
-		$getter = $this->field->option_group; 
-	
+		$getter = $option_group; // take from control arguments which may be  modified by set options
 		// look for option array in a sequence of possible sources
 		$option_array = $wic_db_dictionary->lookup_option_values( $getter );
 		// look first for getter as an option_group value in option values cache

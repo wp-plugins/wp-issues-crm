@@ -88,7 +88,7 @@ class WIC_Entity_Advanced_Search extends WIC_Entity_Parent {
 					$row_array[$term['key']] = $term['value'];				
 				} 
 				if ( ! isset ( $key_value_array[$row_field] ) ) {
-					$key_value_array[$row_field] = array ( array ( $row_array ) );			
+					$key_value_array[$row_field] = array ( $row_array );			
 				} else {
 					$key_value_array[$row_field] = array_merge ( $key_value_array[$row_field], array( $row_array ) );
 				}
@@ -99,7 +99,6 @@ class WIC_Entity_Advanced_Search extends WIC_Entity_Parent {
 		$combined_form_values = array_merge ( $key_value_array, $search['unserialized_search_parameters']);
 
 		// pass data object array and see if have values
-		var_dump ( $combined_form_values );
 		foreach ( $this->data_object_array as $field_slug => $control ) { 
 			if ( isset ( $combined_form_values[$field_slug] ) ) {
 					$control->set_value ( $combined_form_values[$field_slug] );
@@ -107,11 +106,6 @@ class WIC_Entity_Advanced_Search extends WIC_Entity_Parent {
 		} 
 	}
 
-
-
-
-
-	
 	// set lister class based on entity_retrieved; spoof entity for lister
 	protected function set_lister_class ( &$wic_query ) {
 		$wic_query->entity = $wic_query->entity_retrieved;

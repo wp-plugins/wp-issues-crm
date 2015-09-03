@@ -10,10 +10,7 @@
 abstract class WIC_Entity_Multivalue extends WIC_Entity_Parent {
 
 	protected function initialize() {
-		
 		global $wic_db_dictionary;
-
-
 		$this->fields = $wic_db_dictionary->get_form_fields( $this->entity );
 		$this->initialize_data_object_array();
 	}
@@ -30,7 +27,11 @@ abstract class WIC_Entity_Multivalue extends WIC_Entity_Parent {
 				$this->data_object_array[$field->field_slug]->set_value( $form_row_array[$field->field_slug] );
 			}
 		}
+		$this->do_field_interaction_rules();
 	}
+
+	// slot used by wic_entity_advanced_search_constituent
+	protected function do_field_interaction_rules(){}
 
 	protected function populate_from_object( $args ) {
 		extract( $args );

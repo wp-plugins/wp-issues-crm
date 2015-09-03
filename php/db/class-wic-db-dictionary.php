@@ -130,7 +130,6 @@ class WIC_DB_Dictionary {
 	// 	but in the online system, only the fields selected by get_form_fields are actually set up as controls  
 	public  function get_field_rules ( $entity, $field_slug ) {
 		// this is only called in the control object -- only the control object knows field details
-
 		foreach ( $this->field_rules_cache as $field_rule ) {
 			if ( $entity == $field_rule->entity_slug && $field_slug == $field_rule->field_slug ) {
 				return ( $field_rule );			
@@ -424,10 +423,14 @@ class WIC_DB_Dictionary {
 	*
 	*/
 	private function get_search_fields_array( $entity ) {
+
 		$search_fields_array = array();
-		foreach ( $this->field_rules_cache as $field ) {	
+		$cache_copy = $this->field_rules_cache;
+		foreach ( $cache_copy as $field ) {	
 			if ( $entity == $field->entity_slug ) {
-				if ( 'multivalue' == $field->field_type ) { // this branch only relevant for $entity == 'constituent', no activity multivalue fields 
+				// this branch only relevant for $entity == 'constituent', no activity multivalue fields 
+				// gathering address, phone and email fields
+				if ( 'multivalue' == $field->field_type ) { 
 					if ( 'activity' != $field->field_slug ) {					
 						$search_fields_array = array_merge ( $search_fields_array, $this->get_search_fields_array ( $field->field_slug ) );
 					}			
@@ -450,6 +453,7 @@ class WIC_DB_Dictionary {
 				}
 			}
 		} 
+
 		return ( $search_fields_array );
 	} 
 

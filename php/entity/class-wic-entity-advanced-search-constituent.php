@@ -20,7 +20,7 @@ class WIC_Entity_Advanced_Search_Constituent extends WIC_Entity_Multivalue {
 		return( $wic_db_dictionary->get_search_field_options( 'constituent' ) );
 	}
 
-	public static function constituent_field_types (){
+	public static function constituent_type_options (){
 		return ( array ( array ( 'value' => '', 'label' => 'Type is N/A' ) ) );	
 	}
 
@@ -35,6 +35,17 @@ class WIC_Entity_Advanced_Search_Constituent extends WIC_Entity_Multivalue {
 			}		
 		} 	
 		return ('=');
+	}
+
+	// slot used by wic_entity_advanced_search_constituent
+	protected function do_field_interaction_rules(){
+		global $wic_db_dictionary;	
+		$field =  $this->data_object_array['constituent_field']->get_value();
+		if ( $field > '' ) {	
+			$field_data = $wic_db_dictionary->get_field_rules_by_id( $field );
+			$entity = $field_data['entity_slug']; 
+			$this->data_object_array['constituent_entity_type']->set_options( $entity . '_type_options' );
+		}
 	}
 
 }

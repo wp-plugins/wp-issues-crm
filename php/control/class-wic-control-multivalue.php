@@ -55,10 +55,12 @@ class WIC_Control_Multivalue extends WIC_Control_Parent {
 			);
 			if ( strval($key) != 'row-template' ) { // skip the template row created by all multivalue fields
 				if ( isset ( $form_row_array['screen_deleted'] ) ) {
-					// delete screen deleted items if they came from db, otherwise, they only existed on screen, so do nothing			
-					if ( $form_row_array['ID'] > 0 ) {
-						$wic_access_object = WIC_DB_Access_Factory::make_a_db_access_object( $this->field->field_slug );
-						$wic_access_object->delete_by_id( $form_row_array['ID'] ); 
+					// delete screen deleted items if they came from db, otherwise, they only existed on screen, so do nothing
+					if ( isset ( $form_row_array['ID'] ) ) { // no ID's in multivalue control for advanced search			
+						if ( $form_row_array['ID'] > 0 ) {
+							$wic_access_object = WIC_DB_Access_Factory::make_a_db_access_object( $this->field->field_slug );
+							$wic_access_object->delete_by_id( $form_row_array['ID'] ); 
+						}
 					}
 				} else { // not deleted rows -- may be blank
 					// need to test whether row coming back has anything in it.
@@ -79,7 +81,7 @@ class WIC_Control_Multivalue extends WIC_Control_Parent {
 							}						
 						} 
 					}
-					if ( $values_set ) {					
+					if ( $values_set ) {	
 						$this->value[$instance_counter] = new $class_name( 'populate_from_form', $args );
 						$instance_counter++;
 					}
@@ -226,7 +228,19 @@ class WIC_Control_Multivalue extends WIC_Control_Parent {
 	*  generates template row
 	*
 	*/	
+	
+	public function test_select_controls() {
+		foreach ( $this->value as $value ) {
+			$value->roll_screen_log();	
+		}
+	
+	}	
+	
+	
+	
 	private function save_update_control ( $save ) { // true/false corresponds to save/update
+
+	
 		$final_control_args = $this->default_control_args;
 		extract ( $final_control_args );
 		 

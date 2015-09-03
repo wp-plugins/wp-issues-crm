@@ -98,10 +98,13 @@ var wicStandardInputBorder;
  		
 		// manage display of correct type options for constituent fields in advanced search
 		// set up delegated event listener for changes to constituent field
+		// note that entity type is correctly initialized on server side, so no need to do anything on document ready
+		// 	-- see wic-entity-advanced-search-constituent.php
  		$( "#wic-control-advanced-search-constituent" ).on( "change", ".constituent-field", function ( event ) {
  			var changedBlock = $( this ).parents( ".wic-multivalue-block.advanced_search_constituent" )[0];
  			swapInSubEntityTypes( changedBlock );
  		});
+
 
 		// manage display of combination options in advanced search -- show only if multiple selected
 		wicShowHideAdvancedSearchCombiners(); // initialize

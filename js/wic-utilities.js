@@ -85,7 +85,8 @@ function moreFields( base ) {
 	} 
 	
 	// initialize type and refresh contingent displays based on counts if serving the advanced search form
-	if ( "wic-form-advanced-search" ==  jQuery( newFields ).parents('form').attr('id') ) {
+	var parentFormID = jQuery( newFields ).parents('form').attr('id');
+	if ( "wic-form-advanced-search" ==  parentFormID  || "wic-form-advanced-search-again" ==  parentFormID  ) {
 		swapInSubEntityTypes ( newFields );
 		wicShowHideAdvancedSearchCombiners();
 	}
@@ -122,7 +123,8 @@ function replaceInDescendants ( template, oldValue, newValue, base  ) {
 // screen delete rows in multivalue fields
 function hideSelf( rowname ) {
 	var row = document.getElementById ( rowname );
-	if ( "wic-form-advanced-search" !=  jQuery( row ).parents('form').attr('id') ) {
+	var parentFormID = jQuery( row ).parents('form').attr('id')
+	if ( "wic-form-advanced-search" !=  parentFormID && "wic-form-advanced-search-again" !=  parentFormID  ) {
 		rowClass =row.className; 
 		row.className = rowClass.replace( 'visible-templated-row', 'hidden-template' ) ;
 		sendErrorMessage ( 'Row will be deleted when you save/update.' )
