@@ -39,7 +39,7 @@ class WIC_Admin_Ajax {
 
 		if ( 'upload' == $_POST['entity'] ) {
 			$required_capability = 'activate_plugins';		
-		} elseif ( 'search_log' == $_POST['entity'] || 'autocomplete' == $_POST['entity'] ) {
+		} elseif ( in_array ( $_POST['entity'], array ( 'search_log' , 'autocomplete', 'advanced_search' ) ) ) {
 			$required_capability = '';		
 		}
 		self::ajax_check_capability( $required_capability ); 

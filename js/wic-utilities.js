@@ -65,6 +65,7 @@ function moreFields( base ) {
 	insertHere.parentNode.insertBefore( newFields, insertHere );
 	jQuery('#wic-form-constituent-update').trigger('checkform.areYouSure'); /* must also set 'addRemoveFieldsMarksDirty' : true in Are you sure*/
 	jQuery('#wic-form-constituent-save').trigger('checkform.areYouSure');
+	
 	// activate datepicker on child fields (in wic-jquery-ui.js do not activate datepicker unless visible ) 
  	jQuery( newFields ).find( ".datepicker" ).datepicker({
 			 dateFormat: "yy-mm-dd"
@@ -84,10 +85,14 @@ function moreFields( base ) {
 		}
 	} 
 	
-	// initialize type and refresh contingent displays based on counts if serving the advanced search form
+	// initialize fields and refresh contingent displays based on counts if serving the advanced search form
 	var parentFormID = jQuery( newFields ).parents('form').attr('id');
 	if ( "wic-form-advanced-search" ==  parentFormID  || "wic-form-advanced-search-again" ==  parentFormID  ) {
-		swapInSubEntityTypes ( newFields );
+		if ( jQuery( newFields ).find(".constituent-field" ).length > 0 ) {
+			wicSwapInAppropriateFields ( newFields );
+		} else if ( jQuery( newFields ).find(".activity-field" ).length > 0 ) {
+			wicSwapInActivityAppropriateFields ( newFields );
+		}
 		wicShowHideAdvancedSearchCombiners();
 	}
 }
@@ -132,6 +137,7 @@ function hideSelf( rowname ) {
 		jQuery('#wic-form-constituent-update').trigger('checkform.areYouSure');
 	} else {
 		jQuery( row ).remove();
+		wicShowHideAdvancedSearchCombiners();
 	}
 }
 

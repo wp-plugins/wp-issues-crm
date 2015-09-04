@@ -91,7 +91,8 @@ class WIC_List_Activity_Export extends WIC_List_Constituent_Export {
 		switch ( $download_type ) { // using switch to add possible formats later
 			case 'activities':		
 				$download_sql = " 		
-					SELECT  activity_date, activity_type, activity_amount, pro_con, post_title, first_name as fn, last_name as ln,  
+					SELECT  if( count(ac.ID) > 1,'yes','not necessary' ) as 'constituent_data_consolidated',
+						activity_date, activity_type, activity_amount, pro_con, post_title, first_name as fn, last_name as ln,  
 						city, 
 						email_address, 
 						phone_number,
@@ -104,10 +105,7 @@ class WIC_List_Activity_Export extends WIC_List_Constituent_Export {
 					left join $email e on e.constituent_id = c.ID
 					left join $phone p on p.constituent_id = c.ID
 					left join $address a on a.constituent_id = c.ID	
-					WHERE ( address_type = '0' or address_type is null ) &&
-					( email_type = '0' or email_type is null ) && 
-					( phone_type = '0' or phone_type is null )  
-					";	
+					GROUP BY ac.ID";	
 				break;
 		} 	
 	

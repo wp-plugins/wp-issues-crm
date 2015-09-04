@@ -127,64 +127,17 @@ class WIC_Entity_Advanced_Search extends WIC_Entity_Parent {
 		$constituent_entity = new WIC_Entity_Constituent ( 'id_search', $args );	
 	}
 
-
-	
-/*
-
-
-
-
-	//handle a search request coming search log -- own function here, since need to combine form redisplay with list again
-	protected function redo_search_from_query ( $search ) { 
-		// prepare all  the data for a form  
-		$this->populate_data_object_array_with_search_parameters( $search );
-		// then also do the list
-		$wic_query = WIC_DB_Access_Factory::make_a_db_access_object( $this->entity );
-		// don't want to log previously logged search again, but do want to know ID for down load and redo search purposes
-		// talking to search function as if a new search, but with two previous parameters set
-		$search['unserialized_search_parameters']['log_search'] = false;
-		$search['unserialized_search_parameters']['old_search_id'] = $search['search_id'];
-		$wic_query->search ( $search['unserialized_search_array'], $search['unserialized_search_parameters'] ); //
-		$this->handle_search_results ( $wic_query, 'WIC_Form_Trend_Search_Again', 'WIC_Form_Trend_Search_Again' ); // show form or list
+	public static function make_blank_control( $new_control_field_id  ) {
+		global $wic_db_dictionary;
+		$field = $wic_db_dictionary->get_field_rules_by_id( $new_control_field_id  );
+		$control = WIC_Control_Factory::make_a_control ( $field['field_type'] );
+		// need to initialize with values from field being searched for, not field in advanced_search form
+		$control->initialize_default_values(  $field['entity_slug'], $field['field_slug'], 'wic_blank_control_template' );
+		// all controls should be updateable and want in update format (no search ranges, for example)
+		$control->override_readonly();
+		$control = $control->update_control();
+		$control_no_label = substr( $control, strpos( $control, 'label>' ) + 6 );
+		echo json_encode( $control_no_label );
+		die();
 	}
-	// handle search results
-	protected function handle_search_results ( $wic_query, $not_found_form, $found_form ) {
-		$sql = $wic_query->sql;
-		$trend_search_mode = $this->data_object_array['trend_search_mode']->get_value();
-		if ( 0 == $wic_query->found_count ) {
-			$message = __( 'No activity found matching search criteria.', 'wp-issues-crm' );
-			$message_level =  'error';
-			$form = new $not_found_form;
-			$form->layout_form ( $this->data_object_array, $message, $message_level, $sql );			
-		} else {
-			// get lister class in place before running list, so that can use message function 
-			// use trend lister for cats and issues; activity lister for activities			
-			switch ( $trend_search_mode ) {
-				case 'cats':
-					$lister_class = 'WIC_List_Trend';
-					$lister_function = 'category_stats';
-					break;
-				case 'issues':
-					$lister_class = 'WIC_List_Trend';		
-					$lister_function = 'format_entity_list';
-					break;		
-				case 'activities':
-					$lister_class = 'WIC_List_Activity';	
-					$lister_function = 'format_entity_list';
-					break;								
-			}
-			$lister = new $lister_class;
-			$message = $lister->format_message( $wic_query ); // hoisting message (normally w/i lister form) out of the lister to top of search form
-			$message_level = 'guidance';	
-			
-			// do trend search form
-			$form = new $found_form;
-			$form->layout_form ( $this->data_object_array, $message, $message_level, $sql );
-			
-			// do activity list below form
-			$list = $lister->$lister_function( $wic_query, ''); 
-			echo $list;	
-		}
-	}
-*/
 }

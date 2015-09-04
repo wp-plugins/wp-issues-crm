@@ -94,6 +94,10 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 
 == Changelog ==
+= 2.3 =
+* Alter activity download to return single rows for each activity for constituents with multiple addresses, emails or phones --
+old logic selected address/phone email type 0 or null; new logic simply groups by activity and flags constituents that have
+multiple values that have been consolidated  
 = 2.2.72 =
 * Simplify and clean up last_update tracking -- correctly reflect multivalue deletes and carry latest values to forms 
 * Fix select logic for datepicker to apply to initially hidden fields other than the hidden row-templates

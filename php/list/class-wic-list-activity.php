@@ -106,6 +106,19 @@ class WIC_List_Activity extends WIC_List_Parent {
 				'title'	=>	__( 'Download all activities meeting search criteria together with related constituent information', 'wp-issues-crm' ),
 			);
 		$buttons .= WIC_Form_Parent::create_wic_form_button( $button_args );
+
+		// show search form with parameters 
+		if ( isset ( $wic_query->advanced_search ) ) { 
+			$button_args = array (
+					'entity_requested'	=> 'search_log',
+					'action_requested'	=> 'id_search_to_form', // will display form with search criteria
+					'id_requested'	=> $wic_query->search_id,
+					'button_class'	=> 'button button-primary wic-top-menu-button ',
+					'button_label'	=>	'<span class="dashicons dashicons-search"></span><span class="dashicons dashicons-update"></span></span>',
+					'title'	=>	__( 'Change search criteria', 'wp-issues-crm' ),
+				);
+			$buttons .= WIC_Form_Parent::create_wic_form_button( $button_args );
+		}
 		
 		return ( $buttons );
 	}

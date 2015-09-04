@@ -425,8 +425,7 @@ class WIC_DB_Dictionary {
 	private function get_search_fields_array( $entity ) {
 
 		$search_fields_array = array();
-		$cache_copy = $this->field_rules_cache;
-		foreach ( $cache_copy as $field ) {	
+		foreach ( $this->field_rules_cache as $field ) {	
 			if ( $entity == $field->entity_slug ) {
 				// this branch only relevant for $entity == 'constituent', no activity multivalue fields 
 				// gathering address, phone and email fields
@@ -437,10 +436,9 @@ class WIC_DB_Dictionary {
 				} else {
 					if ( 	0 == $field->transient  && 																		// exclude transients 
 							'constituent_id' != $field->field_slug &&														// exclude link fields
-							( 'constituent' == $field->entity_slug || 'ID' != $field->field_slug )  && 		// exclude lower entity ID fields
-							( false === in_array ( $field->field_slug, 
-								array ( 'activity_type', 'phone_type', 'email_type', 'address_type' ) ) ) 	// exclude types */
-						) {
+							( 'constituent' == $field->entity_slug || 'ID' != $field->field_slug )  			// exclude lower entity ID fields
+						) 	
+						 {
 							$search_fields_array[$field->entity_slug . $field->field_label . $field->field_slug ] = array(
 								'ID'					=>	$field->ID,
 								'entity_slug'		=> $field->entity_slug,
@@ -474,7 +472,12 @@ class WIC_DB_Dictionary {
 		$entity_fields_array = $this->get_sorted_search_fields_array( $entity );
 
 		// note: do not supply a blank value -- this assures that obviates need for field validation
-		$entity_fields_select_array = array();
+		$entity_fields_select_array = array(); /* array(
+			array ( 
+				'value' => 'T',
+				'label' => 'Type Selection Only'
+				)
+		); */
 		foreach ( $entity_fields_array as $entity_field ) {
 			$entity_fields_select_array[] = array (
 					'value' => $entity_field['ID'],

@@ -73,6 +73,10 @@ abstract class WIC_Control_Parent {
 		$this->default_control_args['label_class'] .= ' hidden-element ';
 	}	
 
+	public function override_readonly() {
+		$this->default_control_args['readonly'] = false;	
+	}
+
 	public function get_value () {
 		return $this->value;	
 	}
@@ -99,6 +103,14 @@ abstract class WIC_Control_Parent {
 
 	public function get_field_slug() {
 		return ( $this->field->field_slug );	
+	}
+
+	public function get_args_field_slug() {
+		return ( $this->default_control_args['field_slug']);	
+	}
+
+	public function set_args_field_slug( $new_slug ) {
+		$this->default_control_args['field_slug'] = $new_slug;	
 	}
 
 	/**********************************************************************************

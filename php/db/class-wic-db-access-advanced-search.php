@@ -11,6 +11,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 	public $amount_total;
 	public $financial_activities_in_results;
 	public $entity_retrieved;	
+	public $advanced_search = 'yes'; // flag used to preserve original identity as advanced search while spoofing constituent or activity search
 	
 	
 	protected function db_search( $meta_query_array, $search_parameters ) { 
@@ -32,7 +33,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 		// extract search parameters from passed array
 		extract ( $search_parameters, EXTR_OVERWRITE );
 
-		// default special search parameters parameters
+		// default special search parameters 
 		$activity_or_constituent 		= 'constituent';
 		$activity_and_or_constituent 	= 'and';
 		$activity_and_or					= 'and';
@@ -81,8 +82,9 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 			$select_list = ' constituent.ID ';
 			$found_rows = 'SQL_CALC_FOUND_ROWS';
 		} else {
-			$select_list =  ' activity_date, activity_type, activity_amount, pro_con, last_name, first_name, activity.constituent_id, post_title ';
-			$join .= " inner join $wpdb->posts p on activity.issue = p.ID" ;
+			$select_list =  'download' == $select_mode ? ' activity.ID ' :
+				' activity_date, activity_type, activity_amount, pro_con, last_name, first_name, activity.constituent_id, post_title ';
+			$join .= " inner join $wpdb->posts p on activity.issue = p.ID " ;
 			$found_rows = ''; // in activity retrieval, do secondary search for amount totals			
 		}
 
@@ -128,37 +130,58 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 				$compare = ( 'BLANK' == $compare ) ? '=' : '>';
 			} 
 			
+			// prepare special handling for when field is a type field
+			$is_a_type_field = in_array ( $field_name, array ( 'activity_type', 'phone_type', 'email_type', 'address_type' ) ); 			
+			
 			if ( 'activity' == $row_type ) {
-				$activity_where_connecter = $activity_where_count > 0 ? $activity_and_or : '';
-				if ( 'IS_NULL' != $compare ) {				
+				$activity_where_connecter = $activity_where_count > 0 ? $activity_and_or : ( strpos ( $activity_and_or, 'NOT' ) > 0 ? 'NOT' : '' );
+				if ( $is_a_type_field ) {
 					if ( '' < $type ) {
-						$activity_where 		.= " $activity_where_connecter ( activity.activity_type = %s and activity.$field_name $compare %s ) ";
+						$activity_where 		.= " $activity_where_connecter ( activity.activity_type = %s ) ";
 						$activity_values[]	= $type;
-						$activity_values[] 	= $value;
 					} else {
-						$activity_where .= " $activity_where_connecter ( activity.$field_name $compare %s )";
-						$activity_values[] = $value;
-					}
+						$activity_where 		.= " $activity_where_connecter ( activity.activity_type IS NOT NULL ) "; // 
+					}					
 				} else {
-					$activity_where .= " $activity_where_connecter ( activity.$field_name IS NULL )";
-				}	
+					if ( 'IS_NULL' != $compare ) {				
+						if ( '' < $type ) {
+							$activity_where 		.= " $activity_where_connecter ( activity.activity_type = %s and activity.$field_name $compare %s ) ";
+							$activity_values[]	= $type;
+							$activity_values[] 	= $value;
+						} else {
+							$activity_where .= " $activity_where_connecter ( activity.$field_name $compare %s )";
+							$activity_values[] = $value;
+						}
+					} else {
+						$activity_where .= " $activity_where_connecter ( activity.$field_name IS NULL )";
+					}	
+				}
 				$activity_where_count++;	
 			} elseif ( 'constituent' == $row_type ) { 
-				$constituent_where_connecter = $constituent_where_count > 0 ? $constituent_and_or : '';
+				$constituent_where_connecter = $constituent_where_count > 0 ? $constituent_and_or : ( strpos ( $constituent_and_or, 'NOT' ) > 0 ? 'NOT' : '' );
 				$field_name = $table . '.' . $field_name;
-				if ( 'IS_NULL' != $compare ) {	
+				if ( $is_a_type_field ) {
 					if ( '' < $type ) {
-						$type = $table . '.' . $table . '_type';
-						$constituent_where 		.= " $constituent_where_connecter ( $type = %s and $field_name $compare %s ) ";
+						$constituent_where 		.= " $constituent_where_connecter ( $field_name = %s ) ";
 						$constituent_values[]	= $type;
-						$constituent_values[] 	= $value;
 					} else {
-						$constituent_where .= " $constituent_where_connecter ( $field_name $compare %s ) ";
-						$constituent_values[] = $value;
-					}	
+						$constituent_where 		.= " $constituent_where_connecter ( $field_name IS NOT NULL ) "; // 
+					}					
 				} else {
-					$constituent_where .= " $constituent_where_connecter ( $field_name IS NULL )";
-				}	
+					if ( 'IS_NULL' != $compare ) {	
+						if ( '' < $type ) {
+							$type = $table . '.' . $table . '_type';
+							$constituent_where 		.= " $constituent_where_connecter ( $type = %s and $field_name $compare %s ) ";
+							$constituent_values[]	= $type;
+							$constituent_values[] 	= $value;
+						} else {
+							$constituent_where .= " $constituent_where_connecter ( $field_name $compare %s ) ";
+							$constituent_values[] = $value;
+						}	
+					} else {
+						$constituent_where .= " $constituent_where_connecter ( $field_name IS NULL )";
+					}	
+				}
 				$constituent_where_count++;		
 			} elseif ( 'constituent_having' == $row_type ) { // right wild card like match
 				// build having logic here	
