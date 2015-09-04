@@ -42,15 +42,11 @@ class WIC_Entity_Advanced_Search_Constituent extends WIC_Entity_Multivalue {
 		global $wic_db_dictionary;	
 		$field =  $this->data_object_array['constituent_field']->get_value();
 		if ( $field > '' ) {
-			// set type options based on constituent field entity	
+			// set type options based on constituent field entity	( works whether or not already have a value)
+			// have to do it here before create select control because otherwise will be created with no selected value if value not in option set
 			$field_data = $wic_db_dictionary->get_field_rules_by_id( $field );
 			$entity = $field_data['entity_slug']; 
 			$this->data_object_array['constituent_entity_type']->set_options( $entity . '_type_options' );
-			// set value control to look like as if in own entity
-			$final_field_slug = $this->data_object_array['constituent_value']->get_args_field_slug( );						
-			$this->data_object_array['constituent_value'] = WIC_Control_Factory::make_a_control( $field_data['field_type'] );
-			$this->data_object_array['constituent_value']->initialize_default_values ( $field_data['entity_slug'], $field_data['field_slug'], '' );
-			$this->data_object_array['constituent_value']->set_args_field_slug( $final_field_slug ); 
 		}
 	}
 

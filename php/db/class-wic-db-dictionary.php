@@ -108,9 +108,10 @@ class WIC_DB_Dictionary {
 	**************************************************************************/	
 	
 	// assemble fields for an entity -- n.b. as rewritten, limits the assembly to fields assigned to form field groups
-	// does not force groups to be implemented though, since not joining to groups table -- assignment to a 
-	// 	non-existent group could lead to data corruption
-	public  function get_form_fields ( $entity ) {
+	// does not force groups to be implemented though, since not joining to groups table 
+	// similarly, assignment of field to non-existing or blank group means will not appear in forms, but could be used elsewhere
+	// -- last_updated_by and last_updated_time for subsidiary entities handled with blank group, so can access in advanced search
+		public  function get_form_fields ( $entity ) {
 		// returns array of row objects, one for each field 
 	
 		$fields_array = array();

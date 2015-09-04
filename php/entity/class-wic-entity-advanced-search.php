@@ -124,7 +124,7 @@ class WIC_Entity_Advanced_Search extends WIC_Entity_Parent {
 
 	protected function id_search_generic ( $id, $success_form = '', $sql = '', $log_search = '', $primary_search_id = ''  ) {
 		$args = array ( 'id_requested' => $id );
-		$constituent_entity = new WIC_Entity_Constituent ( 'id_search', $args );	
+		$constituent_entity = new WIC_Entity_Constituent ( 'id_search_no_log', $args );	
 	}
 
 	public static function make_blank_control( $new_control_field_id  ) {

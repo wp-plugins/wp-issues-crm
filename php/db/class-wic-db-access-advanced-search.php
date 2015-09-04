@@ -109,7 +109,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 					$compare = $query_clause_item['value']; 				
 				} elseif ( $row_type . '_value' == $query_clause_item['key']  ) { 
 					$value =  $query_clause_item['value']; 
-				} elseif ( $row_type . '_type' == $query_clause_item['key']  ) { 
+				} elseif ( $row_type . '_entity_type' == $query_clause_item['key'] ||  $row_type . '_type' == $query_clause_item['key'] ) { // different naming for activity and constituent 
 					$type =  $query_clause_item['value']; 
 				} elseif ( $row_type . '_aggregator' == $query_clause_item['key']  ) { 
 					$aggregator =  $query_clause_item['value']; 

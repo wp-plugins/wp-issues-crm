@@ -18,7 +18,7 @@ class WIC_Control_Select extends WIC_Control_Parent {
 	public function update_control () {
 		$final_control_args = $this->default_control_args;
 		$final_control_args['value'] = $this->value;
-		if ( $this->field->readonly ) {	
+		if ( $final_control_args['readonly'] ) {	
 			$final_control_args['readonly_update'] = 1 ; // lets control know to only show the already set value if readonly
 																		// (readonly control will not show at all on save, so need not cover that case)
 		} 
