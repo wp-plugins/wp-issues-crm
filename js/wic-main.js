@@ -55,6 +55,7 @@ var wicStandardInputBorder;
 			}
 		});  	
 	
+		// set up favorite button on return to search list
 		$( ".wic-favorite-button" ).click(function() {
 			starSpan = $( this ).find("span").first();
 			var buttonValueArray = $( this ).val().split(",");
@@ -118,9 +119,6 @@ var wicStandardInputBorder;
 			wicSwapInActivityAppropriateFields( this, true );  // true preserve field values
 		});
 
-
-
-
 		// manage display of combination options in advanced search -- show only if multiple selected
 		wicShowHideAdvancedSearchCombiners(); // initialize
 		// set up delegated event listener for changes to constituent block
@@ -147,7 +145,6 @@ function showHideFinancialActivityType( activityMultivalueBlock ) {
 		} else {
 			jQuery( activityMultivalueBlock ).find( ".wic-input.activity-amount").show();			
 		}
-
 }
 
 
@@ -186,49 +183,10 @@ function wicShowHideAdvancedSearchCombiners() {
 }
 
 /*
-* function wicSwapInAppropriateFields
-* expects an constituent field multivalue block -- swaps select control options
-*/ 
-function wicSwapInAppropriateFields( constituentFieldMultivalueBlock, preserveFieldValues ) {
-	
-		// set up variables
-		var currentBlock 			= jQuery( constituentFieldMultivalueBlock );
- 		var newLabel 				= currentBlock.find( ".constituent-field :selected").text();
- 		var newValue 				= currentBlock.find( ".constituent-field :selected").val();
- 		var valueField				= currentBlock.find( ".constituent-value");
-		var valueFieldID			= valueField.attr("id");
-
- 		// identify and swap in appropriate types 
- 		if ( ! preserveFieldValues ) { // preserveFieldValues is true on document.ready; this field is properly set from server
- 			var fieldEntity 			= newLabel.substring( newLabel.lastIndexOf( ' ' ) + 1, newLabel.lastIndexOf( ':' ) );
-			var targetTypeElement 	= jQuery( constituentFieldMultivalueBlock ).find( ".wic-input.constituent-entity-type");
-			var newTemplate;
- 			if ( '' != fieldEntity && 'constituent' != fieldEntity ) {
- 				// have to escape brackets  in jquery with \\ to cause them to be treated as literal
-				var newTemplateIDString = "#" + fieldEntity + '\\[control-template\\]\\[' + fieldEntity + '_type\\]';
-				newTemplate = jQuery( newTemplateIDString );
- 			} else {
-				newTemplate = jQuery( "#advanced_search_constituent\\[row-template\\]\\[constituent_entity_type\\]" ); 
- 			}
- 			// for a select element, the html is just the options list, so swapping in the options:
- 			targetTypeElement.html( newTemplate.html() );
- 		}
-		//now swap in control for values ( this AJAX function will also set other values based on new control)
-		wicAdvancedSearchReplaceControl( constituentFieldMultivalueBlock, valueFieldID, newValue, "constituent-value", preserveFieldValues );
- 		
-}
-// parallel function for activity fields 
-function wicSwapInActivityAppropriateFields( activityFieldMultivalueBlock, preserveFieldValues ) {
- 		var newValue = jQuery( activityFieldMultivalueBlock ).find( ".wic-input.activity-field :selected").val();
-		valueFieldID = jQuery( activityFieldMultivalueBlock ).find( ".wic-input.activity-value").attr("id");
-		wicAdvancedSearchReplaceControl( activityFieldMultivalueBlock, valueFieldID, newValue, "activity-value", preserveFieldValues );
-}
-/*
 *
 * Activity Issue Autocomplete setup
 *
 */
-
 function setUpActivityIssueAutocomplete( activityMultivalueBlock ) {
 	var activityIssue = jQuery( activityMultivalueBlock ).find( ".wic-input.issue"); console.log (activityIssue);
 	var activityIssueAutocomplete = jQuery( activityMultivalueBlock ).find( ".wic-input.issue-autocomplete");
@@ -306,7 +264,7 @@ function setUpActivityIssueAutocomplete( activityMultivalueBlock ) {
 
 /*
 *
-* Name and Address Autocompete
+* Name and Address Autocomplete
 *
 */
 function setUpNameAndAddressAutocomplete ( element ) {
@@ -388,23 +346,65 @@ function changeActivityIssueButtonDestination() {
 }
 
 
+/*
+* Advanced Query functions
+* function wicSwapInAppropriateFields
+* expects a constituent field multivalue block -- swaps select control options
+*/ 
+function wicSwapInAppropriateFields( constituentFieldMultivalueBlock, preserveFieldValues ) {
+	
+		// set up variables
+		var currentBlock 			= jQuery( constituentFieldMultivalueBlock );
+ 		var newLabel 				= currentBlock.find( ".constituent-field :selected").text();
+ 		var newValue 				= currentBlock.find( ".constituent-field :selected").val();
+ 		var valueField				= currentBlock.find( ".constituent-value");
+		var valueFieldID			= valueField.attr("id");
+
+ 		// identify and swap in appropriate types 
+ 		if ( ! preserveFieldValues ) { // preserveFieldValues is true on document.ready; this field is properly set from server
+ 			var fieldEntity 			= newLabel.substring( newLabel.lastIndexOf( ' ' ) + 1, newLabel.lastIndexOf( ':' ) );
+			var targetTypeElement 	= jQuery( constituentFieldMultivalueBlock ).find( ".wic-input.constituent-entity-type");
+			var newTemplate;
+ 			if ( '' != fieldEntity && 'constituent' != fieldEntity ) {
+ 				// have to escape brackets  in jquery with \\ to cause them to be treated as literal
+				var newTemplateIDString = "#" + fieldEntity + '\\[control-template\\]\\[' + fieldEntity + '_type\\]';
+				newTemplate = jQuery( newTemplateIDString );
+ 			} else {
+				newTemplate = jQuery( "#advanced_search_constituent\\[row-template\\]\\[constituent_entity_type\\]" ); 
+ 			}
+ 			// for a select element, the html is just the options list, so swapping in the options:
+ 			targetTypeElement.html( newTemplate.html() );
+ 		}
+		//now swap in control for values ( this AJAX function will also set other values based on new control)
+		wicAdvancedSearchReplaceControl( constituentFieldMultivalueBlock, valueFieldID, newValue, "constituent-value", preserveFieldValues );
+ 		
+}
+
+// parallel function for activity fields 
+function wicSwapInActivityAppropriateFields( activityFieldMultivalueBlock, preserveFieldValues ) {
+ 		var newValue = jQuery( activityFieldMultivalueBlock ).find( ".wic-input.activity-field :selected").val();
+		valueFieldID = jQuery( activityFieldMultivalueBlock ).find( ".wic-input.activity-value").attr("id");
+		wicAdvancedSearchReplaceControl( activityFieldMultivalueBlock, valueFieldID, newValue, "activity-value", preserveFieldValues );
+}
+
 function wicAdvancedSearchReplaceControl( fieldMultivalueBlock, valueFieldID, newFieldID, newFieldClass, preserveFieldValues  ) { 
 	wpIssuesCRMAjaxPost( 'advanced_search', 'make_blank_control',  newFieldID, '', function( response ) {
 		// make a control in the current document context from the response
-		newControl = jQuery.parseHTML( response );
-		oldControl = document.getElementById( valueFieldID );
+		var newControl = jQuery.parseHTML( response );
+		var newControlObject = jQuery( newControl );
+		var oldControl = document.getElementById( valueFieldID );
 		var oldValue = jQuery ( oldControl ).val();
 		// set the name and ID to control that is to be replaced
-		jQuery( newControl ).attr( "id", valueFieldID );
-		jQuery( newControl ).attr( "name", valueFieldID );
-		jQuery( newControl ).addClass ( newFieldClass );
+		newControlObject.attr( "id", valueFieldID );
+		newControlObject.attr( "name", valueFieldID );
+		newControlObject.addClass ( newFieldClass );
 		if ( preserveFieldValues ) { 
-			if ( jQuery(newControl).hasClass('wic-input-checked') ) { 
-				if ( jQuery(newControl).val() == oldValue ) { 
-					jQuery(newControl).prop( 'checked', true );					
+			if ( newControlObject.hasClass('wic-input-checked') ) { 
+				if ( newControlObject.val() == oldValue ) { 
+					newControlObject.prop( 'checked', true );					
 				}
 			} else {
-			jQuery( newControl ).val( oldValue );
+			newControlObject.val( oldValue );
 			}		
 		}
 		// do the replace
@@ -412,7 +412,7 @@ function wicAdvancedSearchReplaceControl( fieldMultivalueBlock, valueFieldID, ne
 		 
 		// add date picker if appropriate
 		if ( jQuery ( newControl ).hasClass( "datepicker" ) )
-			jQuery(newControl).datepicker({
+			newControlObject.datepicker({
 	  		 dateFormat: "yy-mm-dd"
 	  	});
  		
@@ -420,52 +420,77 @@ function wicAdvancedSearchReplaceControl( fieldMultivalueBlock, valueFieldID, ne
 		* show hide compare fields and options based on relevance
 		*/ 
 		var currentBlock 			= jQuery( fieldMultivalueBlock );
-	
+		var nonQuantitativeOptionString = "option[value$=\'BLANK\'], option[value=\'IS_NULL\'], option[value=\'LIKE\'], option[value=\'SCAN\']"	
 		// logic specific to constituent fields
 		if ( 'constituent-value' == newFieldClass ) {
 			var newLabel 				= currentBlock.find( ".constituent-field :selected").text();
  			var newValue 				= currentBlock.find( ".constituent-field :selected").val();
- 			var compareField 			= currentBlock.find( ".constituent-comparison" )[0];
- 			var typeField				= currentBlock.find( ".constituent-entity-type" )[0];
+ 			var compareFieldObject	= currentBlock.find( ".constituent-comparison" );
+ 			var typeFieldObject		= currentBlock.find( ".constituent-entity-type" );
 		 	var fieldEntity 			= newLabel.substring( newLabel.lastIndexOf( ' ' ) + 1, newLabel.lastIndexOf( ':' ) ) 
 		 	var fieldFieldSlug =  newLabel.substring( newLabel.lastIndexOf( ':' ) + 1 );
-		 					
+
+			// for constituents, always hide issue only comparison options (doing this after show, b/c also hidden as non-quantitativefs)
+			compareFieldObject.find( "option[value^='CATEGORY']" ).hide();			
+
+			// for last updated time fields limit options
+			// for other date fields, leave all possibilities
+			if (  newControlObject.hasClass( "last-updated-time" ) ) {
+				compareFieldObject.find( nonQuantitativeOptionString ).hide(); 			
+			}	else {
+				compareFieldObject.find( nonQuantitativeOptionString ).show();
+			}		
+
 			// hide type selection (is set to blank and is irrelevant) if have a constituent field;
 			if ( 'constituent' == fieldEntity ) {
-				jQuery( typeField ).hide();		
+				typeFieldObject.hide();		
 			} else {
-				jQuery( typeField ).show();
+				typeFieldObject.show();
 			}
 
 			// hide comparison and value fields if selecting by type 
 			if ( jQuery.inArray ( fieldFieldSlug, ["address_type", "email_type", "phone_type"] ) > -1 ) {
-				jQuery(compareField).hide(); 	// will not be incorporated into query
-				jQuery(newControl).hide();		// will not be incorporated into query
+				compareFieldObject.hide(); 	// will not be incorporated into query
+				newControlObject.hide();		// will not be incorporated into query
 			} else {
-				jQuery(compareField).show();
-				jQuery(newControl).show();	
+				compareFieldObject.show();
+				newControlObject.show();	
 			}
 
 			// hide comparison and value fields if selecting by type 
-			if ( jQuery(newControl).hasClass('wic-input-checked') ) { 
-				jQuery(compareField).hide(); 	// can only be checked or not
-				jQuery(compareField).val( "=" ); // set in case previous value was set to something else
+			if ( newControlObject.hasClass('wic-input-checked') ) { 
+				compareFieldObject.hide(); 	// can only be checked or not
+				compareFieldObject.val( "=" ); // set in case previous value was set to something else
 			} else {
 				// don't need show logic because shown by previous test 
 			}
+			
 		} else if ( 'activity-value' == newFieldClass ) {
-	  	
+	  		var compareFieldObject	= currentBlock.find( ".activity-comparison" );
+ 			var typeFieldObject		= currentBlock.find( ".activity-type" );
+			
+			// amounts and dates, only show ordinal comparisons
+			// note that activity_date is required, so blank/non-blank/null are irrelevant
+			if ( newControlObject.hasClass( "activity-amount") || newControlObject.hasClass( "activity-date") || newControlObject.hasClass( "last-updated-time")) { 
+				compareFieldObject.find( nonQuantitativeOptionString ).hide(); 			
+			} else {
+				compareFieldObject.find( nonQuantitativeOptionString ).show();
+			}		  
+		  
+		  
+		  
+		  
 		  	// show issue autocomplete
-	 		if ( jQuery ( newControl ).hasClass( "issue" ) ) { 
-				jQuery ( newControl ).hide(); 
-				jQuery ( newControl ).next().attr( "type", "text" );		
-				setUpActivityIssueAutocomplete( jQuery( newControl ).parent() );
+	 		if ( newControlObject.hasClass( "issue" ) ) { 
+				newControlObject.hide(); 
+				newControlObject.next().attr( "type", "text" );		
+				setUpActivityIssueAutocomplete( newControlObject.parent() );
 			} 	else { // rehide autocomplete field which is always present, but does not emit search clauses because transient
-				jQuery ( newControl ).next().attr( "type", "hidden" );
+				newControlObject.next().attr( "type", "hidden" );
 			}	
 		
 		} 
  		
-   })
+   });
 
 }

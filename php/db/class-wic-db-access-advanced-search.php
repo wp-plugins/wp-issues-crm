@@ -121,9 +121,38 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 				$table_array[] = $table;			
 			}
 
-			// set up  parallel where subclauses with place holders
-			$value = ( 'LIKE' == $compare ) ? ( '%' . $wpdb->esc_like ( $value ) . '%' ) : $value;
 			
+			/*
+			*
+			*	logic to construct where clauses
+			*
+			*
+			*/
+			// prepare values based on comparisons
+			switch ( $compare ) {
+				case 'SCAN':
+					$value = '%' . $wpdb->esc_like ( $value ) . '%' ;
+					$compare = 'LIKE';
+					break;
+				case 'LIKE':
+					$value = $wpdb->esc_like ( $value ) . '%'	;			
+					break;
+				case 'CATEGORY_ALL':
+					$value = ''; // develop lookup logic
+					$compare = '=' ;// develop in string logic
+				case 'CATEGORY_ANY_KIDS':
+					$value = ''; // develop lookup logic
+					$compare = '=' ;// develop in string logic
+				case 'CATEGORY_ANY_NOT_KIDS':
+					$value = ''; // develop lookup logic
+					$compare = '=' ;// develop in string logic
+				case 'CATEGORY_NONE':
+					$value = ''; // develop lookup logic
+					$compare = '=' ;// develop in string logic
+				default:					
+					// no action -- $value = $value				
+			} 
+
 			// special handling for blank compare operators
 			if ( 'BLANK' == $compare || 'NOT_BLANK' == $compare ) {
 				$value = '';			
