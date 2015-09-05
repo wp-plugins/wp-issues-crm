@@ -25,7 +25,6 @@ class WIC_DB_Access_WP Extends WIC_DB_Access {
 		$compute_total 	= true; 		// not used
 		$retrieve_limit 	= -1;			// USED
 		$show_deleted		= true; 		// not used
-		$category_search_mode = 'category__in'; // USED		
 		
 		extract ( $search_parameters, EXTR_OVERWRITE ); 
 		

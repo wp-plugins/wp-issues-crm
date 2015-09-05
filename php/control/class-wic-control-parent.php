@@ -58,6 +58,15 @@ abstract class WIC_Control_Parent {
 		$this->reset_value();		
 	}
 
+	public function initialize_overriden_default_values ( $entity, $field_slug, $instance, $override_entity, $override_field_slug ) {
+		$this->initialize_default_values ( $entity, $field_slug, $instance );
+		$this->default_control_args['field_slug_css'] 		= str_replace( '_', '-', $override_field_slug );
+		$this->default_control_args['field_slug_stable'] 	= $override_field_slug; 
+		$this->default_control_args['field_slug'] = $override_entity . '[' . $instance . ']['. $override_field_slug . ']';
+		// initialize the value of the control
+		$this->reset_value();		
+	}
+
 	/*********************************************************************************
 	*
 	* setters_getters

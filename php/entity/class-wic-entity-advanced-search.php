@@ -72,16 +72,31 @@ class WIC_Entity_Advanced_Search extends WIC_Entity_Parent {
 		return $meta_query_array;
 	}		
 
-	// the reverse process to assembly
+	// the reverse process to assembly -- have to convert array back to format expected by multivalue controls
 	protected function populate_data_object_array_with_search_parameters ( $search ) { 
 
 		$this->initialize_data_object_array();
 		// reformat $search_parameters array
+		
+		$key_value_array = self::reformat_search_array ( $search['unserialized_search_array'] );	
+
+		// already in key value format
+		$combined_form_values = array_merge ( $key_value_array, $search['unserialized_search_parameters']);
+
+		// pass data object array and see if have values
+		foreach ( $this->data_object_array as $field_slug => $control ) { 
+			if ( isset ( $combined_form_values[$field_slug] ) ) {
+					$control->set_value ( $combined_form_values[$field_slug] );
+			}
+		} 
+	}
+
+	public static function reformat_search_array( $unserialized_search_array ) {
 		$key_value_array = array();		
-		foreach ( $search['unserialized_search_array'] as $search_array ) { 
+		foreach ( $unserialized_search_array as $search_array ) { 
 			if ( isset ( $search_array['table'] ) ) { // these are the search connect terms
 				$key_value_array[$search_array['key']] = $search_array['value'];
-			} else { // is a row array
+			} else { // is a row array for a multivalue control
 				$row_field = $search_array[1][0]['table'];				
 				$row_array = array(); 
 				foreach ( $search_array[1] as $term ) {
@@ -94,17 +109,10 @@ class WIC_Entity_Advanced_Search extends WIC_Entity_Parent {
 				}
 			}
 		}
-
-		// already in key value format
-		$combined_form_values = array_merge ( $key_value_array, $search['unserialized_search_parameters']);
-
-		// pass data object array and see if have values
-		foreach ( $this->data_object_array as $field_slug => $control ) { 
-			if ( isset ( $combined_form_values[$field_slug] ) ) {
-					$control->set_value ( $combined_form_values[$field_slug] );
-			}
-		} 
+		return ( $key_value_array );
 	}
+
+
 
 	// set lister class based on entity_retrieved; spoof entity for lister
 	protected function set_lister_class ( &$wic_query ) {
@@ -129,7 +137,15 @@ class WIC_Entity_Advanced_Search extends WIC_Entity_Parent {
 
 	public static function make_blank_control( $new_control_field_id  ) {
 		global $wic_db_dictionary;
-		$field = $wic_db_dictionary->get_field_rules_by_id( $new_control_field_id  );
+		if ( 'CATEGORY' == $new_control_field_id ) {
+			$field = array ( 
+				'field_type' => 'multiselect',
+				'field_slug' => 'post_category',
+				'entity_slug' => 'issue',			
+			);		
+		} else {
+			$field = $wic_db_dictionary->get_field_rules_by_id( $new_control_field_id  );
+		}	
 		$control = WIC_Control_Factory::make_a_control ( $field['field_type'] );
 		// need to initialize with values from field being searched for, not field in advanced_search form
 		$control->initialize_default_values(  $field['entity_slug'], $field['field_slug'], 'wic_blank_control_template' );

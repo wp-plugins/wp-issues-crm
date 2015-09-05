@@ -15,7 +15,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 	
 	
 	protected function db_search( $meta_query_array, $search_parameters ) { 
-
+		
 		global $wic_db_dictionary;
 		global $wpdb;
 
@@ -91,7 +91,6 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 		// parse the query_clause_rows into where string and array ready for wpdb->prepare
 		foreach ( $query_clause_rows as $query_clause_row ) { 
 			
-			
 			$field_name = ''; // will be set in inner loop
 			$table 		= '';	// will be 
 			$compare 	= '';	// will be 
@@ -137,22 +136,17 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 				case 'LIKE':
 					$value = $wpdb->esc_like ( $value ) . '%'	;			
 					break;
-				case 'CATEGORY_ALL':
-					$value = ''; // develop lookup logic
-					$compare = '=' ;// develop in string logic
-				case 'CATEGORY_ANY_KIDS':
-					$value = ''; // develop lookup logic
-					$compare = '=' ;// develop in string logic
-				case 'CATEGORY_ANY_NOT_KIDS':
-					$value = ''; // develop lookup logic
-					$compare = '=' ;// develop in string logic
-				case 'CATEGORY_NONE':
-					$value = ''; // develop lookup logic
-					$compare = '=' ;// develop in string logic
+				case 'cat':
+				case 'category__in':
+				case 'category__and':
+				case 'category__not_in':
+					$value = $this->get_issue_list_from_category ( $compare, $value );
+					$compare = 'IN'; ;// develop in string logic
+					$break;
 				default:					
 					// no action -- $value = $value				
 			} 
-
+		
 			// special handling for blank compare operators
 			if ( 'BLANK' == $compare || 'NOT_BLANK' == $compare ) {
 				$value = '';			
@@ -174,12 +168,22 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 				} else {
 					if ( 'IS_NULL' != $compare ) {				
 						if ( '' < $type ) {
-							$activity_where 		.= " $activity_where_connecter ( activity.activity_type = %s and activity.$field_name $compare %s ) ";
-							$activity_values[]	= $type;
-							$activity_values[] 	= $value;
+							if ( 'IN' != $compare ) {
+								$activity_where 		.= " $activity_where_connecter ( activity.activity_type = %s and activity.$field_name $compare %s ) ";
+								$activity_values[]	= $type;
+								$activity_values[] 	= $value;
+							} else {
+								$activity_where 		.= " $activity_where_connecter ( activity.activity_type = %s and activity.$field_name $compare $value ) ";
+								$activity_values[]	= $type;
+							}
 						} else {
-							$activity_where .= " $activity_where_connecter ( activity.$field_name $compare %s )";
-							$activity_values[] = $value;
+							if ( 'IN' != $compare ) { 
+								$activity_where .= " $activity_where_connecter ( activity.$field_name $compare %s )";
+								$activity_values[] = $value;
+							} else {
+								$activity_where 		.= " $activity_where_connecter ( activity.$field_name $compare $value ) ";
+								$activity_values[]	= $type;
+							}
 						}
 					} else {
 						$activity_where .= " $activity_where_connecter ( activity.$field_name IS NULL )";
@@ -317,6 +321,37 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 		}
 		
 	}	
+
+	private function get_issue_list_from_category ( $compare, $value ) {
+		$query_clause =  array ( // double layer array to standardize a return that allows multivalue fields
+			array (
+				'table'	=> 'issue',
+				'key' 	=> 'post_category',
+				'value'	=> $value,
+				'compare'=> $compare,
+				'wp_query_parameter' => 'cat',
+			)
+		);	
+
+		$search_parameters = array (
+			'retrieve_limit' 	=> -1,
+			'log_search' 		=> false,		
+		);
+
+		$wic_query = WIC_DB_Access_Factory::make_a_db_access_object( 'issue' );
+		$wic_query->search ( $query_clause, $search_parameters );
+		
+		$in_string = '(99999999'; // make the string non-empty
+		$in_string_count = 0;
+		foreach ( $wic_query->result as $post ) {
+			$in_string .= ',' . $post->ID;
+		}	
+		$in_string .= ')';
+
+		return ( $in_string );
+
+	}
+
 
 	/* 
 	*

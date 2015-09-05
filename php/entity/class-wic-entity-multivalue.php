@@ -15,7 +15,8 @@ abstract class WIC_Entity_Multivalue extends WIC_Entity_Parent {
 		$this->initialize_data_object_array();
 	}
 	
-	protected function populate_from_form( $args ) {
+	// note also used in population basic set_value from multivalue
+	protected function populate_from_form( $args ) { 
 		extract( $args );
 		// expects form_row_array among args; 
 		// instance also present, but has already been processed in __construct
@@ -24,14 +25,18 @@ abstract class WIC_Entity_Multivalue extends WIC_Entity_Parent {
 		$this->initialize();
 		foreach ($this->fields as $field ) {
 			if ( isset ( $form_row_array[$field->field_slug] ) ) {
+				$this->do_control_replace_rules( $field->field_slug, $form_row_array[$field->field_slug] );
 				$this->data_object_array[$field->field_slug]->set_value( $form_row_array[$field->field_slug] );
 			}
 		}
 		$this->do_field_interaction_rules();
 	}
-
-	// slot used by wic_entity_advanced_search_constituent
+	
+	// slot used to implement field replace rules
+	protected function do_control_replace_rules( $field_slug, $value){}
+	// slot used to implement field interaction rules
 	protected function do_field_interaction_rules(){}
+
 
 	protected function populate_from_object( $args ) {
 		extract( $args );
