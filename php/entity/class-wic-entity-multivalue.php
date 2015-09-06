@@ -25,15 +25,12 @@ abstract class WIC_Entity_Multivalue extends WIC_Entity_Parent {
 		$this->initialize();
 		foreach ($this->fields as $field ) {
 			if ( isset ( $form_row_array[$field->field_slug] ) ) {
-				$this->do_control_replace_rules( $field->field_slug, $form_row_array[$field->field_slug] );
 				$this->data_object_array[$field->field_slug]->set_value( $form_row_array[$field->field_slug] );
 			}
 		}
 		$this->do_field_interaction_rules();
 	}
-	
-	// slot used to implement field replace rules
-	protected function do_control_replace_rules( $field_slug, $value){}
+
 	// slot used to implement field interaction rules
 	protected function do_field_interaction_rules(){}
 

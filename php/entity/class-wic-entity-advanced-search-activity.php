@@ -23,7 +23,8 @@ class WIC_Entity_Advanced_Search_Activity extends WIC_Entity_Multivalue {
 	public static function activity_comparison_sanitizor ( $incoming ) {
 		return ( WIC_Entity_Advanced_Search_Constituent::constituent_comparison_sanitizor ( $incoming ) );	
 	}	
-	
+
+	// supports incoming array from substituted activity-value field	
 	public static function activity_value_sanitizor ( $incoming ) {
 		if ( is_array ($incoming) ) {
 			foreach ( $incoming as $key => $value ) {
@@ -37,15 +38,12 @@ class WIC_Entity_Advanced_Search_Activity extends WIC_Entity_Multivalue {
 		}	
 	}	
 
-	// swap in multivalue control if have issue selection in category array form 	
-	protected function do_control_replace_rules( $field_slug, $value){
-		if ( is_array( $value ) ) {
-			echo "<br/> $field_slug points to: "; var_dump ( $value );
-			$control = WIC_Control_Factory::make_a_control ( 'multiselect' );
-			$control->initialize_overriden_default_values (  'issue', 'post_category', $this->entity_instance , $this->entity, $field_slug  ) ;
-			$this->data_object_array['field_slug'] = $control;
-		} 
+	// supports special handling of activity field in case is array	
+	public function update_row() {
+		$new_update_row_object = new WIC_Form_Advanced_Search_Activity_Update ( $this->entity, $this->entity_instance );
+		$new_update_row = $new_update_row_object->layout_form( $this->data_object_array, null, null );
+		return $new_update_row;
 	}	
 	
-	
+
 }

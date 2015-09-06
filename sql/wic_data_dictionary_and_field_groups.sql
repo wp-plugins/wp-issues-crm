@@ -188,7 +188,7 @@ INSERT INTO `wp_wic_data_dictionary` (`entity_slug`, `group_slug`, `field_slug`,
 ( 'advanced_search_constituent_having', 'constituent_having_row', 'constituent_having_aggregator', 'select', '', 5, 0, 0, '', 0, 0, 0, '', 0, 0, '', '', 'advanced_search_having_aggregators', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
 ( 'advanced_search_constituent_having', 'constituent_having_row', 'constituent_having_field', 'select', '', 10, 0, 0, '', 0, 0, 0, '', 0, 0, '', '', 'constituent_having_fields', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
 ( 'advanced_search_constituent_having', 'constituent_having_row', 'constituent_having_type', 'select', '', 20, 0, 0, '', 0, 0, 0, '', 0, 0, '', '', 'activity_type_options', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
-( 'advanced_search_constituent_having', 'constituent_having_row', 'constituent_having_comparison', 'select', '', 30, 0, 0, '', 0, 0, 0, '', 0, 0, '', '', 'advanced_search_comparisons', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
+( 'advanced_search_constituent_having', 'constituent_having_row', 'constituent_having_comparison', 'select', '', 30, 0, 0, '', 0, 0, 0, '', 0, 0, '', '', 'advanced_search_having_comparisons', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00'),
 ( 'advanced_search_constituent_having', 'constituent_having_row', 'constituent_having_value', 'text', '', 40, 0, 0, '', 0, 0, 0, '', 0, 0, '', 'Enter value', '', '', '', 0, 0, 1, 0, 0, '', 0, '0000-00-00 00:00:00');
 INSERT INTO wp_wic_form_field_groups ( entity_slug, group_slug, group_label, group_legend, group_order, initial_open, sidebar_location, last_updated_time, last_updated_by) VALUES
 ( 'constituent', 'contact', 'Contact', '', 10, 1, 0, '0000-00-00 00:00:00', 0),

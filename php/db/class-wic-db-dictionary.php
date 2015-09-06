@@ -470,16 +470,21 @@ class WIC_DB_Dictionary {
 
 	public function get_search_field_options ( $entity ) {
 		
+		$financial_activity_types_activated = false;
+		$wic_option_array = get_option('wp_issues_crm_plugin_options_array');
+		if ( isset ( $wic_option_array['financial_activity_types'] ) ) {
+			if ( trim($wic_option_array['financial_activity_types']) > ''  ) {
+				$financial_activity_types_activated = true;			
+			}		
+		}		
+		
 		$entity_fields_array = $this->get_sorted_search_fields_array( $entity );
 
-		// note: do not supply a blank value -- this assures that obviates need for field validation
-		$entity_fields_select_array = array(); /* array(
-			array ( 
-				'value' => 'T',
-				'label' => 'Type Selection Only'
-				)
-		); */
+		// note: do not supply a blank value -- this obviates need for test blank field value
+		$entity_fields_select_array = array(); 
+		
 		foreach ( $entity_fields_array as $entity_field ) {
+			if ( $financial_activity_types_activated || 'activity_amount' != $entity_field['field_slug'] ) // filter amount from options retrieved if not financial
 			$entity_fields_select_array[] = array (
 					'value' => $entity_field['ID'],
 					'label' => $entity_field['field_label'] . ' -- ' . $entity_field['entity_slug'] . ':' . $entity_field['field_slug']

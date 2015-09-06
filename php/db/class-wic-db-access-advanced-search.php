@@ -68,12 +68,14 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 		$table_array = array();
 		$activity_where = '';
 		$constituent_where = '';
+		$having = '';
 		$activity_where_count = 0;
 		$constituent_where_count = 0;
-		$having = '';
+		$having_count = 0;
 		$activity_values = array();
 		$constituent_values = array();
 		$having_values = array();
+		$additional_select_terms = '';
 		$join = ' ' .	$wpdb->prefix . 'wic_constituent constituent LEFT JOIN ' . 
 							$wpdb->prefix . 'wic_activity activity on activity.constituent_id = constituent.id ';
 
@@ -90,7 +92,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 
 		// parse the query_clause_rows into where string and array ready for wpdb->prepare
 		foreach ( $query_clause_rows as $query_clause_row ) { 
-			
+
 			$field_name = ''; // will be set in inner loop
 			$table 		= '';	// will be 
 			$compare 	= '';	// will be 
@@ -119,7 +121,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 			if( ! in_array( $table, $table_array ) ) {
 				$table_array[] = $table;			
 			}
-
+			
 			
 			/*
 			*
@@ -216,10 +218,21 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 					}	
 				}
 				$constituent_where_count++;		
-			} elseif ( 'constituent_having' == $row_type ) { // right wild card like match
-				// build having logic here	
+			} elseif ( 'constituent_having' == $row_type && 'constituent' == $activity_or_constituent ) { 
+				$having_connecter = $having_count > 0 ? $constituent_having_and_or : ( strpos ( $constituent_having_and_or, 'NOT' ) > 0 ? 'NOT' : '' );
+				if ( '' < $type ) {
+						$having .= " $having_connecter $aggregator" . "(if(activity.activity_type = %s, activity.$field_name, NULL )) $compare %s ";
+						$additional_select_terms = ", $aggregator" . "(if(activity.activity_type = %s, activity.$field_name, NULL )) as " . $aggregator . '_' . $field_name; 
+						$having_values[]	= $type;
+						$having_values[] 	= $value;	
+				} else {
+						$having .= " $having_connecter $aggregator" . "(activity.$field_name) " . $compare . " %s  ";
+						$additional_select_terms = ", $aggregator" . "(activity.$field_name) as " . $aggregator . '_' . $field_name; 
+						$having_values[] 	= $value;	
+				}	
+				$having_count++;
 			} else {
-				WIC_Function_Utilities::wic_error ( sprintf( 'Row type not properly set in advanced search.',  $field  ), __FILE__, __LINE__, __METHOD__, true );
+				WIC_Function_Utilities::wic_error ( sprintf( 'Row type not properly set in advanced search.  Row type is:',  $row_type  ), __FILE__, __LINE__, __METHOD__, true );
 			}	 
 		}
 		
@@ -249,6 +262,10 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 				$join .= " LEFT JOIN $table_name as $table on $table.constituent_id = constituent.ID ";
 			}
 		}
+		
+		// complete the having clause
+		$having = ( $having_count > 0 ) ? 'HAVING ' . $having : '';
+		
 
 		// merge prepare values (note that start with digit 1 so will always be non-empty use in where 1=1)
 		$values = array_merge ( array(1), $activity_values, $constituent_values, $having_values );
@@ -257,7 +274,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 
 		// prepare SQL ( or skip prepare if no user input to where clause)
 		$sql = $wpdb->prepare( "
-				SELECT $found_rows $select_list
+				SELECT $found_rows $select_list $additional_select_terms
 				FROM 	$join
 				WHERE 1=%d $deleted_clause $connector $activity_where $activity_and_or_constituent $constituent_where $close_paren  
 				$group_by

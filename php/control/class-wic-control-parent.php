@@ -31,6 +31,10 @@ abstract class WIC_Control_Parent {
 	*		In child controls, may allow direct passage of arguments -- see checked and multivalue.
 	*		Note that have potential to get css specified to them based on their field slug
 	*		Any special validation, sanitization, formatting and default values ( as opposed to default rule values ) are supplied from the relevant object and the dictionary
+	*
+	*	Note that $wic_db_dictionary->field_rules_cache, although itself private, points to public database results and therefore can be corrupted by
+	*	overwriting $this->field which is just a pointer to one of its elements.  So, never update $this->field.  If wish to alter a rule value, 
+	*  override $default_control_args (and check that downstream uses run off it or can be safely modified to run off it).
 	*/
 
 
@@ -60,6 +64,7 @@ abstract class WIC_Control_Parent {
 
 	public function initialize_overriden_default_values ( $entity, $field_slug, $instance, $override_entity, $override_field_slug ) {
 		$this->initialize_default_values ( $entity, $field_slug, $instance );
+		$this->default_control_args['entity'] = $override_entity;
 		$this->default_control_args['field_slug_css'] 		= str_replace( '_', '-', $override_field_slug );
 		$this->default_control_args['field_slug_stable'] 	= $override_field_slug; 
 		$this->default_control_args['field_slug'] = $override_entity . '[' . $instance . ']['. $override_field_slug . ']';

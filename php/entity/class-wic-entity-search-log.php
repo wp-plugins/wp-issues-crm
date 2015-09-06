@@ -131,9 +131,9 @@ class WIC_Entity_Search_Log extends WIC_Entity_Parent {
 					
 				$value =  isset ( $search_clause['value'] ) ? $search_clause['value'] : '' ; // default
 				$show_item = true; 
-				
-				// look up categories if any for post_category			
-				if ( 'post_category' == $search_clause['key'] ) { 
+
+				// look up categories if any for post_category ( from either regular or advanced search format array )			
+				if ( 'post_category' == $search_clause['key'] || strpos( $search_clause['compare'], 'cat' ) > -1 ) { 
 					if ( 0 < count ( $value ) ) {
 						$value_string = '';
 						foreach ( $value as $key => $selected ) {

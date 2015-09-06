@@ -165,26 +165,26 @@ class WIC_List_Constituent_Export {
 	 		
 		}
 
+
 		// initialize download sql -- if remains blank, will bypass download
-		
 		$download_sql = '';
 		switch ( $download_type ) {
 			case 'emails':		
 				$download_sql =" 
 					SELECT  first_name as fn, last_name as ln,  
 						email_type, email_address, 
-						max( city ) as city $custom_fields_string
+						max( city ) as city $custom_fields_string , i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
 					inner join $email e on e.constituent_id = c.ID
 					left join $address a on a.constituent_id = c.ID	
 					GROUP BY c.ID, e.ID
-					"; 		
+					"; 
 				break;
 			case 'phones':		
 				$download_sql =" 
 					SELECT  first_name as fn, last_name as ln,  
 						phone_type, phone_number, extension, 
-						max( city ) as city $custom_fields_string
+						max( city ) as city $custom_fields_string , i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
 					inner join $phone p on p.constituent_id = c.ID
 					left join $address a on a.constituent_id = c.ID	
@@ -197,7 +197,7 @@ class WIC_List_Constituent_Export {
 						address_type, 
 						address_line as address_line_1,
 						concat ( city, ', ', state, ' ',  zip ) as address_line_2,
-						city, state, zip $custom_fields_string
+						city, state, zip $custom_fields_string , i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
 					inner join $address a on a.constituent_id = c.ID	
 					GROUP BY c.ID, a.ID
@@ -211,7 +211,7 @@ class WIC_List_Constituent_Export {
 						phone_number,
 						address_line as address_line_1,
 						concat ( city, ', ', state, ' ',  zip ) as address_line_2,
-						state, zip $custom_fields_string
+						state, zip $custom_fields_string , i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
 					left join $email e on e.constituent_id = c.ID
 					left join $phone p on p.constituent_id = c.ID
@@ -228,7 +228,7 @@ class WIC_List_Constituent_Export {
 						phone_number,
 						address_line,
 						city, state, zip,
-						c.* 
+						c.* , i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
 					left join $email e on e.constituent_id = c.ID
 					left join $phone p on p.constituent_id = c.ID
