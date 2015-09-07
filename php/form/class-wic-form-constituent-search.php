@@ -5,12 +5,7 @@
 *
 */
 
-class WIC_Form_Constituent_Search extends WIC_Form_Parent  {
-	
-	// associate form with entity in data dictionary
-	protected function get_the_entity() {
-		return ( 'constituent' );	
-	}
+class WIC_Form_Constituent_Search extends WIC_Form_Constituent  {
 
 	// no header tabs
 	protected function format_tab_titles( &$data_array ){}
@@ -27,7 +22,9 @@ class WIC_Form_Constituent_Search extends WIC_Form_Parent  {
 			'button_label'					=> __('Search', 'wp-issues-crm')
 		);	
 		$buttons .= $this->create_wic_form_button ( $button_args_main );
-	
+		
+		$buttons .=	'<a target = "_blank" href="http://wp-issues-crm.com/?page_id=155">' . __( 'Constituent FAQ', 'wp-issues-crm' ) . '</a>';
+			
 		return $buttons;
 		
 	}
@@ -78,10 +75,12 @@ class WIC_Form_Constituent_Search extends WIC_Form_Parent  {
 		return ( 'save_options' != $group->group_slug && 'comment' != $group->group_slug );	
 	}	
 
+
+
 	// hooks not implemented
 	protected function supplemental_attributes() {}
 	protected function group_special( $group ) {}
 	protected function pre_button_messaging ( &$data_array ){}
-	protected function post_form_hook ( &$data_array ) {} 
+	
 
 }

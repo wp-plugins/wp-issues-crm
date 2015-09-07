@@ -16,7 +16,7 @@ class WIC_Admin_Settings {
 
 	// sets up WP settings interface	
 	public function __construct() { // class instantiated in plugin main 
-		add_action('admin_init', array ( $this, 'settings_setup') );
+		add_action( 'admin_init', array ( $this, 'settings_setup') );
 		$this->plugin_options = get_option( 'wp_issues_crm_plugin_options_array' );
 	}	
 	
@@ -25,7 +25,7 @@ class WIC_Admin_Settings {
 		
 		// registering only one setting, which will be an array -- will set up nonces when called
 		register_setting(
-			'wp_issues_crm_plugin_options', // Option Group
+			'wp_issues_crm_plugin_options', // Option Group (have only one option)
 			'wp_issues_crm_plugin_options_array', // Option Name
 			array ( $this, 'sanitize' ) // Sanitize call back
 		);
@@ -104,16 +104,16 @@ class WIC_Admin_Settings {
        // Preference Settings
       add_settings_section(
             'preference_settings', // setting ID
-            'Preference Settings', // Title
+            'Activity Issue Assignment Settings', // Title
             array( $this, 'preference_settings_legend' ), // Callback
             'wp_issues_crm_settings_page' // page ID ( a group of settings sections)
         ); 
 
 		// naming of the callback with array elements (in the callbacks) is what ties the option array together 		
       add_settings_field(
-            'allow_issue_dropdown_preferences', // field id
-            'Allow issue preferences', // field label
-            array( $this, 'allow_issue_dropdown_preferences_callback' ), // field call back 
+            'disallow_activity_issue_search', // field id
+            'Disallow instant issue search', // field label
+            array( $this, 'disallow_activity_issue_search_callback' ), // field call back 
             'wp_issues_crm_settings_page', // page 
             'preference_settings' // settings section within page
        ); 
@@ -150,11 +150,25 @@ class WIC_Admin_Settings {
             'postal_address_interface' // settings section within page
        ); 
 
-
-    
-	// Uninstall Settings (legend only)
+		// financial transactions settings 
       add_settings_section(
-            'uninstal', // setting ID
+            'enable_financial_activities', // setting ID
+            'Enable Financial Activities', // Title
+            array( $this, 'enable_financial_activities_legend_callback' ), // Callback
+            'wp_issues_crm_settings_page' // page ID ( a group of settings sections)
+        ); 
+
+      add_settings_field(
+            'financial_activity_types', // field id
+            'Financial Activity Type Codes', // field label
+            array( $this, 'financial_activity_types_callback' ), // field call back 
+            'wp_issues_crm_settings_page', // page 
+            'enable_financial_activities' // settings section within page
+       ); 
+    
+		// Uninstall Settings (legend only)
+      add_settings_section(
+            'uninstall', // setting ID
             'Uninstalling WP Issues CRM', // Title
             array( $this, 'uninstall_legend' ), // Callback
             'wp_issues_crm_settings_page' // page ID ( a group of settings sections)
@@ -206,6 +220,7 @@ class WIC_Admin_Settings {
 			'input_class' 	   => '',
 			'field_slug_css'	=> '',
 			'onchange' 			=> '',
+			'hidden'				=> 0,
 			'field_slug'		=> 'wp_issues_crm_plugin_options_array[access_level_required]',
 			'value'				=> $value ,		
 		);		
@@ -224,6 +239,7 @@ class WIC_Admin_Settings {
 			'option_array'    => $option_array,
 			'input_class' 	   => '',
 			'field_slug_css'	=> '',
+			'hidden'				=> '',
 			'onchange' 			=> '',
 			'field_slug'		=> 'wp_issues_crm_plugin_options_array[access_level_required_downloads]',
 			'value'				=> $value ,		
@@ -272,17 +288,22 @@ class WIC_Admin_Settings {
 	*/
 	// section legend call back
 	public function preference_settings_legend() {
-		echo '<p>' . __( 'By default, when users add new activities for a constituent, the drop down for "Activity Issue?" includes only those set as 
-		"Open for WP Issues CRM" in the Activity Tracking box on the Issue form.', 'wp-issues-crm' ) .  '</p>' . 
-		'<p>' . __( 'If the setting below is checked, then users can choose preferences to see additional issues in the drop down: (a) the issue that 
-		they have most recently edited; and/or (b) the most recent or most frequent issues that they have added to activities.  These additional issues
-		will appear whether or not they are affirmatively "Open for WP Issues CRM", but will not appear if they are "Closed for WP Issues CRM".', 'wp-issues-crm' ) . '</p>';
+		echo '<p>' . __( 'On constituent screens, when activities are added or updated, the activity type and associated issue must be identified -- 
+		for example, an activity could be of type "EMail" about an issue titled "Education".', 'wp-issues-crm' ). '</p>' .
+		'<p>' . __( 'By default, the Activity Issue field will instantly retrieve issues matching what the user types (for example, typing "edu" would 
+		show issues with titles	including the word "education").  The user must select one of the retrieved issues.  The retrieval will prioritize issues 
+		that have been set in the Activity Tracking section (on the issue screen) as "Always appear in issue drop down" and will exclude issues set 
+		to "never appear".  Issues that have not been set either way will be retrieved but as lower priority.', 'wp-issues-crm') . '</p>' .  
+		'<p>' . __('By checking the box below, you can disable this built-in search feature and force users to select from a defined drop down including only 
+		issues set as "Always appear in issue dropdown" in the Activity Tracking section on the Issue form.  This approach controls user choices as
+		might be necessary in a larger office.', 'wp-issues-crm' ) .  '</p>' . 
+		'<p>' . __( 'Note that even if you allow searching for issues, users will have the option to choose the simpler non-searchable select dropdown by setting preferences.', 'wp-issues-crm' ) . '</p>';
 	}
 
 	// setting field call back	
-	public function allow_issue_dropdown_preferences_callback() {
-		printf( '<input type="checkbox" id="allow_issue_dropdown_preferences" name="wp_issues_crm_plugin_options_array[allow_issue_dropdown_preferences]" value="%s" %s />',
-            1, checked( '1', isset ( $this->plugin_options['allow_issue_dropdown_preferences'] ), false ) );
+	public function disallow_activity_issue_search_callback() {
+		printf( '<input type="checkbox" id="disallow_activity_issue_search" name="wp_issues_crm_plugin_options_array[disallow_activity_issue_search]" value="%s" %s />',
+            1, checked( '1', isset ( $this->plugin_options['disallow_activity_issue_search'] ), false ) );
 	}
 
 	/*
@@ -313,25 +334,49 @@ class WIC_Admin_Settings {
 
 	// setting field call back
 	public function user_name_for_postal_address_interface_callback() {
+		$value = isset( $this->plugin_options['user_name_for_postal_address_interface'] ) ? $this->plugin_options['user_name_for_postal_address_interface']: '';
 		printf( '<input type="text" id="user_name_for_postal_address_interface" name="wp_issues_crm_plugin_options_array[user_name_for_postal_address_interface]"
-				value ="%s" />', $this->plugin_options['user_name_for_postal_address_interface'] );
-	
-	}
+				value ="%s" />', $value );
+		}
 
 	public function do_zip_code_format_check_callback() {
 		printf( '<input type="checkbox" id="do_zip_code_format_check" name="wp_issues_crm_plugin_options_array[do_zip_code_format_check]" value="%s" %s />',
             1, checked( '1', isset ( $this->plugin_options['do_zip_code_format_check'] ), false ) );
 	}
+	/*
+	*
+	* Financial Activity Types Callback
+	*
+	*/
+	// section legend call back
+	public function enable_financial_activities_legend_callback() {
+		echo 
+		'<p>' . __( 'WP Issues CRM can be used to track financial transactions. Simply enter below the Activity Type codes <em>separated by commas</em> for which amounts should be recorded.' , 'wp-issues-crm' ) . '</p>' . 
+		'<p>' . __( 'For example, if you defined <a href="/wp-admin/admin.php?page=wp-issues-crm-options">Activity Type Options</a> <code>Check Contribution</code> coded as <code>CH</code> and <code>Online Contribution</code> coded as <code>OC</code>, you would enter them below like so:' , 'wp-issues-crm' ) . ' <code>CH,OC</code>' . '</p>' . 
+		'<p>' . __( 'Activities of these types will then be stored and displayed with an amount field formatted with two decimal points.' , 'wp-issues-crm' ) .  '</p>' .
+		'<p>' . __( 'Tip: The matching of activity type codes is case sensitive -- "CH" as an Activity Type code will <em>not</em> match "ch" as a financial activity setting.' , 'wp-issues-crm' ) .  '</p>' ;
+	}
+	
+	// setting field call back
+	public function financial_activity_types_callback() { 
+		$value = isset ( $this->plugin_options['financial_activity_types'] ) ? $this->plugin_options['financial_activity_types'] : '';
+		printf( '<input type="text" id="financial_activity_types" name="wp_issues_crm_plugin_options_array[financial_activity_types]"
+				value ="%s" />', $value );
+	}
+
 
 
 	/*
 	*
-	* Uninstal Legend
+	* Uninstall Legend
 	*
 	*/
 	// section legend call back
 	public function uninstall_legend() {
-		echo '<div id="uninstall"><p>' . __( 'WP Issues CRM does a partial uninstall of its own data if you "delete" it through the <a href="/wp-admin/plugins.php">plugins menu</a>.  It removes its entries
+		echo '<div id="uninstall">' .
+			'<p>' . __( 'If you simply wish to refresh original options settings, you can safely deactivate and delete WP Issues CRM and then reinstall it on
+			the <a href="/wp-admin/plugins.php">plugins menu</a>.  WP Issues CRM will come back up	with all of your data.', 'wp-issues-crm' ) . '</p>' 
+			. '<p>' . __( 'WP Issues CRM does a partial uninstall of its own data if you "delete" it through the <a href="/wp-admin/plugins.php">plugins menu</a>.  It removes its entries
 			in the Wordpress options table -- which include the plugin options, database version and cached search histories. 
 			It also removes entries in the Wordpress user meta table for individual preference settings for the plugin.
 			Finally, it removes its control and audit trail tables, with the exception of the dictionary (which may include user configured fields).', 'wp-issues-crm') . '</p><p>' .  
@@ -347,7 +392,7 @@ class WIC_Admin_Settings {
 		'</ol>' .		
 		'<p>' . __( 'Finally, run this command to delete post_meta data created by WP Issues CRM (this will not affect issue posts themselves):', 'wp-issues-crm' ) . '</p>' .
 		'<pre>DELETE FROM wp_postmeta WHERE meta_key LIKE \'wic_data_%\'</pre></div>' .
-		'<p>' . __( 'Take note: These steps should all be taken AFTER the plugin is deactivated -- otherwise it will automatically restore missing tables. ', 'wp-issues-crm' ) . '</p>' ;
+		'<p>' . __( 'Take note: These steps should all be taken AFTER the plugin is deactivated -- otherwise it will automatically restore missing tables. ', 'wp-issues-crm' ) . '</p>';
 				
 	}
 	// call back for the option array (used by options.php in handling the form on return)
@@ -362,8 +407,8 @@ class WIC_Admin_Settings {
   		if( isset( $input['hide_private_posts'] ) ) {
             $new_input['hide_private_posts'] = absint( $input['hide_private_posts'] );
       } 
-  		if( isset( $input['allow_issue_dropdown_preferences'] ) ) {
-            $new_input['allow_issue_dropdown_preferences'] = absint( $input['allow_issue_dropdown_preferences'] );
+  		if( isset( $input['disallow_activity_issue_search'] ) ) {
+            $new_input['disallow_activity_issue_search'] = absint( $input['disallow_activity_issue_search'] );
       } 
 		if( isset( $input['use_postal_address_interface'] ) ) {
             $new_input['use_postal_address_interface'] = absint( $input['use_postal_address_interface'] );
@@ -371,7 +416,7 @@ class WIC_Admin_Settings {
 		if( isset( $input['user_name_for_postal_address_interface'] ) ) {
             $new_input['user_name_for_postal_address_interface'] = sanitize_text_field( $input['user_name_for_postal_address_interface'] );
       } 
-    		if( isset( $input['do_zip_code_format_check'] ) ) {
+    	if( isset( $input['do_zip_code_format_check'] ) ) {
             $new_input['do_zip_code_format_check'] = absint( $input['do_zip_code_format_check'] );
       } 
   		if( isset( $input['access_level_required'] ) ) {
@@ -380,7 +425,17 @@ class WIC_Admin_Settings {
 		if( isset( $input['access_level_required_downloads'] ) ) {
             $new_input['access_level_required_downloads'] = sanitize_text_field( $input['access_level_required_downloads'] );
       }    
-           
+      if( isset( $input['financial_activity_types'] ) ) {
+      	   $type_array = explode ( ',', $input['financial_activity_types'] );
+      	   $clean_type_array = array();
+      	   foreach ( $type_array as $type ) {
+      	   	$clean_type = sanitize_text_field( $type );
+					if ( $clean_type > '' ) { 
+						$clean_type_array[] = $clean_type;
+					}     	   
+      	   } 
+      	   $new_input['financial_activity_types'] = implode (',', $clean_type_array );
+      }  
       return ( $new_input );      
 	}
 

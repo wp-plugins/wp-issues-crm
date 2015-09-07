@@ -162,7 +162,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		*  No real payoff in preserving it as an option for users.
 		*
 		*	Strategy: execution time aside, the risk with an insert approach is that 
-		*  users will can into memory and packet size issues with larger packets in
+		*  users will run into memory and packet size issues with larger packets in
 		* 	long insert statements -- rather than force naive users to change these parameters, keep likely 
 		* 	packet size low enough 
 		*	// http://dev.mysql.com/doc/refman/5.5/en/packet-too-large.html
@@ -260,6 +260,12 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 
 		} // end not eof loop
 
+
+		/*
+		*
+		* have uploaded staging table, now want to update the upload table with details about the uplad
+		*
+		*/
 		$method = "INSERTS in packets of $rows_per_packet rows via wpdb";
 		$database_insert_count = WIC_DB_Access::table_count ( $table_name ) > 0;
 		if ( $database_insert_count != $insert_count ) {
@@ -357,7 +363,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	
 	private function null_to_empty ( $value ) {
 		$value = ( '\N' == $value  ||  'NULL' == $value || NULL === $value ) ? '' : $value;
-		return $value; 
+		return ( trim ( $value ) ); // discard trailing/leading white spaces for all values 
 	}	
 	
 	// limit column name to letters, digits and underscore
@@ -517,6 +523,10 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	/*
 	*
 	* support match functions
+	* this includes creation of preliminary tables for use in ultimate upload
+	*    	-- unmatched input records for new constituent creation
+	* 		-- unmatched issue records for new issue creation 
+	* also includes markup of staging table records as matched
 	*/
 	
 		// quick look up
@@ -928,7 +938,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	
 	/*
 	*
-	* Save the new constituents that have been identified through the matching process
+	* Save the new constituents ( previously identified through the matching process )
 	*
 	*/
 	public static function complete_upload_save_new_constituents	( $upload_id, $staging_table, $offset, $chunk_size ) {
@@ -1229,11 +1239,21 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 					$data_object_array['constituent_id']->set_value ( $staging_record->MATCHED_CONSTITUENT_ID );
 					// prepare a query array for those fields used in upload match/dedup checking for multi-value fields 
 					$query_array = array();
+					// set up test for missing email_address or phone_number will not store or update if missing (added to allow these to be blank in validation stage) 
+					$email_phone_missing = '';
 					foreach ( $data_object_array as $field_slug => $control ) { 
 						if ( $control->is_upload_dedup() ) {
 							$query_array = array_merge ( $query_array, $control->create_search_clause ( $search_clause_args ) );
 						}
+						// do the required testing deferred from validation stage
+						if ( 'email_address' == $field_slug  || 'phone_number' == $field_slug ) {
+							$email_phone_missing = $control->required_check();
+						}
 					} 
+					// by pass this entity if missing phone or email number.
+					if ( $email_phone_missing > '' ) {
+						continue; // go to the next entity						
+					}
 					// execute a search for the multivalue entity -- treating it as a top level entity, but query object is OK with that
 					$wic_access_object_array[$entity]->search ( $query_array, $search_parameters );
 					// if matches found, take the first for update purposes 
@@ -1303,6 +1323,9 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 
 		return ( $return_result );
 	}
+
+	public function db_get_time_stamp ( $id ) {} // not implemented for uploads
+	protected function db_do_time_stamp ( $table, $id ) {} // not implemented for uploads
 
 }
 

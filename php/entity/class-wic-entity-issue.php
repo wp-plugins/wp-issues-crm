@@ -38,6 +38,7 @@ class WIC_Entity_Issue extends WIC_Entity_Parent {
 	// handle a search request for an ID coming from anywhere
 	protected function id_search ( $args ) {
 		$id = $args['id_requested']; 
+		WIC_DB_Search_History::new_history_branch();
 		$this->id_search_generic ( $id, 'WIC_Form_Issue_Update', '' , true, false ); // do search log for these which do display form; no original search 
 		return;		
 	}

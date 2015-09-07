@@ -24,7 +24,7 @@ class WIC_List_Search_Log extends WIC_List_Parent {
    	
    	// create a new WIC access object and search for the id's
   		$wic_query2 = WIC_DB_Access_Factory::make_a_db_access_object( $wic_query->entity );
-		$wic_query2->list_by_id ( $id_list, 'DESC' ); 
+		$wic_query2->list_by_id ( $id_list ); 
 		
 		// loop through the rows and output a list item for each
 		foreach ( $wic_query2->result as $row_array ) { 
@@ -46,14 +46,27 @@ class WIC_List_Search_Log extends WIC_List_Parent {
 				}
 			$row .='</ul>';				
 			
+			$favorite_button_args = array(
+					'entity_requested'	=> $wic_query->entity,
+					'action_requested'	=> 'toggle_favorite',
+					'button_class' 		=> 'wic-favorite-button ' . $row_class,
+					'id_requested'			=> $row_array->ID,
+					'button_label' 		=> WIC_Entity_Search_Log::favorite_formatter( $row_array->favorite ),
+					'name'					=> 'wic-favorite-button',
+					'type'					=>	'button',
+					'title'					=> __( 'Favorite?', 'wp-issues-crm' ),				
+			);						
+			
 			$list_button_args = array(
 					'entity_requested'	=> $wic_query->entity,
 					'action_requested'	=> 'id_search',
-					'button_class' 		=> 'wic-post-list-button ' . $row_class,
+					'button_class' 		=> 'wic-post-list-button wic-search-log-list-button ' . $row_class,
 					'id_requested'			=> $row_array->ID,
 					'button_label' 		=> $row,				
 			);			
-			$output .= '<li>' . WIC_Form_Parent::create_wic_form_button( $list_button_args ) . '</li>';	
+			$output .= '<li>' .
+				WIC_Form_Parent::create_wic_form_button( $favorite_button_args ) . 
+				WIC_Form_Parent::create_wic_form_button( $list_button_args ) . '</li>';	
 			}
 		return ( $output );		
 	}

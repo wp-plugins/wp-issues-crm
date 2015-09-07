@@ -5,6 +5,7 @@ CREATE TABLE wp_wic_activity (
   constituent_id bigint(20) unsigned NOT NULL,
   activity_date varchar(10) NOT NULL,
   activity_type varchar(255) DEFAULT NULL,
+  activity_amount decimal(20,2) NOT NULL,
   issue bigint(20) NOT NULL COMMENT 'post_id for associated issue',
   pro_con varchar(255) NOT NULL,
   activity_note text NOT NULL,
@@ -81,9 +82,9 @@ CREATE TABLE wp_wic_constituent (
 
 CREATE TABLE wp_wic_data_dictionary (
   ID bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  entity_slug varchar(20) NOT NULL,
-  group_slug varchar(30) NOT NULL,
-  field_slug varchar(30) NOT NULL,
+  entity_slug varchar(60) NOT NULL,
+  group_slug varchar(60) NOT NULL,
+  field_slug varchar(60) NOT NULL,
   field_type varchar(30) NOT NULL,
   field_label varchar(120) NOT NULL,
   field_order mediumint(9) NOT NULL,
@@ -131,8 +132,8 @@ CREATE TABLE wp_wic_email (
 
 CREATE TABLE wp_wic_form_field_groups (
   ID bigint(20) NOT NULL AUTO_INCREMENT,
-  entity_slug varchar(30) NOT NULL,
-  group_slug varchar(30) NOT NULL,
+  entity_slug varchar(60) NOT NULL,
+  group_slug varchar(60) NOT NULL,
   group_label varchar(255) NOT NULL,
   group_legend text NOT NULL,
   group_order smallint(6) NOT NULL DEFAULT '0',
@@ -145,7 +146,7 @@ CREATE TABLE wp_wic_form_field_groups (
 
 CREATE TABLE wp_wic_option_group (
   ID bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  option_group_slug varchar(30) NOT NULL,
+  option_group_slug varchar(60) NOT NULL,
   option_group_desc varchar(100) NOT NULL,
   enabled tinyint(1) NOT NULL DEFAULT '1',
   last_updated_time datetime NOT NULL,
@@ -158,7 +159,7 @@ CREATE TABLE wp_wic_option_group (
 CREATE TABLE wp_wic_option_value (
   ID bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   option_group_id varchar(50) NOT NULL,
-  parent_option_group_slug varchar(30) NOT NULL,
+  parent_option_group_slug varchar(60) NOT NULL,
   option_value varchar(50) NOT NULL,
   option_label varchar(200) NOT NULL,
   value_order smallint(11) NOT NULL,
@@ -187,6 +188,7 @@ CREATE TABLE wp_wic_phone (
 
 CREATE TABLE wp_wic_search_log (
   ID bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  favorite tinyint(1) NOT NULL,
   user_id bigint(20) NOT NULL,
   search_time varchar(20) NOT NULL,
   entity varchar(30) NOT NULL,
@@ -196,7 +198,8 @@ CREATE TABLE wp_wic_search_log (
   result_count bigint(20) NOT NULL,
   PRIMARY KEY (ID),
   KEY user_entity_time (user_id,entity,search_time),
-  KEY user_time (user_id,search_time)
+  KEY user_time (user_id,search_time),
+  KEY user_favorite_time (user_id,favorite,search_time)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 CREATE TABLE wp_wic_upload (

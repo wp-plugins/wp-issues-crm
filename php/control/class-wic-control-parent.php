@@ -31,6 +31,10 @@ abstract class WIC_Control_Parent {
 	*		In child controls, may allow direct passage of arguments -- see checked and multivalue.
 	*		Note that have potential to get css specified to them based on their field slug
 	*		Any special validation, sanitization, formatting and default values ( as opposed to default rule values ) are supplied from the relevant object and the dictionary
+	*
+	*	Note that $wic_db_dictionary->field_rules_cache, although itself private, points to public database results and therefore can be corrupted by
+	*	overwriting $this->field which is just a pointer to one of its elements.  So, never update $this->field.  If wish to alter a rule value, 
+	*  override $default_control_args (and check that downstream uses run off it or can be safely modified to run off it).
 	*/
 
 
@@ -58,6 +62,16 @@ abstract class WIC_Control_Parent {
 		$this->reset_value();		
 	}
 
+	public function initialize_overriden_default_values ( $entity, $field_slug, $instance, $override_entity, $override_field_slug ) {
+		$this->initialize_default_values ( $entity, $field_slug, $instance );
+		$this->default_control_args['entity'] = $override_entity;
+		$this->default_control_args['field_slug_css'] 		= str_replace( '_', '-', $override_field_slug );
+		$this->default_control_args['field_slug_stable'] 	= $override_field_slug; 
+		$this->default_control_args['field_slug'] = $override_entity . '[' . $instance . ']['. $override_field_slug . ']';
+		// initialize the value of the control
+		$this->reset_value();		
+	}
+
 	/*********************************************************************************
 	*
 	* setters_getters
@@ -68,6 +82,15 @@ abstract class WIC_Control_Parent {
 		$this->value = $value;	
 	}
 	
+	public function set_input_class_to_hide_element() {
+		$this->default_control_args['input_class'] .= ' hidden-element ';
+		$this->default_control_args['label_class'] .= ' hidden-element ';
+	}	
+
+	public function override_readonly() {
+		$this->default_control_args['readonly'] = false;	
+	}
+
 	public function get_value () {
 		return $this->value;	
 	}
@@ -92,6 +115,9 @@ abstract class WIC_Control_Parent {
 		return ( 1 == $this->field->upload_dedup );	
 	}
 
+	public function get_field_slug() {
+		return ( $this->field->field_slug );	
+	}
 
 	/**********************************************************************************
 	*
@@ -346,10 +372,14 @@ abstract class WIC_Control_Parent {
 	* create set array or sql statements for saves/updates 
 	*
 	*********************************************************************************/
-	public function create_update_clause () {
-		if ( ( ( ! $this->field->transient ) && ( ! $this->field->readonly ) ) || 'ID' == $this->field->field_slug ) {
+	public function create_update_clause () { 
+		if ( ( ( ! $this->field->transient ) && ( ! $this->field->readonly ) ) 
+				|| 'ID' == $this->field->field_slug 
+				|| 'custom_field_' == substr( $this->field->field_slug, 0, 13 ) ) {
 			// exclude transient and readonly fields.   ID as readonly ( to allow search by ID), but need to pass it anyway.
 			// ID is a where condition on an update in WIC_DB_Access_WIC::db_update
+			// include custom fields since may be readonly but need to update in batch upload; 
+			// -- no harm in including custom fields in form context since controls will be appropriately readonly 
 			$update_clause = array (
 					'key' 	=> $this->field->field_slug,
 					'value'	=> $this->value,

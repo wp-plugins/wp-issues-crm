@@ -18,18 +18,22 @@ class WIC_DB_Access_WP_User Extends WIC_DB_Access {
 		
 		$wic_user_meta = get_user_meta ( $current_user->ID, self::WIC_METAKEY ) ;
 		$preferences = ( count ( $wic_user_meta ) > 0 ) ? unserialize ( $wic_user_meta[0] ) : array();
+		$activity_issue_simple_dropdown = isset ( $preferences['activity_issue_simple_dropdown'] ) ? $preferences['activity_issue_simple_dropdown'] : ''; 
 		$show_viewed_issue 	= isset ( $preferences['show_viewed_issue'] ) ? $preferences['show_viewed_issue'] : ''; 
 		$show_latest_issue 	= isset ( $preferences['show_latest_issues'] ) ? $preferences['show_latest_issues'] : ''; 
 		$max_issues_to_show 	= isset ( $preferences['max_issues_to_show'] ) ? $preferences['max_issues_to_show'] : '';
 		$first_form			 	= isset ( $preferences['first_form'] ) ? $preferences['first_form'] : '';
+		$disable_autocomplete 	= isset ( $preferences['disable_autocomplete'] ) ? $preferences['disable_autocomplete'] : '';
 		
 		$user_preferences = new WIC_DB_User_Preferences_Object ( 
 			$current_user->ID, 
 			$current_user->display_name,
+			$activity_issue_simple_dropdown,
 			$show_viewed_issue,
 			$show_latest_issue,
 			$max_issues_to_show,
-			$first_form
+			$first_form,
+			$disable_autocomplete
 		);
 
 		$interface_array = array ( $user_preferences );		
@@ -102,9 +106,9 @@ class WIC_DB_Access_WP_User Extends WIC_DB_Access {
 		return ( isset ( $preferences[$preference] ) ?  $preferences[$preference] : false );
 	}
 
-	protected function db_updated_last ( $user_id ) {} // not implemented for users
 	protected function db_get_option_value_counts( $field_slug ) {} // not implemented for users
-
+	public function db_get_time_stamp ( $id ) {} // not implemented for users
+	protected function db_do_time_stamp ( $table, $id ) {} // not imlpemented for users
 
 }
 

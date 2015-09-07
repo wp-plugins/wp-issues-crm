@@ -153,38 +153,38 @@ class WIC_List_Constituent_Export {
 		$temp_table = $wpdb->prefix . 'wic_temporary_id_list';
 		
 		// pass constituent list through repeated chunks to db as temp table
-		$temp_constituent_table = $wpdb->prefix . 'wic_temporary_constituent_list';		
+		$temp_constituent_table = $wpdb->prefix . 'wic_temporary_constituent_list' . time();		
 
 		global $wic_db_dictionary;
 		$custom_fields = $wic_db_dictionary->custom_fields_match_array ();
 		$custom_fields_string = '';
 		if ( count ( $custom_fields ) > 0 ) {
 			foreach ( $custom_fields as $field => $match_array ) {
-				$custom_fields_string .= ', ' . $field . ' as `' . $match_array['label'] . '` ';			
+				$custom_fields_string .= ', ' . $field . ' as `' . $match_array['label'] . ' -- ' . $field . '` ';			
 			}
 	 		
 		}
 
+
 		// initialize download sql -- if remains blank, will bypass download
-		
 		$download_sql = '';
 		switch ( $download_type ) {
 			case 'emails':		
 				$download_sql =" 
-					SELECT  first_name as fn, last_name as ln,  
+					SELECT  first_name, last_name,  
 						email_type, email_address, 
-						max( city ) as city $custom_fields_string
+						max( city ) as city $custom_fields_string , i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
 					inner join $email e on e.constituent_id = c.ID
 					left join $address a on a.constituent_id = c.ID	
 					GROUP BY c.ID, e.ID
-					"; 		
+					"; 
 				break;
 			case 'phones':		
 				$download_sql =" 
-					SELECT  first_name as fn, last_name as ln,  
+					SELECT  first_name, last_name,  
 						phone_type, phone_number, extension, 
-						max( city ) as city $custom_fields_string
+						max( city ) as city $custom_fields_string , i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
 					inner join $phone p on p.constituent_id = c.ID
 					left join $address a on a.constituent_id = c.ID	
@@ -193,11 +193,11 @@ class WIC_List_Constituent_Export {
 				break;
 			case 'addresses':		
 				$download_sql =" 
-					SELECT  first_name as fn, last_name as ln,  
+					SELECT  first_name, last_name,  
 						address_type, 
-						address_line as address_line_1,
-						concat ( city, ', ', state, ' ',  zip ) as address_line_2,
-						city, state, zip $custom_fields_string
+						address_line as wic_address_line_1,
+						concat ( city, ', ', state, ' ',  zip ) as wic_address_line_2,
+						city, state, zip $custom_fields_string , i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
 					inner join $address a on a.constituent_id = c.ID	
 					GROUP BY c.ID, a.ID
@@ -205,13 +205,13 @@ class WIC_List_Constituent_Export {
 				break;		
 			case 'type0':
 				$download_sql = " 		
-					SELECT  first_name as fn, last_name as ln,  
+					SELECT  first_name, last_name,  
 						city, 
 						email_address, 
 						phone_number,
-						address_line as address_line_1,
-						concat ( city, ', ', state, ' ',  zip ) as address_line_2,
-						state, zip $custom_fields_string
+						address_line as wic_address_line_1,
+						concat ( city, ', ', state, ' ',  zip ) as wic_address_line_2,
+						state, zip $custom_fields_string , i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
 					left join $email e on e.constituent_id = c.ID
 					left join $phone p on p.constituent_id = c.ID
@@ -223,12 +223,15 @@ class WIC_List_Constituent_Export {
 				break;
 			case 'dump':
 				$download_sql = " 		
-					SELECT  first_name as fn, last_name as ln,  
+					SELECT  first_name, last_name, middle_name,  
 						email_address, 
 						phone_number,
 						address_line,
 						city, state, zip,
-						c.* 
+						date_of_birth, is_deceased, mark_deleted, 
+						case_assigned, case_review_date, case_status, 
+						gender, c.last_updated_time, c.last_updated_by $custom_fields_string ,
+						i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
 					left join $email e on e.constituent_id = c.ID
 					left join $phone p on p.constituent_id = c.ID
@@ -252,7 +255,7 @@ class WIC_List_Constituent_Export {
 
 
 
-	private static function do_download_security_checks() {
+	protected static function do_download_security_checks() {
 
 		$wic_plugin_options = get_option( 'wp_issues_crm_plugin_options_array' ); 
 		// if not set, limit access to administrators
@@ -270,7 +273,7 @@ class WIC_List_Constituent_Export {
 	}
 
 	// do_the_export runs the $sql in chunks and exports to filename
-	public static function do_the_export ( $file_name, $sql ) {
+	protected static function do_the_export ( $file_name, $sql ) {
 
 		header("Cache-Control: must-revalidate, post-check=0, pre-check=0");
 		header('Content-Description: File Transfer');

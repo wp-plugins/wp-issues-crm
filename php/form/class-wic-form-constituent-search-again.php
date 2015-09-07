@@ -39,6 +39,8 @@ class WIC_Form_Constituent_Search_Again extends WIC_Form_Constituent_Search  {
 		
 		$buttons .=  $this->create_wic_form_button ( $button_args_main );		
 		
+		$buttons .=	'<a target = "_blank" href="http://wp-issues-crm.com/?page_id=155">' . __( 'Constituent FAQ', 'wp-issues-crm' ) . '</a>';
+			
 		return $buttons;
 	}
 	

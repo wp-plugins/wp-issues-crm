@@ -10,12 +10,15 @@ class WIC_Function_Utilities { // functions that serve multiple entities
 
 	// display error message
 	public static function wic_error ( $text, $file, $line, $method, $fatal ) {
-		$fatal_phrase = $fatal ? __( 'WP Issues CRM Fatal Error: ', 'wp-issues-crm' ) : __( 'WP Issues CRM Non Fatal Error: ', 'wp_issues_crm' );
+		$fatal_phrase = $fatal ? __( 'WP Issues CRM Fatal Error. ', 'wp-issues-crm' ) : __( 'WP Issues CRM Non Fatal Error. ', 'wp_issues_crm' );
+		$fatal_phrase = $fatal_phrase . __( ' Check any suggested issues below and/or please contact help@wp-issues-crm.com or call (in U.S.) 617-771-8274. ', 'wp-issues-crm' );
 		$error_class  = $fatal ? 'wp-issues-crm-fatal-error' : 'wp-issues-crm-non-fatal-error'; 
 		echo '<div class="' . $error_class . '">' . ' 
 			<h3>' . $fatal_phrase . __( $text, 'wp-issues-crm' ) . '</h3>' .  
 			'<p>' . sprintf ( __( '  File Reporting: %s on line number %s -- method %s.', 'wp-issues-crm' ), $file, $line, $method ) . '</p>' . 
 		'</div>';
+		echo '<h3>' . __( 'Stack Trace Results for reference ', 'wp-issues-crm' ) . '</h3>';		
+		wic_generate_call_trace();
 		if ( $fatal ) {
 			die;		
 		}	

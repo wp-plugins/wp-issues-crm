@@ -115,6 +115,17 @@ class WIC_DB_Setup {
 		if ( false === $installed_version || $installed_version < '2.2' ) {
 			$outcome7 = self::execute_file_sql ( 'wic_option_groups_and_options_upgrade_001' );					
 		}
+
+		// add ons in version 2.2.7
+		if ( false === $installed_version || $installed_version < '2.2.7' ) {
+			$outcome7 = self::execute_file_sql ( 'wic_option_groups_and_options_upgrade_002' );					
+		}
+
+		// add ons in version 2.3
+		if ( false === $installed_version || $installed_version < '2.3' ) {
+			$outcome7 = self::execute_file_sql ( 'wic_option_groups_and_options_upgrade_003' );					
+		}
+
 	
 		/*
 		* back fill option_group_id based on parent_option_group_slug for upgrades to option table 

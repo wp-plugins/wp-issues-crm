@@ -10,15 +10,13 @@
 abstract class WIC_Entity_Multivalue extends WIC_Entity_Parent {
 
 	protected function initialize() {
-		
 		global $wic_db_dictionary;
-
-
 		$this->fields = $wic_db_dictionary->get_form_fields( $this->entity );
 		$this->initialize_data_object_array();
 	}
 	
-	protected function populate_from_form( $args ) {
+	// note also used in population basic set_value from multivalue
+	protected function populate_from_form( $args ) { 
 		extract( $args );
 		// expects form_row_array among args; 
 		// instance also present, but has already been processed in __construct
@@ -30,7 +28,12 @@ abstract class WIC_Entity_Multivalue extends WIC_Entity_Parent {
 				$this->data_object_array[$field->field_slug]->set_value( $form_row_array[$field->field_slug] );
 			}
 		}
+		$this->do_field_interaction_rules();
 	}
+
+	// slot used to implement field interaction rules
+	protected function do_field_interaction_rules(){}
+
 
 	protected function populate_from_object( $args ) {
 		extract( $args );

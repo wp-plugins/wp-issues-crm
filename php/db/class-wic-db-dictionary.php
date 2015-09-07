@@ -108,9 +108,10 @@ class WIC_DB_Dictionary {
 	**************************************************************************/	
 	
 	// assemble fields for an entity -- n.b. as rewritten, limits the assembly to fields assigned to form field groups
-	// does not force groups to be implemented though, since not joining to groups table -- assignment to a 
-	// 	non-existent group could lead to data corruption
-	public  function get_form_fields ( $entity ) {
+	// does not force groups to be implemented though, since not joining to groups table 
+	// similarly, assignment of field to non-existing or blank group means will not appear in forms, but could be used elsewhere
+	// -- last_updated_by and last_updated_time for subsidiary entities handled with blank group, so can access in advanced search
+		public  function get_form_fields ( $entity ) {
 		// returns array of row objects, one for each field 
 	
 		$fields_array = array();
@@ -130,7 +131,6 @@ class WIC_DB_Dictionary {
 	// 	but in the online system, only the fields selected by get_form_fields are actually set up as controls  
 	public  function get_field_rules ( $entity, $field_slug ) {
 		// this is only called in the control object -- only the control object knows field details
-
 		foreach ( $this->field_rules_cache as $field_rule ) {
 			if ( $entity == $field_rule->entity_slug && $field_slug == $field_rule->field_slug ) {
 				return ( $field_rule );			
@@ -416,6 +416,100 @@ class WIC_DB_Dictionary {
 			}
 		} 
 		return ( $custom_fields_match_array );
+	}
+
+	/*
+	*
+	* Field inventories for advanced search forms (handles entity constituent and activity)
+	*
+	*/
+	private function get_search_fields_array( $entity ) {
+
+		$search_fields_array = array();
+		foreach ( $this->field_rules_cache as $field ) {	
+			if ( $entity == $field->entity_slug ) {
+				// this branch only relevant for $entity == 'constituent', no activity multivalue fields 
+				// gathering address, phone and email fields
+				if ( 'multivalue' == $field->field_type ) { 
+					if ( 'activity' != $field->field_slug ) {					
+						$search_fields_array = array_merge ( $search_fields_array, $this->get_search_fields_array ( $field->field_slug ) );
+					}			
+				} else {
+					if ( 	0 == $field->transient  && 																		// exclude transients 
+							'constituent_id' != $field->field_slug &&														// exclude link fields
+							( 'constituent' == $field->entity_slug || 'ID' != $field->field_slug )  			// exclude lower entity ID fields
+						) 	
+						 {
+							$search_fields_array[$field->entity_slug . $field->field_label . $field->field_slug ] = array(
+								'ID'					=>	$field->ID,
+								'entity_slug'		=> $field->entity_slug,
+								'field_slug'		=> $field->field_slug,
+								'field_type'		=>	$field->field_type,
+								'field_label'		=>	$field->field_label,
+								'option_group'		=>	$field->option_group
+							);
+					}
+				}
+			}
+		} 
+
+		return ( $search_fields_array );
+	} 
+
+	private function get_sorted_search_fields_array ( $entity ) {
+		
+		$search_fields_array = $this->get_search_fields_array( $entity ); 
+		ksort ( $search_fields_array );
+		$sorted_return_array = array();
+		foreach ( $search_fields_array as $key => $field_array ) {
+			$sorted_return_array[] = $field_array;		
+		} 
+		return ( $sorted_return_array );		
+	
+	}
+
+	public function get_search_field_options ( $entity ) {
+		
+		$financial_activity_types_activated = false;
+		$wic_option_array = get_option('wp_issues_crm_plugin_options_array');
+		if ( isset ( $wic_option_array['financial_activity_types'] ) ) {
+			if ( trim($wic_option_array['financial_activity_types']) > ''  ) {
+				$financial_activity_types_activated = true;			
+			}		
+		}		
+		
+		$entity_fields_array = $this->get_sorted_search_fields_array( $entity );
+
+		// note: do not supply a blank value -- this obviates need for test blank field value
+		$entity_fields_select_array = array(); 
+		
+		foreach ( $entity_fields_array as $entity_field ) {
+			if ( $financial_activity_types_activated || 'activity_amount' != $entity_field['field_slug'] ) // filter amount from options retrieved if not financial
+			$entity_fields_select_array[] = array (
+					'value' => $entity_field['ID'],
+					'label' => $entity_field['field_label'] . ' -- ' . $entity_field['entity_slug'] . ':' . $entity_field['field_slug']
+				);
+		}
+
+		return ( $entity_fields_select_array );	
+	
+	}
+
+	public function get_field_rules_by_id( $id ) {
+		
+		$field_rules_subset = array();
+		// note that $id must exist in field rules cache since using select fields derived from cache		
+		foreach ( $this->field_rules_cache as $field ) {
+			if ( $id == $field->ID ) {
+				return ( 
+					array (
+						'entity_slug'		=> $field->entity_slug,
+						'field_slug'		=> $field->field_slug,
+						'field_type'		=>	$field->field_type,
+					)
+				);
+			}
+		}
 	}
 
 }

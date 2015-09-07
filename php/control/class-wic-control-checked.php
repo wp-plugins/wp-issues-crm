@@ -7,7 +7,7 @@ class WIC_Control_Checked extends WIC_Control_Parent {
 	
 	public static function create_control ( $control_args ) {
 		
-		$input_class = 'wic_input_checked';
+		$input_class = 'wic-input-checked';
 
 		extract ( $control_args, EXTR_SKIP ); 
 	

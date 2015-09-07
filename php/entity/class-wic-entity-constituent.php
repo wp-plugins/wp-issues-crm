@@ -44,6 +44,7 @@ class WIC_Entity_Constituent extends WIC_Entity_Parent {
 	// handle a search request for an ID coming from anywhere
 	protected function id_search ( $args ) {
 		$id = $args['id_requested']; 
+		WIC_DB_Search_History::new_history_branch();
 		$this->id_search_generic ( $id, 'WIC_Form_Constituent_Update', '' , true, false ); // no sql, but do log search as individual, no old search
 		return;		
 	}
@@ -87,9 +88,10 @@ class WIC_Entity_Constituent extends WIC_Entity_Parent {
 	}
 
 	// set values from update process to be visible on form after save or update
-	protected function special_entity_value_hook ( &$wic_access_object ) {
-		$this->data_object_array['last_updated_time']->set_value( $wic_access_object->last_updated_time );
-		$this->data_object_array['last_updated_by']->set_value( $wic_access_object->last_updated_by );		
+	protected function special_entity_value_hook ( &$wic_access_object ) { 
+			$time_stamp = $wic_access_object->db_get_time_stamp( $this->data_object_array['ID']->get_value() );
+			$this->data_object_array['last_updated_time']->set_value( $time_stamp->last_updated_time );
+			$this->data_object_array['last_updated_by']->set_value( $time_stamp->last_updated_by );
 	}
 	
 	public function get_the_title () {
