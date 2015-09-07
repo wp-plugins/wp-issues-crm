@@ -55,6 +55,10 @@ class WIC_Entity_Advanced_Search_Constituent_Having extends WIC_Entity_Multivalu
 		return ( $having_comparison_options );
 	}
 
+	public static function advanced_search_issue_cats() {
+  		return (WIC_Entity_Issue::get_post_category_options());
+	}
+	
 	public static function constituent_having_comparison_sanitizor ( $incoming ) { 
 		return ( WIC_Entity_Advanced_Search_Constituent::constituent_comparison_sanitizor ( $incoming ) );	
 	}	

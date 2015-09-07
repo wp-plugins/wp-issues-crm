@@ -4,7 +4,7 @@ Donate link:
 Tags: contact, crm, constituent, customer, issues, list
 Requires at least: 4.0
 Tested up to: 4.3
-Stable tag: 2.2.72
+Stable tag: 2.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -73,7 +73,7 @@ like incoming emails.
 == WP Issues CRM Upload Facility ==
 WP Issues CRM now includes a flexible upload subsystem. The upload subsystem is designed to handle large uploads as in an initial setup and also
 to support frequent smaller uploads to reduce manual data entry.
-= Upload Features =
+== Upload Features ==
 * Handles common file .csv and txt file formats
 * Learns your the field mappings for your repetitive file uploads
 * Validates data transparently so that you can fix problems as they emerge
@@ -83,6 +83,9 @@ attended signed a petition related to an issue
 * Automatically breaks every task and the final upload process into chunks to minimize memory and packet sizes and avoid exceeding system limits
 * Allows you to download files documenting the results of your upload to allow, for example, the manual completion of records that failed in the upload
 * Allows you to automatically backout some types of uploads
+== Advanced Search ==
+* Includes user friendly search screens for constituents and issues retrieval and update
+* Includes powerful general search facility for selecting group with complex definitions
 == WP Issues CRM Manage Storage Facility ==
 WP Issue CRM now includes a facility to show storage usage and to selectively purge interim files and dated external data.  So, for example, suppose you 
 initially uploaded your database from a voter list.  Over time, you added information about contacts with voters.  You could then easily purge all voters with 

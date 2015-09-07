@@ -171,7 +171,7 @@ class WIC_List_Constituent_Export {
 		switch ( $download_type ) {
 			case 'emails':		
 				$download_sql =" 
-					SELECT  first_name as fn, last_name as ln,  
+					SELECT  first_name, last_name,  
 						email_type, email_address, 
 						max( city ) as city $custom_fields_string , i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
@@ -182,7 +182,7 @@ class WIC_List_Constituent_Export {
 				break;
 			case 'phones':		
 				$download_sql =" 
-					SELECT  first_name as fn, last_name as ln,  
+					SELECT  first_name, last_name,  
 						phone_type, phone_number, extension, 
 						max( city ) as city $custom_fields_string , i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
@@ -193,10 +193,10 @@ class WIC_List_Constituent_Export {
 				break;
 			case 'addresses':		
 				$download_sql =" 
-					SELECT  first_name as fn, last_name as ln,  
+					SELECT  first_name, last_name,  
 						address_type, 
-						address_line as address_line_1,
-						concat ( city, ', ', state, ' ',  zip ) as address_line_2,
+						address_line as wic_address_line_1,
+						concat ( city, ', ', state, ' ',  zip ) as wic_address_line_2,
 						city, state, zip $custom_fields_string , i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
 					inner join $address a on a.constituent_id = c.ID	
@@ -205,12 +205,12 @@ class WIC_List_Constituent_Export {
 				break;		
 			case 'type0':
 				$download_sql = " 		
-					SELECT  first_name as fn, last_name as ln,  
+					SELECT  first_name, last_name,  
 						city, 
 						email_address, 
 						phone_number,
-						address_line as address_line_1,
-						concat ( city, ', ', state, ' ',  zip ) as address_line_2,
+						address_line as wic_address_line_1,
+						concat ( city, ', ', state, ' ',  zip ) as wic_address_line_2,
 						state, zip $custom_fields_string , i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
 					left join $email e on e.constituent_id = c.ID
@@ -223,12 +223,15 @@ class WIC_List_Constituent_Export {
 				break;
 			case 'dump':
 				$download_sql = " 		
-					SELECT  first_name as fn, last_name as ln,  
+					SELECT  first_name, last_name, middle_name,  
 						email_address, 
 						phone_number,
 						address_line,
 						city, state, zip,
-						c.* , i.*
+						date_of_birth, is_deceased, mark_deleted, 
+						case_assigned, case_review_date, case_status, 
+						gender, c.last_updated_time, c.last_updated_by $custom_fields_string ,
+						i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
 					left join $email e on e.constituent_id = c.ID
 					left join $phone p on p.constituent_id = c.ID

@@ -7,6 +7,7 @@ var wicFinancialCodesArray;
 var wicUseActivityIssueAutocomplete = false;
 var wicUseNameAndAddressAutocomplete = false;
 var wicStandardInputBorder;
+var wicStandardCompareSet;
 
 jQuery(document).ready(function($) {
 
@@ -282,6 +283,9 @@ function changeActivityIssueButtonDestination() {
 *
 */
 jQuery(document).ready(function($) {
+	
+	// pick up like option set for restore on value change
+	wicStandardCompareSet = $( "#advanced_search_constituent\\[row-template\\]\\[constituent_comparison\\]" ).html();
 	/*
 	* manage display of correct options for  fields in advanced search
 	*/
@@ -294,6 +298,7 @@ jQuery(document).ready(function($) {
 	$( ".wic-multivalue-block.advanced_search_constituent" ).each( function () {
 		wicSwapInAppropriateFields( this, true );  // true preserve field values
 	});
+
 	
 	// set up delegated event listener for changes to activity field 
  	$( "#wic-control-advanced-search-activity" ).on( "change", ".activity-field", function ( event ) {
@@ -305,6 +310,13 @@ jQuery(document).ready(function($) {
 		wicSwapInActivityAppropriateFields( this, true );  // true preserve field values
 	});
 
+	// set up delegated event listener for changes to activity comparison field (decide what version of issue field to show) 
+ 	$( "#wic-control-advanced-search-activity" ).on( "change", ".activity-comparison", function ( event ) { 
+ 		var changedBlock = $( this ).parents( ".wic-multivalue-block.advanced_search_activity" )[0];
+ 		wicSwapInIssueAppropriateFields( changedBlock ); // never preserves values 
+ 	});  	// note that this does not need to be initialized because generate appropriate issue field on server side  
+
+ 	
 	// set up delegated event listener for changes to constituent having field 
  	$( "#wic-control-advanced-search-constituent-having" ).on( "change", ".constituent-having-field", function ( event ) {
  		var changedBlock = $( this ).parents( ".wic-multivalue-block.advanced_search_constituent_having" )[0];
@@ -315,25 +327,13 @@ jQuery(document).ready(function($) {
 		wicSwapInHavingAppropriateFields( this, true );  // true preserve field values
 	});
 	
-	// set up delegated event listener for change to constituent having aggregator 
+	// set up delegated event listener for change to constituent having aggregator (also gets called through change fields)
  	$( "#wic-control-advanced-search-constituent-having" ).on( "change", ".constituent-having-aggregator", function ( event ) {
  		var changedBlock = $( this ).parents( ".wic-multivalue-block.advanced_search_constituent_having" )[0];
  		wicReconcileHavingAggregateWithField( changedBlock );
  	});
-
-	// set up delegated event listener for changes to activity comparison field 
- 	$( "#wic-control-advanced-search-activity" ).on( "change", ".activity-comparison", function ( event ) { 
- 		var changedBlock = $( this ).parents( ".wic-multivalue-block.advanced_search_activity" )[0];
- 		wicSwapInIssueAppropriateFields( changedBlock ); // never preserves values 
- 	});  
- 	// note that this does not need to be initialized because generate appropriate issue field on server side
  	
- 	// remove unused options for having comparison value -- do only on initialization and include template
- 	$( ".wic-multivalue-block.advanced_search_constituent_having" ).each( function() { 
- 		wicPrepareConstituentHavingFields( this );
- 	}); 		
 
-	
 	// manage display of combination options in advanced search -- show only if multiple selected
 	wicShowHideAdvancedSearchCombiners(); // initialize
 	// set up delegated event listener for changes to constituent block
@@ -345,7 +345,7 @@ jQuery(document).ready(function($) {
  	$( "#activity_or_constituent" ).on( "change", function ( event ) {
 			wicShowHideHavingClauses();
  	});
- 		
+			
 }); // document ready
 
 /*
@@ -407,7 +407,7 @@ function wicSwapInIssueAppropriateFields( activityFieldMultivalueBlock ) {
 }
 function wicSwapInHavingAppropriateFields( constituentHavingFieldMultivalueBlock, preserveFieldValues ) {
  	var newValue = jQuery( constituentHavingFieldMultivalueBlock ).find( ".wic-input.constituent-having-field :selected").val();
-	valueFieldID = jQuery( constituentHavingFieldMultivalueBlock ).find( ".wic-input.constituent-having-value, .wic_multi_select" ).attr("id");
+	valueFieldID = jQuery( constituentHavingFieldMultivalueBlock ).find( ".wic-input.constituent-having-value" ).attr("id");
 	wicAdvancedSearchReplaceControl( constituentHavingFieldMultivalueBlock, valueFieldID, newValue, "constituent-having-value", preserveFieldValues );
 }
 
@@ -454,6 +454,7 @@ function wicAdvancedSearchReplaceControl( fieldMultivalueBlock, valueFieldID, ne
 			});
 			newControlObject.addClass( " issue " );
 		}
+
 		// preserve values on init (constituent-field input to whatever) and on all input to input changes
 		if ( preserveFieldValues || ( oldControlObject.is("input") && newControlObject.is("input") ) ) { 
 			if ( newControlObject.hasClass('wic-input-checked') ) { 
@@ -461,6 +462,13 @@ function wicAdvancedSearchReplaceControl( fieldMultivalueBlock, valueFieldID, ne
 					newControlObject.prop( 'checked', true );					
 				}
 			} else {
+				// select option searched for may not be in current select list; add it to preserve integrity of search
+				if ( newControlObject.is("select") ) {
+					var findString = "option[value=\'" + oldValue + "\']";
+					if ( 0 == newControlObject.find( findString ).length ) {
+						jQuery('<option/>').attr('value',oldValue).text('added working').appendTo( newControlObject );
+					}
+				} 
 				newControlObject.val( oldValue );
 			}
 		} 
@@ -472,7 +480,7 @@ function wicAdvancedSearchReplaceControl( fieldMultivalueBlock, valueFieldID, ne
 		} else {		
 			oldControlObject.replaceWith ( newControl );  
 		}
-		
+		newControlObject.val( oldValue );
 		// add date picker if appropriate
 		if ( newControlObject.hasClass( "datepicker" ) ) {
 			newControlObject.datepicker({
@@ -520,20 +528,23 @@ function wicAdvancedSearchReplaceControl( fieldMultivalueBlock, valueFieldID, ne
 			}
 
 			// managing options, start with show all, then hide as appropriate
-			compareFieldObject.find( "option").show()
+			var saveCompareValue = compareFieldObject.val();
+			compareFieldObject.html( wicStandardCompareSet );
 			// reset comparison after field change unless redo
 			if ( ! preserveFieldValues ) { 
 				compareFieldObject.val("=");
+			} else {
+				compareFieldObject.val( saveCompareValue );
 			}
 			// for constituents, always hide issue only comparison options 
-			compareFieldObject.find( "option[value^='cat']" ).hide();			
+			compareFieldObject.find( "option[value^='cat']" ).remove();			
 
 			// for last updated time fields limit options
 			// for other date fields, leave all possibilities
 			if (  newControlObject.hasClass( "last-updated-time" ) ) {
-				compareFieldObject.find( nonQuantitativeOptionString ).hide(); 			
+				compareFieldObject.find( nonQuantitativeOptionString ).remove(); 			
 			}	else if ( newControlObject.is( "select" ) ) {
-				compareFieldObject.find( nonSelectOptionString ).hide(); 			
+				compareFieldObject.find( nonSelectOptionString ).remove(); 			
 			}
 		// same sequence as above activity row if swapped an activity field
 		} else if ( 'activity-value' == newFieldClass ) { 
@@ -561,30 +572,37 @@ function wicAdvancedSearchReplaceControl( fieldMultivalueBlock, valueFieldID, ne
 			}	
 			
 			// now do comparison options -- as above, start with show all
-			compareFieldObject.find( "option").show();
+			// compareFieldObject.find( "option").show();
+			var saveCompareValue = compareFieldObject.val();
+			compareFieldObject.html( wicStandardCompareSet );
 			// amounts and dates, only show ordinal comparisons
 			// note that activity_date is required, so blank/non-blank/null are irrelevant
 			if ( newControlObject.hasClass( "activity-amount") || newControlObject.hasClass( "activity-date") || newControlObject.hasClass( "last-updated-time")) { 
-				compareFieldObject.find( nonQuantitativeOptionString ).hide();
-				compareFieldObject.find( "option[value^='cat']" ).hide(); 			
+				compareFieldObject.find( nonQuantitativeOptionString ).remove();
+				compareFieldObject.find( "option[value^='cat']" ).remove(); 			
 			} else if ( newControlObject.is ( "select" ) || newControlObject.is ( "div" )  ) {
 				if ( newControlObject.hasClass( "issue") ) {  
-					compareFieldObject.find( nonSelectOptionString ).hide();
-					compareFieldObject.find( nonQuantitativeOptionString ).hide();
+					compareFieldObject.find( nonSelectOptionString ).remove();
+					compareFieldObject.find( nonQuantitativeOptionString ).remove();
 				} else {	
-					compareFieldObject.find( nonSelectOptionString ).hide();
-					compareFieldObject.find( "option[value^='cat']" ).hide();
+					compareFieldObject.find( nonSelectOptionString ).remove();
+					compareFieldObject.find( "option[value^='cat']" ).remove();
 				} 			
+			} else if ( newControlObject.hasClass( "activity-note") ) {
+					compareFieldObject.find( "option[value^='cat']" ).remove();			
 			}	
 			// reset comparison after field change unless was to a multiselect or on redo search
 			if ( ! newControlObject.is ( "div" ) && ! keptOldMultiSelect && ! preserveFieldValues ) {
 				compareFieldObject.val("=");
+			} else {
+				compareFieldObject.val( saveCompareValue );
 			}
 		} else if ( 'constituent-having-value' == newFieldClass ) {
 			// no special rules for constituent-having row -- no type selection, no fields other than from dictionary, no variation in comparison values
 			// except -- datepicker vs count
 			wicReconcileHavingAggregateWithField( fieldMultivalueBlock ); 
 		}
+
    });
 
 }
@@ -597,6 +615,7 @@ function wicShowHideAdvancedSearchCombiners() {
 		jQuery( "#wic-control-constituent-and-or" ).children().show();
 	} else {
 		jQuery( "#wic-control-constituent-and-or" ).children().hide();
+		jQuery( "#constituent_and_or" ).val("and");
 	}
 	
 	// combinations of activity conditions
@@ -604,6 +623,7 @@ function wicShowHideAdvancedSearchCombiners() {
 		jQuery( "#wic-control-activity-and-or" ).children().show();
 	} else {
 		jQuery( "#wic-control-activity-and-or" ).children().hide();
+		jQuery( "#activity_and_or" ).val("and");
 	}
 
 	// combinations of constituent_having conditions
@@ -611,6 +631,7 @@ function wicShowHideAdvancedSearchCombiners() {
 		jQuery( "#wic-control-constituent-having-and-or" ).children().show();
 	} else {
 		jQuery( "#wic-control-constituent-having-and-or" ).children().hide();
+		jQuery( "#constituent_having_and_or" ).val("and");
 	}
 
 	// combinations of activity and constituent conditions
@@ -619,23 +640,11 @@ function wicShowHideAdvancedSearchCombiners() {
 		jQuery( "#wic-control-activity-and-or-constituent" ).children().show();
 	} else {
 		jQuery( "#wic-control-activity-and-or-constituent" ).children().hide();
+		jQuery( "#activity_and_or_constituent" ).val("and");
 	}
 
 }
 
-function wicPrepareConstituentHavingFields( havingBlock ) { 
-/*	
-	var havingBlockObject = jQuery( havingBlock ); 
-	// trim field options
-	var removeString = "option[value$=\'BLANK\'], option[value=\'IS_NULL\'], option[value=\'LIKE\'], option[value=\'SCAN\'], option[value^='cat']"
-	havingBlockObject.find( ".constituent_having_field" ).find ( ) 
-
-
-	// trim comparison options
-	removeString = "option[value$=\'BLANK\'], option[value=\'IS_NULL\'], option[value=\'LIKE\'], option[value=\'SCAN\'], option[value^='cat']"
-	havingBlockObject.find( ".constituent-having-comparison" ).find( removeString ).remove();
-*/
-}
 
 function wicShowHideHavingClauses() { 
 	// only show having block if have chosen constituent as search mode

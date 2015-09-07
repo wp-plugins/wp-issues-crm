@@ -76,6 +76,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 		$constituent_values = array();
 		$having_values = array();
 		$additional_select_terms = '';
+		$additional_select_terms_values = array();
 		$join = ' ' .	$wpdb->prefix . 'wic_constituent constituent LEFT JOIN ' . 
 							$wpdb->prefix . 'wic_activity activity on activity.constituent_id = constituent.id ';
 
@@ -99,9 +100,10 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 			$type			= ''; // may not be 
 			$value 		= '';	// may not be 
 			$aggregator	= ''; // may not be 
-			
+			$having_cat = ''; // may not be  
+
 			$row_type = substr( $query_clause_row[0]['table'], 16 );
-			foreach ( $query_clause_row as $query_clause_item ) {
+			foreach ( $query_clause_row as $query_clause_item ) { 
 				if ( $row_type . '_field' == $query_clause_item['key'] ) {
 					$field = $wic_db_dictionary->get_field_rules_by_id( $query_clause_item['value'] );
 					$field_name		= $field['field_slug'];
@@ -114,7 +116,9 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 					$type =  $query_clause_item['value']; 
 				} elseif ( $row_type . '_aggregator' == $query_clause_item['key']  ) { 
 					$aggregator =  $query_clause_item['value']; 
-				}										
+				} elseif ( $row_type . '_issue_cat' == $query_clause_item['key']  ) { 
+					$having_cat =  $query_clause_item['value'];
+				}															
 			}
 			
 			// accumulate subsidiary tables		
@@ -151,6 +155,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 				default:					
 					// no action -- $value = $value				
 			} 
+
 		
 			// special handling for blank compare operators
 			if ( 'BLANK' == $compare || 'NOT_BLANK' == $compare ) {
@@ -222,17 +227,30 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 				}
 				$constituent_where_count++;		
 			} elseif ( 'constituent_having' == $row_type && 'constituent' == $activity_or_constituent ) { 
+				$issue_string = '';
+				$type_string = '';
+				$if_condition = '';
 				$having_connecter = $having_count > 0 ? $constituent_having_and_or : ( strpos ( $constituent_having_and_or, 'NOT' ) > 0 ? 'NOT' : '' );
+				// set up issue cat string
+				if ( count( $having_cat ) > 0 ) { 
+					$issue_string = ' activity.issue IN ' . $this->get_issue_list_from_category ( 'cat' , $having_cat );				
+				} 
+				// set up type string
 				if ( '' < $type ) {
-						$having .= " $having_connecter $aggregator" . "(if(activity.activity_type = %s, activity.$field_name, NULL )) $compare %s ";
-						$additional_select_terms = ", $aggregator" . "(if(activity.activity_type = %s, activity.$field_name, NULL )) as " . $aggregator . '_' . $field_name; 
-						$having_values[]	= $type;
-						$having_values[] 	= $value;	
-				} else {
-						$having .= " $having_connecter $aggregator" . "(activity.$field_name) " . $compare . " %s  ";
-						$additional_select_terms = ", $aggregator" . "(activity.$field_name) as " . $aggregator . '_' . $field_name; 
-						$having_values[] 	= $value;	
-				}	
+					$type_string =  ' activity.activity_type = %s ';
+					$having_values[] = $type;
+					$additional_select_terms_values[] = $type;	
+				} 
+				// combine strings to make if condition
+				if ( $type_string > '' && $issue_string > '' ) {
+					$if_condition = $type_string . ' AND ' . $issue_string . ' AND ';
+				} elseif ( $type_string > '' || $issue_string > '' ) {
+					$if_condition = $type_string . $issue_string . ' AND ';  // at least one of which is blank				
+				} 
+				// combine strings to make having condition
+				$having .= " $having_connecter $aggregator" . "(if($if_condition  1=1, activity.$field_name, NULL )) $compare %s ";
+				$having_values[] = $value;
+				$additional_select_terms .= ", $aggregator" . "(if($if_condition  1=1, activity.$field_name, NULL )) as " . $aggregator . '_' . $field_name;
 				$having_count++;
 			} else {
 				WIC_Function_Utilities::wic_error ( sprintf( 'Row type not properly set in advanced search.  Row type is:',  $row_type  ), __FILE__, __LINE__, __METHOD__, true );
@@ -271,7 +289,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 		
 
 		// merge prepare values (note that start with digit 1 so will always be non-empty use in where 1=1)
-		$values = array_merge ( array(1), $activity_values, $constituent_values, $having_values );
+		$values = array_merge ( $additional_select_terms_values, array(1), $activity_values, $constituent_values, $having_values );
 		
 		$group_by = 'GROUP BY ' . 	$activity_or_constituent . '.ID ';
 
@@ -299,7 +317,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 			}			
 		
 		} else {
-
+			
 			// do search
 			$this->result = $wpdb->get_results ( $sql );
 		 	$this->showing_count = count ( $this->result );

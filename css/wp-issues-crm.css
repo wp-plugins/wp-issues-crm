@@ -784,8 +784,8 @@ select.wic-input.state.constituent-value,
 .wic-input.last-updated-by.activity-value,
 #wic-form-advanced-search .issue-autocomplete,
 #wic-form-advanced-search-again .issue-autocomplete,
-.wic_multi_select.activity-value.issue,
-.wic-input.constituent-having-value
+#wic-form-advanced-search .wic_multi_select.activity-value.issue,
+#wic-form-advanced-search-again .wic_multi_select.activity-value.issue
 {
 	width: 37%;
 }
@@ -796,6 +796,15 @@ textarea.wic-input.activity-note.activity-value {
 	vertical-align: top; 
 }
 
+#wic-form-advanced-search .wic_multi_select,
+#wic-form-advanced-search-again .wic_multi_select {
+	width: 21.25%;
+	margin-right: 1.25%;
+	margin-bottom: 5px;
+}
+
+#wic-form-advanced-search .wic_multi_select,
+#wic-form-advanced-search-again .wic_multi_select,
 .wic_multi_select.activity-value.issue {
 	border: .9166667px solid #ddd;
 	padding: 0 5px;
@@ -803,6 +812,12 @@ textarea.wic-input.activity-note.activity-value {
 	vertical-align: top; 
 }
 
+.wic-input.constituent-having-value {
+	width: 14.50%
+}
+
+#wic-form-advanced-search .wic_multi_select:hover,
+#wic-form-advanced-search-again .wic_multi_select:hover,
 .wic_multi_select.activity-value.issue:hover {
 	border-color: #5b9dd9 
 }
@@ -1740,7 +1755,7 @@ li.pl-search_log-serialized_search_parameters {
 
 /* dislpayed widths set to match button widths scaled by .964444 */
 .pl-search_log-search_time{ width:18.33333%;}
-.pl-search_log-serialized_search_array{ width:29.493%;}
+.pl-search_log-serialized_search_array{ width:44.233%;}
 .pl-search_log-download_time{ width:14.74%;}
 .pl-search_log-result_count { width: 14.74%}
 

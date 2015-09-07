@@ -45,5 +45,17 @@ class WIC_Entity_Advanced_Search_Activity extends WIC_Entity_Multivalue {
 		return $new_update_row;
 	}	
 	
+	// move title to autocomplete field if the current field is issue
+	// in main.js take care to add the option to the issue drop down if not already there, so both are in synch
+	//   -- a general problem of set val to select in main.js swapping of select fields
+	protected function do_field_interaction_rules(){ 
+		global $wic_db_dictionary;
+		$current_field_id	= $this->data_object_array['activity_field']->get_value();
+		$current_field 	= $wic_db_dictionary->get_field_rules_by_id( $current_field_id  );
+		if ( 'issue' == $current_field['field_slug']) {
+			$issue_id = $this->data_object_array['activity_value']->get_value();
+			$this->data_object_array['issue_autocomplete']->set_value( get_the_title( $issue_id ) );
+		}	
+	}
 
 }

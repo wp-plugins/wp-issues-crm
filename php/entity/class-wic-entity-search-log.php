@@ -44,8 +44,12 @@ class WIC_Entity_Search_Log extends WIC_Entity_Parent {
 	public function id_search_execute( $args ) {
 		$search = $this->id_retrieval( $args );
 		$class_name = 'WIC_Entity_'. $search['entity'];
-		$search['show_form'] = true;
-		${ $class_name } = new $class_name ( 'redo_search_from_query', $search  ) ;		
+		if ( $search['result_count'] > 1 ) {
+			$search['show_form'] = true;
+			${ $class_name } = new $class_name ( 'redo_search_from_query', $search  ) ;
+		} else {
+			${ $class_name } = new $class_name ( 'redo_search_form_from_query', $search ) ;		
+		}		
 	}	
 	
 	// request handler for back to search button -- brings back to filled search form, but does not reexecute the query
@@ -65,6 +69,7 @@ class WIC_Entity_Search_Log extends WIC_Entity_Parent {
 			'entity' => $wic_query->result[0]->entity, 
 			'unserialized_search_array' => unserialize( $wic_query->result[0]->serialized_search_array ),
 			'unserialized_search_parameters' => unserialize( $wic_query->result[0]->serialized_search_parameters ),
+			'result_count' =>$wic_query->result[0]->result_count
 			) 
 		);
 	}	
@@ -115,7 +120,9 @@ class WIC_Entity_Search_Log extends WIC_Entity_Parent {
 					} elseif ( $row_type . '_type' == $clause_component['key']  ) { 
 						$new_clause['type'] =  $clause_component['value']; 
 					} elseif ( $row_type . '_aggregator' == $clause_component['key']  ) { 
-						$new_clause['aggregator'] =  $clause_component['value']; 
+						$new_clause['aggregator'] =  $clause_component['value'];
+					} elseif ( $row_type . '_issue_cat' == $clause_component['key']  ) { 
+						$new_clause['issue_cat'] =  $clause_component['value']; 
 					}										
 				}
 				$unpacked_search_array_terms[] = $new_clause;			
@@ -133,7 +140,7 @@ class WIC_Entity_Search_Log extends WIC_Entity_Parent {
 				$show_item = true; 
 
 				// look up categories if any for post_category ( from either regular or advanced search format array )			
-				if ( 'post_category' == $search_clause['key'] || strpos( $search_clause['compare'], 'cat' ) > -1 ) { 
+				if ( 'post_category' == $search_clause['key'] || strpos( $search_clause['compare'], 'cat' ) > -1  ) { 
 					if ( 0 < count ( $value ) ) {
 						$value_string = '';
 						foreach ( $value as $key => $selected ) {
@@ -153,6 +160,21 @@ class WIC_Entity_Search_Log extends WIC_Entity_Parent {
 						$value = ( $label > '' ) ? $label : $value;
 					}
 				}
+			
+				// unpack advanced search having cats
+				$cat_string = ''; 
+				$count_cats = 0;
+				if ( isset ( $search_clause['issue_cat'] ) ) {
+					if ( count( $search_clause['issue_cat'] )  > 0 ) {
+						foreach ( $search_clause['issue_cat'] as $cat => $selected ) {
+							$cats_comma = $count_cats > 0 ? ', ' : '';
+							$cat_string .= get_the_category_by_ID ($cat );
+							$count_cats++;						
+						}
+						$cat_string = ' cat(s) ' . $cat_string . ' '; 	
+					}
+				}							
+			
 				
 				if ( $show_item )	{	
 					if ( 'ID' == $search_clause['key']  ) { // only accessible for issues and constituents and overrides all other criteria
@@ -163,8 +185,9 @@ class WIC_Entity_Search_Log extends WIC_Entity_Parent {
 						}					
 					} else {  		
 						$search_phrase .= ( 'advanced_search' == $search_clause['table'] ? '' : $search_clause['table'] . ': ' ). 
-							( isset ( $search_clause['type'] )  		? ' of type ' . $search_clause['type'] . ' ' : '' ) .
 							( isset ( $search_clause['aggregator'] ) 	? ' ' . $search_clause['aggregator'] . ' of ' : '' ) .
+							( isset ( $search_clause['type'] )  		? ' type ' . $search_clause['type'] . ' ' : '' ) .
+							$cat_string .
 							$search_clause['key'] . ' ' . 
 							$search_clause['compare'] . ' ' . 
 							esc_html( $value ) . '<br />';
