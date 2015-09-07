@@ -160,7 +160,7 @@ class WIC_List_Constituent_Export {
 		$custom_fields_string = '';
 		if ( count ( $custom_fields ) > 0 ) {
 			foreach ( $custom_fields as $field => $match_array ) {
-				$custom_fields_string .= ', ' . $field . ' as `' . $match_array['label'] . '` ';			
+				$custom_fields_string .= ', ' . $field . ' as `' . $match_array['label'] . ' -- ' . $field . '` ';			
 			}
 	 		
 		}

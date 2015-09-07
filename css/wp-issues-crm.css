@@ -667,9 +667,40 @@ ul#constituent-comment-list {
 }
 
 #wic-form-advanced-search #wic-form-sidebar-groups,
-#wic-form-advanced-search-again #wic-form-sidebar-groups {
+#wic-form-advanced-search-again #wic-form-sidebar-groups,
+#wic-form-advanced-search #wic-field-group-search_parms .wic-form-field-group-legend,
+#wic-form-advanced-search-again #wic-field-group-search_parms .wic-form-field-group-legend,
+#wic-field-group-search_definition .wic-form-field-group-legend,
+#wic-field-group-search_constituent .wic-form-field-group-legend,
+#wic-field-group-search_activity .wic-form-field-group-legend {
 	display: none;
 }
+
+#wic-form-advanced-search .wic-multivalue-block 
+#wic-form-advanced-search-again .wic-multivalue-block {
+	margin-bottom: 0;
+}
+
+
+#wic-inner-field-group-search_constituent_having p.wic-form-field-group-legend,
+.wic-multivalue-block.advanced_search_constituent,
+#wic-control-advanced-search-constituent,
+.wic-multivalue-block.advanced_search_activity,
+#wic-control-advanced-search-activity,
+.wic-multivalue-block.advanced_search_constituent_having,
+#wic-control-advanced-search-constituent-having  {
+	margin-bottom: 0;
+}
+
+#wic-inner-field-group-search_constituent-toggle-button, 
+#wic-inner-field-group-search_activity-toggle-button,
+#wic-inner-field-group-search_constituent_having-toggle-button,
+#wic-form-advanced-search #wic-inner-field-group-search_parms-toggle-button,
+#wic-form-advanced-search-again #wic-inner-field-group-search_parms-toggle-button {
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
 
 #wic-form-advanced-search label.wic-label, 
 #wic-form-advanced-search-again label.wic-label {
@@ -677,10 +708,36 @@ ul#constituent-comment-list {
 	margin-right: 0.88888%;
 }
 
-#activity_and_or_constituent,
+#wic-form-advanced-search .wic-multivalue-control-set, 
+#wic-form-advanced-search-again .wic-multivalue-control-set {
+	width: 92.88888%;
+	margin-left: 0;
+	margin-right: 0;
+} 
+ 
+#wic-form-advanced-search .wic-input-deleted-label, 
+#wic-form-advanced-search-again .wic-input-deleted-label {
+	margin-right: 3%;
+}
+
+#wic-form-advanced-search #retrieve_limit,
+#activity_or_constituent {
+	width: 13.33333%
+}
+
+#activity_and_or_constituent {
+	width: calc(36.46% + 20px);
+}
+
 #constituent_and_or,
 #activity_and_or,
-#constituent_having_and_or,
+#constituent_having_and_or {
+	margin-left: 11%;
+	margin-left: calc(9.897% + 20px);
+	width: 23.222%;
+}
+
+#activity_and_or_constituent,
 #wic-form-advanced-search-again #wic-form-main-groups .field-group-show-hide-button,
 #wic-form-advanced-search-again #wic-form-main-groups .wic-form-field-group-legend, 
 #wic-form-advanced-search #wic-form-main-groups .field-group-show-hide-button,
@@ -688,24 +745,108 @@ ul#constituent-comment-list {
 	margin-left: 7.1%
 }
 
-#wic-form-advanced-search select.wic-input.constituent-field,
-#wic-form-advanced-search-again select.wic-input.constituent-field,
-#wic-form-advanced-search select.wic-input.activity-field, 
-#wic-form-advanced-search-again select.wic-input.activity-field {
+.wic-input.constituent-field,
+.wic-input.activity-field {
 	width: 25%
 }
 
-#wic-form-advanced-search select.wic-input.constituent-comparison,
-#wic-form-advanced-search select.wic-input.activity-comparison,
-#wic-form-advanced-search-again select.wic-input.constituent-comparison,
-#wic-form-advanced-search-again select.wic-input.activity-comparison {
-	width: 22%;
+.wic-input.constituent-having-aggregator {
+	width: 7.111%;
 }
 
-#wic-form-advanced-search select.wic-input.constituent-entity-type,
+.wic-input.constituent-having-field {
+	width: 16.65%
+}
+
+.wic-input.constituent-comparison,
+.wic-input.activity-comparison,
+.wic-input.constituent-having-comparison {
+	width: 10%;
+}
+
+.wic-input.constituent-value,
+select.wic-input.last-updated-by.constituent-value,
+.wic-input.last-updated-time.constituent-value,
+.wic-input.zip.constituent-value,
+.wic-input.city.constituent-value,
+select.wic-input.state.constituent-value,
+.wic-input.address-line.constituent-value,
+.wic-input.email-address.constituent-value,
+.wic-input.extension.constituent-value,
+.wic-input.phone-number.constituent-value,
+.wic-input.city.constituent-value,
+.wic-input.activity-value,
+.wic-input.activity-date.activity-value,
+.wic-input.activity-amount.activity-value,
+.wic-input.activity-note.activity-value,
+.wic-input.pro-con.activity-value,
+.wic-input.last-updated-time.activity-value,
+.wic-input.last-updated-by.activity-value,
+#wic-form-advanced-search .issue-autocomplete,
+#wic-form-advanced-search-again .issue-autocomplete,
+.wic_multi_select.activity-value.issue,
+.wic-input.constituent-having-value
+{
+	width: 37%;
+}
+
+textarea.wic-input.activity-note.activity-value {
+	height: 28px;
+	padding: 3px 5px 0 5px;
+	vertical-align: top; 
+}
+
+.wic_multi_select.activity-value.issue {
+	border: .9166667px solid #ddd;
+	padding: 0 5px;
+	max-height: 100px;
+	vertical-align: top; 
+}
+
+.wic_multi_select.activity-value.issue:hover {
+	border-color: #5b9dd9 
+}
+
+
+.wic-input.date-of-birth.constituent-value,
+.wic-input.is-deceased.constituent-value,
+.wic-input.gender.constituent-value,
+.wic-input.ID.constituent-value,
+.wic-input.last-name.constituent-value,
+.wic-input.mark-deleted.constituent-value,
+.wic-input.middle-name.constituent-value,
+.wic-input.first-name.constituent-value,
+.wic-input.custom-field-001.constituent-value,
+.wic-input.custom-field-002.constituent-value,
+.wic-input.custom-field-003.constituent-value,
+.wic-input.custom-field-004.constituent-value,
+.wic-input.custom-field-005.constituent-value,
+.wic-input.custom-field-006.constituent-value,
+.wic-input.custom-field-007.constituent-value,
+.wic-input.custom-field-008.constituent-value,
+.wic-input.custom-field-009.constituent-value,
+.wic-input.custom-field-010.constituent-value,
+.wic-input.custom-field-011.constituent-value,
+.wic-input.custom-field-012.constituent-value,
+.wic-input.custom-field-013.constituent-value,
+.wic-input.custom-field-014.constituent-value,
+.wic-input.custom-field-015.constituent-value,
+.wic-input.custom-field-016.constituent-value,
+.wic-input.custom-field-017.constituent-value,
+.wic-input.case-review-date.constituent-value,
+.wic-input.case-assigned.constituent-value,
+.wic-input.case-status.constituent-value
+{
+	width: 48.25%;
+}
+
+
+
+
+.wic-input.constituent-entity-type,
 #wic-form-advanced-search select.wic-input.activity-type,
-#wic-form-advanced-search-again select.wic-input.constituent-entity-type,
-#wic-form-advanced-search-again select.wic-input.activity-type {
+#wic-form-advanced-search-again select.wic-input.activity-type,
+.wic-input.constituent-having-type {
 	width: 10%
 }
 
@@ -1789,7 +1930,7 @@ td.wic-statistic  {
 		overflow-y: visible;
 		overflow-x: visible;
 		margin: 0;
-		padding: 0 0.5%;
+		padding: 0;
 		width: 100%; 
 	}
 	
@@ -2131,6 +2272,21 @@ td.wic-statistic  {
 
 	#wp-issues-crm-full-screen {
 		display: none;	
+	}
+
+	/*
+	* Advanced search styling
+	*/
+	label.wic-label.activity-or-constituent{
+		display: inline-block;	
+	}	
+	
+	#constituent_and_or,
+	#activity_and_or,
+	#constituent_having_and_or {
+		margin-left: 11%;
+		margin-left: calc(2.786% + 20px);
+		width: 23.222%;
 	}
 
 }

@@ -142,6 +142,9 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 				case 'category__in':
 				case 'category__and':
 				case 'category__not_in':
+					if ( ! is_array ( $value ) ) {
+						continue(2);// jump out of the switch and query clause where loop -- do nothing with blank category selections					
+					}
 					$value = $this->get_issue_list_from_category ( $compare, $value );
 					$compare = 'IN'; ;// develop in string logic
 					$break;
