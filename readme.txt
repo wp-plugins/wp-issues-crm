@@ -3,8 +3,8 @@ Contributors: Will Brownsberger
 Donate link: 
 Tags: contact, crm, constituent, customer, issues, list
 Requires at least: 4.0
-Tested up to: 4.3
-Stable tag: 2.3
+Tested up to: 4.3.1
+Stable tag: 2.3.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -97,6 +97,10 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 
 == Changelog ==
+= 2.3.1 =
+* Bug fix -- changes for advanced search affected upload function for select fields -- 
+in WIC_Control_Select::create_options_array, should get option_group from dictionary 
+if not set as a control argument
 = 2.3 =
 * Add major new function to main page -- advanced search
 * Alter activity download to return single rows for each activity for constituents with multiple addresses, emails or phones --
