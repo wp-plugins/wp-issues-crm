@@ -49,7 +49,8 @@ class WIC_Control_Select extends WIC_Control_Parent {
 				
 		$entity_class = 'WIC_Entity_' . $this->field->entity_slug;
 		$function_class = 'WIC_Function_Utilities';
-		$getter = $option_group; // take from control arguments which may be  modified by set options
+		// if available, take from control arguments which may be  modified by set options
+		$getter = isset ( $option_group ) ? $option_group : $this->field->option_group; 
 		// look for option array in a sequence of possible sources
 		$option_array = $wic_db_dictionary->lookup_option_values( $getter );
 		// look first for getter as an option_group value in option values cache
