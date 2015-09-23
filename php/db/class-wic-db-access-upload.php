@@ -254,7 +254,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 
 			// exit on failure
 			if ( false === $result ) {
-				$this->explanation =  __( 'Error loading staging table.', 'wp-issues-crm' );
+				$this->explanation =  sprintf( __( 'Error loading staging table -- try checking for bad input characters in the %1$d rows before row %2$d. ', 'wp-issues-crm' ), $rows_per_packet, $insert_count );
 				return;
 			}
 

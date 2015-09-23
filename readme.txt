@@ -4,7 +4,7 @@ Donate link:
 Tags: contact, crm, constituent, customer, issues, list
 Requires at least: 4.0
 Tested up to: 4.3.1
-Stable tag: 2.3.1
+Stable tag: 2.3.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -97,6 +97,9 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 
 == Changelog ==
+= 2.3.2 =
+* Enhance feedback to user in case of upload with bad characters.
+* Bug fix -- correct sql generation in searches with activity-type as a term
 = 2.3.1 =
 * Bug fix -- changes for advanced search affected upload function for select fields -- 
 in WIC_Control_Select::create_options_array, should get option_group from dictionary 

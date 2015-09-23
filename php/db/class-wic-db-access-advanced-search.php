@@ -213,8 +213,8 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 				} else {
 					if ( 'IS_NULL' != $compare ) {	
 						if ( '' < $type ) {
-							$type = $table . '.' . $table . '_type';
-							$constituent_where 		.= " $constituent_where_connecter ( $type = %s and $field_name $compare %s ) ";
+							$type_name = $table . '.' . $table . '_type';
+							$constituent_where 		.= " $constituent_where_connecter ( $type_name = %s and $field_name $compare %s ) ";
 							$constituent_values[]	= $type;
 							$constituent_values[] 	= $value;
 						} else {
