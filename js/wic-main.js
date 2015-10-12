@@ -414,15 +414,38 @@ function wicSwapInHavingAppropriateFields( constituentHavingFieldMultivalueBlock
 // activate this when aggregator changes -- is also called on field change and startup through the having field swapper via wicAdvancedSearchReplaceControl
 function wicReconcileHavingAggregateWithField( constituentHavingFieldMultivalueBlock) {
 	var currentBlock = constituentHavingFieldMultivalueBlock;
-	aggregatorIsCount = 	( 'COUNT' == jQuery( constituentHavingFieldMultivalueBlock ).find( ".constituent-having-aggregator" ).val() );
-	currentFieldIsDate = ( jQuery( constituentHavingFieldMultivalueBlock ).find( ".constituent-having-field option:selected" ).text().indexOf('date') > -1 );
-	currentValueHasDatepicker = jQuery( constituentHavingFieldMultivalueBlock ).find( ".constituent-having-value" ).hasClass("hasDatepicker");
-	if ( aggregatorIsCount && currentValueHasDatepicker ) {
-		jQuery( constituentHavingFieldMultivalueBlock ).find( ".constituent-having-value" ).datepicker("destroy");
-	} else if ( ! aggregatorIsCount && currentFieldIsDate && ! currentValueHasDatepicker ) {
-		jQuery( constituentHavingFieldMultivalueBlock ).find( ".constituent-having-value" ).datepicker({
-	  			 dateFormat: "yy-mm-dd"
-	  		});	
+	aggregatorIsCount =  ( 'COUNT' == jQuery( constituentHavingFieldMultivalueBlock ).find( ".constituent-having-aggregator" ).val() );
+	currentValueObject = jQuery( constituentHavingFieldMultivalueBlock ).find( ".constituent-having-value" );
+	currentFieldObject = jQuery( constituentHavingFieldMultivalueBlock ).find( ".constituent-having-field" );
+	currentValueHasDatepicker = currentValueObject.hasClass("hasDatepicker");
+	currentValueID = currentValueObject.attr("id");
+	currentValueValue = currentValueObject.val();
+
+	if ( aggregatorIsCount ) {
+		// hide field selector but leave in place for spacing
+		currentFieldObject.css( "visibility" , "hidden" ) 
+		// remove date picker if present
+		if ( currentValueHasDatepicker ) {
+			currentValueObject.datepicker("destroy");		
+		}
+		// substitute a count input field for value field -- plain text, with class activity-amount
+		tempCountInput = jQuery.parseHTML ( '<input type = "text" />'); 
+		tempCountInputObject = jQuery ( tempCountInput );
+		tempCountInputObject.attr( "id", currentValueID );
+		tempCountInputObject.attr( "name", currentValueID );
+		tempCountInputObject.attr( "class", "wic-input temporary-count-field constituent-having-value" )
+		tempCountInputObject.attr( "placeholder", "Count" );
+		tempCountInputObject.val( currentValueValue );
+		currentValueObject.replaceWith( tempCountInput );
+	} else {
+		// show field selector
+		currentFieldObject.css( "visibility" , "visible" ) 
+  	 	// no need to add back date picker -- field swap will do this
+	  	// restore value input field consistent with current field selection
+	  	if ( currentValueObject.hasClass( "temporary-count-field" ) ) {  
+	  		// NB: swap function calls reconcile function, test for class temporary-count-field to prevent looping 
+	  		wicSwapInHavingAppropriateFields( constituentHavingFieldMultivalueBlock, false )
+	  	}
 	} 
 }
 

@@ -134,6 +134,7 @@ class WIC_List_Activity extends WIC_List_Parent {
 			$header_message = $header . sprintf ( __( 'Found total of %1$s activities, showing search maximum -- %2$s.', 'wp-issues-crm'),
 				 $wic_query->found_count, $wic_query->showing_count ) . $financial_total; 		
 		}
+		$header_message = WIC_Entity_Advanced_Search::add_blank_rows_message ( $wic_query, $header_message );
 		return $header_message;
 	}
 
