@@ -93,6 +93,7 @@ class WIC_List_Constituent extends WIC_List_Parent {
 			$header_message = $header . sprintf ( __( 'Showing %1$s records -- changing search options may show more records.', 'wp-issues-crm' ),
 				 $wic_query->showing_count );		
 		}
+		$header_message = WIC_Entity_Advanced_Search::add_blank_rows_message ( $wic_query, $header_message ); 
 		return $header_message;
 	}
 

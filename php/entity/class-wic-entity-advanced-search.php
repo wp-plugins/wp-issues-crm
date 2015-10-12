@@ -39,14 +39,6 @@ class WIC_Entity_Advanced_Search extends WIC_Entity_Parent {
 		$this->search_form_from_search_array ( 'WIC_Form_Advanced_Search_Again',  __( 'Redo search.', 'wp-issues-crm'), $search );
 		return;
 	}
-
-
-
-
-
-
-
-
 	
 	// in metaquery array assembly, group multivalue rows into single top-level array entries
 	public function assemble_meta_query_array ( $search_clause_args ) {
@@ -112,14 +104,6 @@ class WIC_Entity_Advanced_Search extends WIC_Entity_Parent {
 		return ( $key_value_array );
 	}
 
-
-
-	// set lister class based on entity_retrieved; spoof entity for lister
-	protected function set_lister_class ( &$wic_query ) {
-		$wic_query->entity = $wic_query->entity_retrieved;
-		return ( 'WIC_List_' . $wic_query->entity_retrieved );	
-	}
-
 	protected function pre_list_message ( &$lister, &$wic_query, &$data_object_array ) {
 		if ( 'activity' == $wic_query->entity_retrieved ) {
 			$message = $lister->format_message( $wic_query ); 		
@@ -129,10 +113,24 @@ class WIC_Entity_Advanced_Search extends WIC_Entity_Parent {
 		}	
 	}
 
-
-	protected function id_search_generic ( $id, $success_form = '', $sql = '', $log_search = '', $primary_search_id = ''  ) {
-		$args = array ( 'id_requested' => $id );
-		$constituent_entity = new WIC_Entity_Constituent ( 'id_search_no_log', $args );	
+	protected function handle_search_results ( $wic_query, $not_found_form, $found_form ) { 
+		$sql = $wic_query->sql;
+		if ( 0 == $wic_query->found_count ) {
+			$message = __( ' No matching record found -- search again, save new or start over.', 'wp-issues-crm' );
+			$message = WIC_Entity_Advanced_Search::add_blank_rows_message ( $wic_query, $message );
+			$message_level =  'error';
+			$form = new $not_found_form;
+			$form->layout_form ( $this->data_object_array, $message, $message_level, $sql );			
+		} else {
+			// spoof lister based on entity retrieved
+			$wic_query->entity = $wic_query->entity_retrieved; 
+			$lister_class =  'WIC_List_' . $wic_query->entity_retrieved;
+			$lister = new $lister_class; 	
+			$list = $lister->format_entity_list( $wic_query, '' );
+			$message = $this->pre_list_message( $lister, $wic_query, $this->data_object_array );
+			echo $message;			
+			echo $list;	
+		}
 	}
 
 	public static function make_blank_control( $new_control_field_id  ) {
@@ -155,5 +153,18 @@ class WIC_Entity_Advanced_Search extends WIC_Entity_Parent {
 		$control_no_label = substr( $control, strpos( $control, 'label>' ) + 6 );
 		echo json_encode( $control_no_label );
 		die();
+	}
+	
+	// filter applied to messages for activity and constituent lists and in self::handle_search_results
+	public static function add_blank_rows_message ( &$wic_query, $message ) { 
+		if ( isset ( $wic_query->blank_rows_ignored ) ) {
+			if ( 0 < $wic_query->blank_rows_ignored ) {
+				$message_add_on = ( 1 == $wic_query->blank_rows_ignored ) ?
+					 __( 'One row with a missing search value ignored. ',	'wp-issues-crm' ) :
+					 sprintf ( __( '%d rows with missing search values ignored. ',	'wp-issues-crm' ) , $wic_query->blank_rows_ignored )  ;					 
+				$message = $message_add_on . $message; 
+			}
+		}
+		return ( $message );
 	}
 }

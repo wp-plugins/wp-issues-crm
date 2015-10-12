@@ -4,7 +4,7 @@ Donate link:
 Tags: contact, crm, constituent, customer, issues, list
 Requires at least: 4.0
 Tested up to: 4.3.1
-Stable tag: 2.3.2
+Stable tag: 2.3.3
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -59,7 +59,7 @@ automatically serving users their latest issues visited when they are entering c
 plugin also includes an interface to the USPS Postal Service for zip code lookup. 
 2. You can create your own custom fields and define options for the custom dropdowns that you create.  You can also
 customize options for built-in fields like email or address type.  
-3. The new constituent add screen is very comfortable to use.
+3. The new constituent add screen is very user friendly.
 4. WP Issues CRM offers powerful search capability that gives quick response over large constituent databases.  Our
 office experience is subsecond response time on a database of 200,000 constituents.
 5. You can assign constituent cases to users and the list will highlight cases that are overdue for action.
@@ -85,7 +85,7 @@ attended signed a petition related to an issue
 * Allows you to automatically backout some types of uploads
 == Advanced Search ==
 * Includes user friendly search screens for constituents and issues retrieval and update
-* Includes powerful general search facility for selecting group with complex definitions
+* Includes powerful general search facility for selecting and downloading groups with complex definitions
 == WP Issues CRM Manage Storage Facility ==
 WP Issue CRM now includes a facility to show storage usage and to selectively purge interim files and dated external data.  So, for example, suppose you 
 initially uploaded your database from a voter list.  Over time, you added information about contacts with voters.  You could then easily purge all voters with 
@@ -97,6 +97,11 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 
 == Changelog ==
+= 2.3.3 =
+* Refactor and compress code in advanced search SQL generator; fix certain special cases
+* Improve user interface for advanced search 'having' clause generation
+* Ignore rows with missing search values in advanced search and message to user 
+* Add zip code to email downloads
 = 2.3.2 =
 * Enhance feedback to user in case of upload with bad characters.
 * Bug fix -- correct sql generation in searches with activity-type as a term

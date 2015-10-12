@@ -173,7 +173,8 @@ class WIC_List_Constituent_Export {
 				$download_sql =" 
 					SELECT  first_name, last_name,  
 						email_type, email_address, 
-						max( city ) as city $custom_fields_string , i.*
+						max( city ) as city,
+						max( zip ) as zip $custom_fields_string , i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
 					inner join $email e on e.constituent_id = c.ID
 					left join $address a on a.constituent_id = c.ID	

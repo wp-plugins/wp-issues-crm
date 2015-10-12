@@ -474,18 +474,13 @@ abstract class WIC_Entity_Parent {
 			$this->data_object_array = array(); // discard possibly soft matching array values before doing straight id retrieval
 			$this->id_search_generic ( $wic_query->result[0]-> ID, $found_form, $sql, false, $wic_query->search_id );	// do not log second search; use original ID
 		} else {
-			$lister_class = $this->set_lister_class( $wic_query );
+			$lister_class = 'WIC_List_' . $this->entity;
 			$lister = new $lister_class; 	
 			$list = $lister->format_entity_list( $wic_query, '' );
 			$message = $this->pre_list_message( $lister, $wic_query, $this->data_object_array );
 			echo $message;			
 			echo $list;	
 		}
-	}
-
-	// default is own entity; for advanced search, override
-	protected function set_lister_class ( &$wic_query ) {
-		return ( 'WIC_List_' . $this->entity );	
 	}
 
 	// default is blank; for advanced search, override

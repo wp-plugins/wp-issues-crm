@@ -12,7 +12,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 	public $financial_activities_in_results;
 	public $entity_retrieved;	
 	public $advanced_search = 'yes'; // flag used to preserve original identity as advanced search while spoofing constituent or activity search
-	
+	public $blank_rows_ignored = 0; 
 	
 	protected function db_search( $meta_query_array, $search_parameters ) { 
 		
@@ -26,7 +26,6 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 		// default search parameters
 		$select_mode 		= 'id';
 		$sort_order 		= false;
-		$compute_total 	= false;
 		$retrieve_limit 	= '10';
 		$show_deleted		= true;
 
@@ -36,7 +35,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 		// default special search parameters 
 		$activity_or_constituent 		= 'constituent';
 		$activity_and_or_constituent 	= 'and';
-		$activity_and_or					= 'and';
+		$activity_and_or				= 'and';
 		$constituent_and_or				= 'and';
 		$constituent_having_and_or		= 'and';
 
@@ -57,6 +56,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 		$sort_clause = $sort_order ? $wic_db_dictionary->get_sort_order_for_entity( $activity_or_constituent ) : '';
 		$order_clause = ( '' == $sort_clause ) ? '' : " ORDER BY $sort_clause "; 
 		$deleted_clause = $show_deleted ? '' : 'AND constituent.mark_deleted != \'deleted\'';
+		$retrieve_limit = is_numeric ( $retrieve_limit ) ? $retrieve_limit : 50; // bullet proofing, since can't prepare
 		$this->entity_retrieved = $activity_or_constituent; // saved for setting of entity for listing
 		// retrieve limit goes directly into SQL
 		 
@@ -68,6 +68,8 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 		$table_array = array();
 		$activity_where = '';
 		$constituent_where = '';
+		$activity_not = ( strpos ( $activity_and_or, 'NOT' ) > 0 ? 'NOT' : '' );
+		$constituent_not = ( strpos ( $constituent_and_or, 'NOT' ) > 0 ? 'NOT' : '' );
 		$having = '';
 		$activity_where_count = 0;
 		$constituent_where_count = 0;
@@ -86,7 +88,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 			$found_rows = 'SQL_CALC_FOUND_ROWS';
 		} else {
 			$select_list =  'download' == $select_mode ? ' activity.ID ' :
-				' activity_date, activity_type, activity_amount, pro_con, last_name, first_name, activity.constituent_id, post_title ';
+				' activity.ID as ID, activity.constituent_id as constituent_id, activity_date, activity_type, activity_amount, pro_con, last_name, first_name, activity.constituent_id, post_title ';
 			$join .= " inner join $wpdb->posts p on activity.issue = p.ID " ;
 			$found_rows = ''; // in activity retrieval, do secondary search for amount totals			
 		}
@@ -95,12 +97,15 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 		foreach ( $query_clause_rows as $query_clause_row ) { 
 
 			$field_name = ''; // will be set in inner loop
-			$table 		= '';	// will be 
-			$compare 	= '';	// will be 
-			$type			= ''; // may not be 
-			$value 		= '';	// may not be 
+			$table 		= ''; // will be 
+			$compare 	= ''; // will be 
+			$type		= ''; // may not be 
+			$value 		= ''; // may not be 
 			$aggregator	= ''; // may not be 
-			$having_cat = ''; // may not be  
+			$having_cat = ''; // may not be 
+			$blank_search_valid = false; // will not be set in inner loop -- may be set in compare switch
+			$value_variable = '%s'; // will not be set in inner loop -- may be set in compare switch
+			$type_filter = ''; // will not be set in inner loop -- may be set in row logic
 
 			$row_type = substr( $query_clause_row[0]['table'], 16 );
 			foreach ( $query_clause_row as $query_clause_item ) { 
@@ -121,19 +126,17 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 				}															
 			}
 			
+			// set flag for top entity messaging
+			if ( '' == $value ) {
+				$this->blank_rows_ignored++;
+			}
+			
 			// accumulate subsidiary tables		
 			if( ! in_array( $table, $table_array ) ) {
 				$table_array[] = $table;			
 			}
 			
-			
-			/*
-			*
-			*	logic to construct where clauses
-			*
-			*
-			*/
-			// prepare values based on comparisons
+			// set $compare, $value and $value_variable based on compare type
 			switch ( $compare ) {
 				case 'SCAN':
 					$value = '%' . $wpdb->esc_like ( $value ) . '%' ;
@@ -149,84 +152,44 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 					if ( ! is_array ( $value ) ) {
 						continue(2);// jump out of the switch and query clause where loop -- do nothing with blank category selections					
 					}
-					$value = $this->get_issue_list_from_category ( $compare, $value );
+					$value_variable = $this->get_issue_list_from_category ( $compare, $value ); // can't do prepare on this, b/c adds quotes
 					$compare = 'IN'; ;// develop in string logic
-					$break;
+					break;
+				case 'BLANK':
+				case 'NOT_BLANK';
+					$value = '';
+					$blank_search_valid = true;
+					$compare = 'BLANK' == $compare ? '=' : '>' ;
+					break;
+				case 'IS_NULL';
+					$value_variable = ''; // can't do on prepare on this, b/c adds quotes
+					$blank_search_valid = true;
+					$compare = ' IS NULL ';
+					break;
 				default:					
-					// no action -- $value = $value				
+					// no action -- $value = $value	and $value_variable = %s;			
 			} 
 
-		
-			// special handling for blank compare operators
-			if ( 'BLANK' == $compare || 'NOT_BLANK' == $compare ) {
-				$value = '';			
-				$compare = ( 'BLANK' == $compare ) ? '=' : '>';
-			} 
 			
-			// prepare special handling for when field is a type field
+			// prepare for special handling for when field is a type field (only possible for activity and constituent rows
 			$is_a_type_field = in_array ( $field_name, array ( 'activity_type', 'phone_type', 'email_type', 'address_type' ) ); 			
+			if ( $is_a_type_field ) {
+				$value = $type;
+			}
 			
-			if ( 'activity' == $row_type ) {
-				$activity_where_connecter = $activity_where_count > 0 ? $activity_and_or : ( strpos ( $activity_and_or, 'NOT' ) > 0 ? 'NOT' : '' );
-				if ( $is_a_type_field ) {
-					if ( '' < $type ) {
-						$activity_where 		.= " $activity_where_connecter ( activity.activity_type = %s ) ";
-						$activity_values[]	= $type;
-					} else {
-						$activity_where 		.= " $activity_where_connecter ( activity.activity_type IS NOT NULL ) "; // 
-					}					
-				} else {
-					if ( 'IS_NULL' != $compare ) {				
-						if ( '' < $type ) {
-							if ( 'IN' != $compare ) {
-								$activity_where 		.= " $activity_where_connecter ( activity.activity_type = %s and activity.$field_name $compare %s ) ";
-								$activity_values[]	= $type;
-								$activity_values[] 	= $value;
-							} else {
-								$activity_where 		.= " $activity_where_connecter ( activity.activity_type = %s and activity.$field_name $compare $value ) ";
-								$activity_values[]	= $type;
-							}
-						} else {
-							if ( 'IN' != $compare ) { 
-								$activity_where .= " $activity_where_connecter ( activity.$field_name $compare %s )";
-								$activity_values[] = $value;
-							} else {
-								$activity_where 		.= " $activity_where_connecter ( activity.$field_name $compare $value ) ";
-								$activity_values[]	= $type;
-							}
-						}
-					} else {
-						$activity_where .= " $activity_where_connecter ( activity.$field_name IS NULL )";
-					}	
-				}
-				$activity_where_count++;	
-			} elseif ( 'constituent' == $row_type ) { 
-				$constituent_where_connecter = $constituent_where_count > 0 ? $constituent_and_or : ( strpos ( $constituent_and_or, 'NOT' ) > 0 ? 'NOT' : '' );
+			if ( ( 'activity' == $row_type || 'constituent' == $row_type ) && ( '' < $value || $blank_search_valid ) ) {
+				$where_connecter = ${ $row_type . '_where_count' } > 0 ? ${ $row_type . '_and_or' } : ${ $row_type . '_not' };
 				$field_name = $table . '.' . $field_name;
-				if ( $is_a_type_field ) {
-					if ( '' < $type ) {
-						$constituent_where 		.= " $constituent_where_connecter ( $field_name = %s ) ";
-						$constituent_values[]	= $type;
-					} else {
-						$constituent_where 		.= " $constituent_where_connecter ( $field_name IS NOT NULL ) "; // 
-					}					
-				} else {
-					if ( 'IS_NULL' != $compare ) {	
-						if ( '' < $type ) {
-							$type_name = $table . '.' . $table . '_type';
-							$constituent_where 		.= " $constituent_where_connecter ( $type_name = %s and $field_name $compare %s ) ";
-							$constituent_values[]	= $type;
-							$constituent_values[] 	= $value;
-						} else {
-							$constituent_where .= " $constituent_where_connecter ( $field_name $compare %s ) ";
-							$constituent_values[] = $value;
-						}	
-					} else {
-						$constituent_where .= " $constituent_where_connecter ( $field_name IS NULL )";
-					}	
-				}
-				$constituent_where_count++;		
-			} elseif ( 'constituent_having' == $row_type && 'constituent' == $activity_or_constituent ) { 
+				if ( ! $is_a_type_field && '' < $type ) { // not a type field and type not blank, so set filter
+					$type_name = $table . '.' . $table . '_type';
+					$type_filter = " $type_name = %s and ";
+					${ $row_type  . '_values'}[] = $type;				}
+				if ( '%s' == $value_variable ) {
+					${ $row_type  . '_values'}[] = $value; 
+				} 
+				${ $row_type . '_where' } .= " $where_connecter ( $type_filter $field_name $compare $value_variable ) ";					
+				${ $row_type . '_where_count' }++;
+			} elseif ( 'constituent_having' == $row_type && 'constituent' == $activity_or_constituent && '' < $value ) { 
 				$issue_string = '';
 				$type_string = '';
 				$if_condition = '';
@@ -250,10 +213,9 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 				// combine strings to make having condition
 				$having .= " $having_connecter $aggregator" . "(if($if_condition  1=1, activity.$field_name, NULL )) $compare %s ";
 				$having_values[] = $value;
-				$additional_select_terms .= ", $aggregator" . "(if($if_condition  1=1, activity.$field_name, NULL )) as " . $aggregator . '_' . $field_name;
 				$having_count++;
-			} else {
-				WIC_Function_Utilities::wic_error ( sprintf( 'Row type not properly set in advanced search.  Row type is:',  $row_type  ), __FILE__, __LINE__, __METHOD__, true );
+				// add a select term so that aggregation result can be included in download
+				$additional_select_terms .= ", $aggregator" . "(if($if_condition  1=1, activity.$field_name, NULL )) as " . $aggregator . '_' . $having_count;
 			}	 
 		}
 		
@@ -289,7 +251,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 		
 
 		// merge prepare values (note that start with digit 1 so will always be non-empty use in where 1=1)
-		$values = array_merge ( $additional_select_terms_values, array(1), $activity_values, $constituent_values, $having_values );
+		$values = array_merge ( $additional_select_terms_values, array(1),  $constituent_values, $activity_values, $having_values );
 		
 		$group_by = 'GROUP BY ' . 	$activity_or_constituent . '.ID ';
 
@@ -297,15 +259,14 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 		$sql = $wpdb->prepare( "
 				SELECT $found_rows $select_list $additional_select_terms
 				FROM 	$join
-				WHERE 1=%d $deleted_clause $connector $activity_where $activity_and_or_constituent $constituent_where $close_paren  
+				WHERE 1=%d $deleted_clause $connector $constituent_where $activity_and_or_constituent $activity_where $close_paren  
 				$group_by
 				$having
 				$order_clause
-				LIMIT 0, $retrieve_limit
 				",
 			$values );
 		// $sql group by always returns single row, even if multivalues for some records 
-
+		
 		$this->sql = $sql; // final retrieval sql
 
 		if ( 'download' == $select_mode ) {
@@ -317,7 +278,7 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 			}			
 		
 		} else {
-			
+			$sql .= " LIMIT 0, $retrieve_limit "; // add the retrieve limit to the sql serving screen
 			// do search
 			$this->result = $wpdb->get_results ( $sql );
 		 	$this->showing_count = count ( $this->result );
@@ -333,12 +294,12 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 					SELECT $summary_select FROM( 
 						SELECT $select_list
 						FROM 	$join
-						WHERE 1=%d $deleted_clause $connector $activity_where $activity_and_or_constituent $constituent_where $close_paren  
+						WHERE 1=%d $deleted_clause $connector $constituent_where $activity_and_or_constituent $activity_where $close_paren  
 						$group_by
 						$having ) base_query
 					",
 					$values ); 
-	
+
 				$summary = $wpdb->get_results ( $summary_sql );
 				$this->found_count = $summary[0]->activity_count;
 				$this->amount_total = $summary[0]->total_amount;
