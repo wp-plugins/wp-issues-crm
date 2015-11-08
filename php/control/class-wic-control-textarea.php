@@ -23,7 +23,7 @@ class WIC_Control_Textarea extends WIC_Control_Parent {
 		
 		extract ( $control_args, EXTR_SKIP ); 
 	
-		$readonly = $readonly ? 'readonly' : '';
+		$readonly = $readonly ? ' readonly ' : '';
 		$hidden	 = $hidden ? 'hidden' : ''; 
 		 
 		$control = ( $field_label > '' ) ? '<label class="' . $label_class . ' ' . esc_attr( $field_slug_css ) . '" ' .

@@ -525,6 +525,10 @@ a#wic-email-icon-link:hover {
 	width: 47%;
 } 
 
+#wic-activity-frozen-date {
+	display: none;
+}
+
 #wic-form-constituent-update .wic-input.activity-amount,
 #wic-form-constituent-save .wic-input.activity-amount {
 	width: 47.5%;
@@ -855,7 +859,9 @@ textarea.wic-input.activity-note.activity-value {
 	width: 48.25%;
 }
 
-
+.wic-input.first-name.constituent-value {
+	margin-bottom: 0;
+}
 
 
 .wic-input.constituent-entity-type,
@@ -1742,20 +1748,19 @@ div.wic-post-list-headers.search_log {
 
 /* elements present in sort row and needed for processing, but not displayed */
 .wic-post-list-header.pl-search_log-entity,
-.wic-post-list-field.pl-search_log-entity {
-	display: none;
-}
+.wic-post-list-field.pl-search_log-entity,
+.wic-post-list-header.pl-search_log-is_named,
+.wic-post-list-field.pl-search_log-is_named,
 .wic-post-list-header.pl-search_log-favorite,
-.wic-post-list-field.pl-search_log-favorite {
-	display: none;
-}
+.wic-post-list-field.pl-search_log-favorite,
 li.pl-search_log-serialized_search_parameters { 
 	display: none;
 }
 
 /* dislpayed widths set to match button widths scaled by .964444 */
 .pl-search_log-search_time{ width:18.33333%;}
-.pl-search_log-serialized_search_array{ width:44.233%;}
+.pl-search_log-serialized_search_array{ width:36.85%;}
+.pl-search_log-share_name{ width:14.74%;}
 .pl-search_log-download_time{ width:14.74%;}
 .pl-search_log-result_count { width: 14.74%}
 

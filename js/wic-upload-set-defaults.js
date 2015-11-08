@@ -28,9 +28,7 @@
 	
 	// for use with us zip code validation if set
 	var regPostalCode = new RegExp("^\\d{5}(-\\d{4})?$");
-	
-	// initialize in progress flag for Ajax call
-	var newIssuesInProgress = 0;
+
 	/*
 	*
 	* in ready function, make all choices and all setup possible to make without knowing user input
@@ -43,13 +41,6 @@
 		if ( jQuery ( "#post-form-message-box" ).hasClass ( "wic-form-errors-found" )	) {
 			return;	
 		}
-
-		// set up window close listener for new issue creation
-		$(window).on('beforeunload', function() {
-			if ( 1 == newIssuesInProgess ) {
-				return ( 'started new issue creation, but not completed');
-			}   
-      });
 
 		// otherwise, initial status is something other than 'staged', 'mapped' or 'validated'
 		// php has defined an appropriate initial message based on status			
@@ -170,10 +161,15 @@
 			}
 		}
 
-		// if title mapped not overridden by issue, create new issue table -- 
+		// no need to resave defaults if upload already completed . . .
+		// no need to look up issues and in fact, can't, if upload completed
+		if ( 'completed' == initialUploadStatus || 'started' == initialUploadStatus || 'reversed' == initialUploadStatus ) {
+			decideWhatToShow();
+		// if upload not already completed, and title mapped and not overridden by issue, create new issue table in form -- 
 		// will be hidden later if no new issues or if default issue is set
-		if ( titleMapped && ! activityIssueMapped ) {
-
+		} else if ( titleMapped && ! activityIssueMapped ) {
+			// disable input so can't get to good to go status before look up of issues is complete
+			jQuery ( "#wic-form-upload-set-defaults :input" ).prop( "disabled", true ); 
 			// create div to receive results
 			jQuery ( "#wic-inner-field-group-new_issue_creation" ).append ( '<div id = "new-issue-progress-bar-legend"> . . . looking up issues . . . </div>' ); 
 			jQuery ( "#wic-inner-field-group-new_issue_creation" ).append ( '<div id = "new-issue-progress-bar"></div>' );			
@@ -181,9 +177,6 @@
 			jQuery ( "#new-issue-progress-bar" ).progressbar({
 				value: false
 			});
-
-			newIssuesInProgress = 1;
-			 
 			// set up AJAX call and go	
 			var data = {
 				staging_table : uploadParameters.staging_table_name,
@@ -194,18 +187,18 @@
 				jQuery ( "#new-issue-table" ).html(response); // show table results
 				jQuery ( "#new-issue-progress-bar-legend" ).remove();
 				jQuery ( "#new-issue-progress-bar" ).remove();
-				newIssuesInProgress = 0;				
+				// reenable input once look up complete
+				jQuery ( "#wic-form-upload-set-defaults :input" ).prop( "disabled", false ); 
 				// do these form set up items as callbacks.
 				recordDefaultDecisions();  // need to set the number of new issues among the default decisions
 				decideWhatToShow();
 				// have to do this in the callback on first run through to have the new issue count to test
-	
+
 			});
-	
 		} else {
-			// on ready, after populating form, set database values from form
+			// on ready, after populating form, set database values from form  (if upload not completed)
 			// necessary in case good to go without change and database values have not been saved
-			// done in the callback above as well
+			// done in the issue look up callback above as well
 			recordDefaultDecisions();
 			decideWhatToShow();
 		}

@@ -392,6 +392,26 @@ class WIC_DB_Access_WP Extends WIC_DB_Access {
 	
 	} 
 
+	// this turns out to be 10x-100x faster than running through the metaquery object
+	// necessary in bulk uploads where using title to get issue id
+	// wp metaquery seemed to be doing table scans despite presence of index
+	public function fast_id_lookup_by_title( $title ) {
+		global $wpdb;
+		$post_table = $wpdb->posts;
+		$sql = $wpdb->prepare ( "SELECT ID from $post_table 
+			WHERE ( post_status = 'private' or post_status = 'publish' )
+			AND post_type = 'post' 
+			AND post_title = %s
+			LIMIT 0, 1
+			", 
+			array ( $title )
+		);
+		$results = $wpdb->get_results( $sql );
+		return  ( isset ( $results[0] ) ? $results[0]->ID : false );
+	}
+
+
+
 	/* not implemented for wp type objects */
 	public function db_get_time_stamp ( $id ) {}
 	protected function db_do_time_stamp ( $table, $id ){}

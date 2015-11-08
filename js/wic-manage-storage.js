@@ -7,7 +7,7 @@
 // self-executing anonymous namespace
 ( function() {
 	
-	var controlsArray, showHideButtons, constituentSubFields;
+	var showHideButtons, constituentSubFields;
 
 	jQuery(document).ready(function($) { 
 
@@ -16,19 +16,20 @@
 		});
 		
 		// all the check boxes should change messages
-		controlsArray =  jQuery ( ":input" ).not( ":button, :hidden" );		
-		controlsArray.change ( function() {
+		jQuery ( ":input" ).not( ":button, :hidden, #keep_all" ).change ( function() {
 			decideWhatToShow();
 		});
 		
-		// set keep search when keep all changes
+		// keep all button for constituents will override staging and search setting
 		jQuery ( "#keep_all" ).change ( function () {
-			jQuery ( "#keep_search" ).prop( "checked" , jQuery ( "#keep_all" ).prop( "checked" ) )
+			jQuery ( "#keep_search, #keep_staging" ).prop( "checked" , jQuery ( "#keep_all" ).prop( "checked" ) );
+			jQuery ( "#keep_search, #keep_staging" ).prop( "disabled" , ! jQuery ( "#keep_all" ).prop( "checked" ) );
+			decideWhatToShow();
 		});
 		
 		// continue to show the section buttons, but knockout their onclick show/hide toggle function
 		showHideButtons = jQuery ( ".field-group-show-hide-button" );
-		showHideButtons.prop( "onclick", '' );
+		showHideButtons.prop( "disabled", true );
 		
 		constituentSubFields = jQuery ( "#keep_activity, #keep_phone, #keep_email, #keep_address" );
 		constituentSubFields.prop( "disabled", true );		
@@ -80,15 +81,9 @@
 			// always show subfields as kept if keep all checked
 			constituentSubFields.prop( "disabled", true );	
 			constituentSubFields.prop( "checked", true );
-			// allow modification of search purge if not purging constituents
-			jQuery ( "#keep_search" ).prop( "disabled", false );
 			constituentMessage = 'No constituents will be purged.';	
 			jQuery ( "#post-form-message-box" ).removeClass( 'wic-form-errors-found' )
 		} else {
-			// if purging any constituents, always purge search log
-			jQuery ( "#keep_search" ).prop( "disabled", true );
-			jQuery ( "#keep_search" ).prop( "checked", false );
-			
 			// allow setting of constituent purge criteria and format message
 			constituentSubFields.prop( "disabled", false );
 			jQuery ( "#post-form-message-box" ).addClass( 'wic-form-errors-found' )

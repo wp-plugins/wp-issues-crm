@@ -61,12 +61,6 @@ class WIC_Admin_Setup {
 	public function add_wic_scripts ( $hook ) {
 	
 		if ( -1 < strpos( $hook, 'wp-issues-crm' ) ) { 
-	
-			wp_enqueue_script(
-				'wic-utilities',
-				plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-utilities.js' , __FILE__ ), 
-				array( 'jquery-ui-datepicker', 'jquery-ui-selectmenu', 'jquery-ui-menu', 'jquery-ui-spinner' )
-			);
 
 			wp_enqueue_script(
 				'wic-changed-page',
@@ -90,11 +84,11 @@ class WIC_Admin_Setup {
 
 			// page specific scripts
 			if ( isset ( $_GET['page'] ) ) {
-				if ( 'wp-issues-crm-main' == $_GET['page'] ) {
+				if ( 'wp-issues-crm-main' == $_GET['page'] || 'wp-issues-crm-options' == $_GET['page']) {
 					wp_enqueue_script(
 						'wic-main',
 						plugins_url( '..' . DIRECTORY_SEPARATOR . '..' . DIRECTORY_SEPARATOR . 'js' . DIRECTORY_SEPARATOR . 'wic-main.js' , __FILE__ ),
-						array ( 'jquery', 'jquery-ui-autocomplete'  ) 
+						array ( 'jquery', 'jquery-ui-autocomplete', 'jquery-ui-datepicker', 'jquery-ui-selectmenu', 'jquery-ui-menu', 'jquery-ui-spinner', 'jquery-ui-dialog' ) 
 					);
 				}
 				if ( 'wp-issues-crm-storage' == $_GET['page'] ) {
@@ -223,20 +217,20 @@ class WIC_Admin_Setup {
 	    	__( 'Constituent Manager', 'wp-issues-crm' ),
 		   array(
 		   		// capacities to add
-				  'manage_wic_constituents' 	=> true, // grants access to plugin and all constituent functions
-		        'read_private_posts' 			=> true, // necessary for viewing (and so editing) individual private issues through wic interface
-		        'upload_files'					=> true,
+				'manage_wic_constituents' 	=> true, // grants access to plugin and all constituent functions
+		        'read_private_posts' 		=> true, // necessary for viewing (and so editing) individual private issues through wic interface
+		        'read'						=> true, // allows access to dashboard
 		        // capacities explicitly (and perhaps unnecessarily) denied
-		        'read'								=> false, // denies access to dashboard
-	           'edit_posts'  					=> false, // limits wp backend access -- can still edit private issues through the wic interface
+	            'edit_posts'  					=> false, // limits wp backend access -- can still edit private issues through the wic interface
 		        'edit_others_posts'  			=> false, // limits wp backend access -- can still edit private issues through the wic interface 
 		        'delete_posts'					=> false,
-	           'delete_published_posts' 	=> false,
-		        'edit_published_posts' 		=> false,
+	            'delete_published_posts' 		=> false,
+		        'edit_published_posts' 			=> false,
 		        'publish_posts'					=> false,
 		        'read_private_pages' 			=> false,
 		        'edit_private_posts' 			=> false,
 		        'edit_private_pages' 			=> false, 
+		        'upload_files'					=> false,
 		    )
 		);
 		

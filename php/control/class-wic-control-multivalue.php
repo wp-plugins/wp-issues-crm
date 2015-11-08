@@ -288,7 +288,6 @@ class WIC_Control_Multivalue extends WIC_Control_Parent {
 			' id = "' . esc_attr( $base ) . '-add-button" ' .
 			' title ="' . esc_attr(  $button_label ) . '"' .
 			' type = "button" ' .
-			' onclick="moreFields(\'' . esc_attr( $base ) . '\')" ' .
 			' ><span class="dashicons dashicons-plus-alt"></span></button>'; 
 
 		return ( $button );

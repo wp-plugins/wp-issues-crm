@@ -15,6 +15,16 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 	public $serialized_column_map;
 	public $upload_status;
 
+	// for option look up
+	public static function list_uploads(){
+		global $wpdb;
+		$table = $wpdb->prefix . 'wic_upload';
+		$sql = "SELECT ID, upload_file, upload_time from $table ORDER BY upload_time DESC";
+		$result = $wpdb->get_results( $sql );
+		return ( $result );
+	
+	}
+
 	/*
 	*
 	*	Overrides parent save/update array function to capture the upload parameters
@@ -254,7 +264,7 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 
 			// exit on failure
 			if ( false === $result ) {
-				$this->explanation =  __( 'Error loading staging table.', 'wp-issues-crm' );
+				$this->explanation =  sprintf( __( 'Error loading staging table -- try checking for bad input characters in the %1$d rows before row %2$d. ', 'wp-issues-crm' ), $rows_per_packet, $insert_count );
 				return;
 			}
 
@@ -929,8 +939,8 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			}				
 		} 
 		
-		// save issue count and return the final results object as updated	
-		$final_results->new_issues_saved = $new_issues_saved;		
+		// save issue count and return the final results object as updated	(+= for restart)
+		$final_results->new_issues_saved += $new_issues_saved;		
 		$final_results = json_encode ( $final_results );
 		self::update_final_results( $upload_id, $final_results );
 		return ( $final_results ) ;		
@@ -1072,6 +1082,19 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		global $wpdb;
 		global $wic_db_dictionary;
 		
+		$final_results = json_decode ( self::get_final_results ( $upload_id ) );
+		
+		// before doing any updates, if on first pass, purge any activities saved on a failed attempt and reset update counters
+		// don't purge emails, phones or addresses, since update these if already exist, but activities can be duped
+		// note that update counters may be incorrect in case of repeated failures in update stage -- reset to 0, but non-activity updates not reversed
+		if ( 0 == $offset ) {
+			self::purge_activities_for_upload_id ( $upload_id );
+			$final_results->constituent_updates_applied = 0;		
+			$final_results->total_valid_records_processed = 0;
+			$final_results_interim = json_encode ( $final_results );
+			self::update_final_results( $upload_id, $final_results_interim );
+		}
+		
 		// have multiple entities to update -- create array of data object arrays for each
 		$data_object_array_array = array(
 			'constituent' 	=> array(),
@@ -1081,8 +1104,6 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			'issue'			=> array(),	// order matters -- need to process issue before activity to look up title if using it	
 			'activity'		=> array(),
 		); 
-		
-		$final_results = json_decode ( self::get_final_results ( $upload_id ) );
 		
 		// set counters of activity for this pass
 		$constituent_updates_applied 		= 0; // counts non-new valid records (i.e., matched records)
@@ -1144,6 +1165,13 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 				$data_object_array[$field_rule->field_slug] = WIC_Control_Factory::make_a_control( $field_rule->field_type );	
 				$data_object_array[$field_rule->field_slug]->initialize_default_values( $entity, $field_rule->field_slug, '' );
 			}
+			// add upload_id control with value set
+			if ( 'activity' == $entity) {
+				$field_rule = $wic_db_dictionary->get_field_rules ( 'activity', 'upload_id' );					
+				$data_object_array[$field_rule->field_slug] = WIC_Control_Factory::make_a_control( $field_rule->field_type );	
+				$data_object_array[$field_rule->field_slug]->initialize_default_values( $entity, $field_rule->field_slug, '' );
+				$data_object_array[$field_rule->field_slug]->set_value ( $upload_id );
+			} 
 		}
 		// necessary to unset when using foreach with pointer -- http://php.net/manual/en/control-structures.foreach.php
 		unset ( $entity );
@@ -1216,16 +1244,12 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 					// if have post_title through mapping or default and have assured that all post_titles exist on database				
 					if ( ! $use_title ) {
 						continue; // continue to next entity					
-					} else { 	
-						$query_array =	$data_object_array['post_title']->create_search_clause ( $search_clause_args );
-						// execute a search
-						$wic_access_object_array[$entity]->search ( $query_array, $search_parameters );
-						// if matches found, take the first for update purposes 
-						if ( $wic_access_object_array[$entity]->found_count > 0 ) {
-							$data_object_array_array['activity']['issue']->set_value( $wic_access_object_array[$entity]->result[0]->ID );					
+					} else {
+						$fast_id_lookup_by_title = $wic_access_object_array[$entity]->fast_id_lookup_by_title ( $data_object_array['post_title']->get_value() );
+						if ( false !== $fast_id_lookup_by_title ) {
+							$data_object_array_array['activity']['issue']->set_value( $fast_id_lookup_by_title ) ;					 	
 						} else {
-							// this could happen if user was quick enough to get through good-to-go status on the set default form and OK leave form
-							// while new issue table creation was in progress and table were only partially populated -- not likely
+							// this shouldn't be possible
 							WIC_Function_Utilities::wic_error ( 
 								sprintf ( 'Data base corrupted for post title: %1$s in update constituent phase.' , $data_object_array['post_title']->get_value() ), 
 								__FILE__, __LINE__, __METHOD__, true );
@@ -1237,38 +1261,45 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 					} 	
 					// set current constituent id for the entity
 					$data_object_array['constituent_id']->set_value ( $staging_record->MATCHED_CONSTITUENT_ID );
-					// prepare a query array for those fields used in upload match/dedup checking for multi-value fields 
-					$query_array = array();
-					// set up test for missing email_address or phone_number will not store or update if missing (added to allow these to be blank in validation stage) 
-					$email_phone_missing = '';
-					foreach ( $data_object_array as $field_slug => $control ) { 
-						if ( $control->is_upload_dedup() ) {
-							$query_array = array_merge ( $query_array, $control->create_search_clause ( $search_clause_args ) );
-						}
-						// do the required testing deferred from validation stage
-						if ( 'email_address' == $field_slug  || 'phone_number' == $field_slug ) {
-							$email_phone_missing = $control->required_check();
-						}
-					} 
-					// by pass this entity if missing phone or email number.
-					if ( $email_phone_missing > '' ) {
-						continue; // go to the next entity						
-					}
-					// execute a search for the multivalue entity -- treating it as a top level entity, but query object is OK with that
-					$wic_access_object_array[$entity]->search ( $query_array, $search_parameters );
-					// if matches found, take the first for update purposes 
-					if ( $wic_access_object_array[$entity]->found_count > 0 ) {
-						$id_to_update = $wic_access_object_array[$entity]->result[0]->ID;
-						// don't touch the found address record if protecting identity data (setting supports soft identity matching)
-						if ( $default_decisions->protect_identity && 'address' == $entity ) {
-							continue;					
-						}
-					// but if don't have the address for this type, proceed regardless of protect_identity setting 					
-					} else {
+					// if an activity, will not do dup checking 
+					if ( 'activity' == $entity ) {
 						$id_to_update = 0;
-					} 					
+					// if not an activity, do dup checking (if already exists, update rather than saving new)
+					} else {
+						//setup a query array for those fields used in upload match/dedup checking for multi-value fields
+						$query_array = array();
+						// while preparing query array, set up test for missing email_address or phone_number 
+						// will not store or update if missing these fields (added to allow these to be blank in validation stage) 
+						$email_phone_missing = '';
+						foreach ( $data_object_array as $field_slug => $control ) { 
+							if ( $control->is_upload_dedup() ) {
+								$query_array = array_merge ( $query_array, $control->create_search_clause ( $search_clause_args ) );
+							}
+							// do the required testing deferred from validation stage
+							if ( 'email_address' == $field_slug  || 'phone_number' == $field_slug ) {
+								$email_phone_missing = $control->required_check();
+							}
+						} 
+						// by pass this entity if missing phone or email number.
+						if ( $email_phone_missing > '' ) {
+							continue; // go to the next entity						
+						}
+						// execute a search for the multivalue entity -- treating it as a top level entity, but query object is OK with that
+						$wic_access_object_array[$entity]->search ( $query_array, $search_parameters );
+						// if matches found, take the first for update purposes 
+						if ( $wic_access_object_array[$entity]->found_count > 0 ) {
+							$id_to_update = $wic_access_object_array[$entity]->result[0]->ID;
+							// don't touch the found address record if protecting identity data (setting supports soft identity matching)
+							if ( $default_decisions->protect_identity && 'address' == $entity ) {
+								continue;					
+							}
+						// but if don't have the address for this type, proceed regardless of protect_identity setting 					
+						} else {
+							$id_to_update = 0;
+						} 					
+					}
+					// prepare call to save update -- id 0 will be a save
 					$data_object_array['ID']->set_value ( $id_to_update );
-
 					// now, either update found record ( email,phone, address or activity ) or save new one
 					// pass user decision as to whether blanks should be overwritten (only matters on update)
 					$result = $wic_access_object_array[$entity]->upload_save_update ( $data_object_array, $default_decisions->protect_blank_overwrite ) ;
@@ -1293,6 +1324,14 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 
 	} // close  update constituents	
 
+	private static function purge_activities_for_upload_id( $upload_id ) {
+		global $wpdb;
+		$table = $wpdb->prefix . 'wic_activity';
+		$sql = "DELETE FROM $table WHERE upload_id = $upload_id";
+		$result = $wpdb->query ( $sql );
+		return ( $result );
+	} 
+
 	public static function backout_new_constituents( $upload_id, $staging_table) {
 		
 		global $wpdb;
@@ -1312,6 +1351,9 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 		
 		$return = $return_result ? __( 'Backout of added constituents successful.', 'WP_Issues_CRM' ) : false;
 
+		// purge activities from upload
+		self::purge_activities_for_upload_id( $upload_id );
+
 		// on successful completion, set final results for new constituents saved to zero, update upload status		
 		if ( false !== $return_result ) {
 			$final_results = json_decode ( self::get_final_results ( $upload_id ) );
@@ -1320,6 +1362,8 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 			self::update_final_results( $upload_id, $final_results );					
 			self::update_upload_status ( $upload_id, 'reversed' );
 		}
+
+
 
 		return ( $return_result );
 	}

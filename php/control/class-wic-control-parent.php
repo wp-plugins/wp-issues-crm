@@ -87,8 +87,8 @@ abstract class WIC_Control_Parent {
 		$this->default_control_args['label_class'] .= ' hidden-element ';
 	}	
 
-	public function override_readonly() {
-		$this->default_control_args['readonly'] = false;	
+	public function override_readonly( $true_or_false ) {
+		$this->default_control_args['readonly'] = $true_or_false;	
 	}
 
 	public function get_value () {
@@ -190,7 +190,7 @@ abstract class WIC_Control_Parent {
 			$value = $formatter ( $value );		
 		}
 
-		$readonly = $readonly ? 'readonly' : '';
+		$readonly = $readonly ? ' readonly ' : '';
 
 		// allow extensions to set field type, but if hidden, is hidden		
 		$type = ( 1 == $hidden ) ? 'hidden' : $type;

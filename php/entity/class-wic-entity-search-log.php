@@ -42,10 +42,10 @@ class WIC_Entity_Search_Log extends WIC_Entity_Parent {
 	
 	// request handler for search log list -- re-executes query 
 	public function id_search_execute( $args ) {
-		$search = $this->id_retrieval( $args );
-		$class_name = 'WIC_Entity_'. $search['entity'];
-		if ( $search['result_count'] > 1 ) {
-			$search['show_form'] = true;
+		$search = WIC_DB_Access::get_search_from_search_log(  $args['id_requested'] );
+		$class_name = 'WIC_Entity_'. $search['entity']; 
+		// returning from search log, go to found item(s) if any, or redisplay search form
+		if ( $search['result_count'] > 0) {
 			${ $class_name } = new $class_name ( 'redo_search_from_query', $search  ) ;
 		} else {
 			${ $class_name } = new $class_name ( 'redo_search_form_from_query', $search ) ;		
@@ -54,25 +54,11 @@ class WIC_Entity_Search_Log extends WIC_Entity_Parent {
 	
 	// request handler for back to search button -- brings back to filled search form, but does not reexecute the query
 	public function id_search_to_form( $args ) {
-		$search = $this->id_retrieval( $args );
+		$search = WIC_DB_Access::get_search_from_search_log(  $args['id_requested'] );
 		$class_name = 'WIC_Entity_'. $search['entity'];
 		${ $class_name } = new $class_name ( 'redo_search_form_from_query', $search ) ;		
 	}
-	
-	// get the search identified by number from the search log and return it unserialized
-	protected function id_retrieval ( $args ) {
-		$id = $args['id_requested']; // expects standard button format args
-		$wic_query = WIC_DB_Access_Factory::make_a_db_access_object( $this->entity );
-		$wic_query->list_by_id ( '(' . $id . ')' );
-		return ( array ( 
-			'search_id' => $id,
-			'entity' => $wic_query->result[0]->entity, 
-			'unserialized_search_array' => unserialize( $wic_query->result[0]->serialized_search_array ),
-			'unserialized_search_parameters' => unserialize( $wic_query->result[0]->serialized_search_parameters ),
-			'result_count' =>$wic_query->result[0]->result_count
-			) 
-		);
-	}	
+
 	
 	/**************************************************************************************************************************************
 	*
@@ -94,6 +80,23 @@ class WIC_Entity_Search_Log extends WIC_Entity_Parent {
 		}
 	}
 	
+	public static function share_name_formatter ( $name ) {
+		return ( $name > '' ? $name : __( 'private', 'wp-issues-crm' ) );
+	}
+	
+	public static function update_name ( $search_id, $json_name ) {
+		$name = json_decode ( stripslashes ( $json_name ) );
+		$result = WIC_DB_Access::update_search_name ( $search_id, $name );
+		$share_phrase = $name > '' ? __( 'Search will be shared', 'wp-issues-crm' ) : __( 'Search will be visible only to you.', 'wp-issues-crm' );
+		echo json_encode ( 
+			array ( $result,  1 == $result ? 
+					__( 'Name update successful. ', 'wp-issues-crm' ) . $share_phrase :
+					__( 'Name update not successful.  Probable security error -- if you are not an administrator, you can only name your own searches.', 'wp-issues-crm' ) 
+			) 
+		);
+		die;
+	}
+	
 	public static function serialized_search_array_formatter ( $serialized ) {
 		
 		global $wic_db_dictionary;
@@ -110,9 +113,15 @@ class WIC_Entity_Search_Log extends WIC_Entity_Parent {
 				$row_type = substr( $search_clause[1][0]['table'], 16 );
 				foreach ( $search_clause[1] as $clause_component ) {
 					if ( $row_type . '_field' == $clause_component['key'] ) {
-						$field = $wic_db_dictionary->get_field_rules_by_id( $clause_component['value'] );
-						$new_clause['key']		= $field['field_slug'];
-						$new_clause['table']		= $field['entity_slug'];
+						// advanced_search array not repacked
+						if ( is_array ( $clause_component['value'] ) ) {
+							$new_clause['key']		=  $clause_component['value']['field_slug'];
+							$new_clause['table']		=  $clause_component['value']['entity_slug'];
+						} else {
+						// if don't have array then old format, can't display or retrieve search
+						return ( __( 'Advanced search from before Version 3.3.5 cannot be retrieved after 
+							upgrade. No data has been lost.  Just redo search.', 'wp-issues-crm' ) );			
+						}
 					} elseif ( $row_type . '_comparison' == $clause_component['key']  ) {
 						$new_clause['compare'] = $clause_component['value']; 				
 					} elseif ( $row_type . '_value' == $clause_component['key']  ) { 
