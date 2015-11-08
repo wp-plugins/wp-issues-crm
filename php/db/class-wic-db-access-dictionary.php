@@ -14,21 +14,24 @@ class WIC_DB_Access_Dictionary Extends WIC_DB_Access_WIC {
 	protected function external_update ( $set ) {
 
 		global $wpdb;	
-		
-		// check used custom field names on constituent table
 		$table1 = $wpdb->prefix . 'wic_constituent';
+		// lock constitutent table to protect against fast repeats of table add operation creating conflicts
+		$wpdb->query (
+			"
+			LOCK TABLES $table1 WRITE 
+			"
+		);	
+		// check used custom field names on constituent table
 		$table_columns = $wpdb->get_results (
 			"
 			SHOW COLUMNS FROM $table1 
 			"
 		);	
-
 		$column_names = array();
 		foreach ( $table_columns as $table_column ) {
 			$column_names[] = $table_column->Field;		
 		}
 		$filtered_column_names = array_filter ( $column_names, array ( $this, 'filter_custom_columns' ) );
-
 		// determine new field name 
 		if ( count ( $filtered_column_names ) > 0 ) {
 			rsort ( $filtered_column_names );
@@ -37,7 +40,6 @@ class WIC_DB_Access_Dictionary Extends WIC_DB_Access_WIC {
 		 } else {
 			$new_field_name = 'custom_field_001';		 
 		 }
-
 		// set property to be picked up in wic-entity-data-dictionary->special_entity_value_hook
 		$this->field_slug = $new_field_name;
 		// update database
@@ -47,9 +49,16 @@ class WIC_DB_Access_Dictionary Extends WIC_DB_Access_WIC {
 			ADD INDEX ( $new_field_name ) ;
 			"		
 			);
+		$wpdb_last_error = $wpdb->last_error;
+		// unlock tables
+		$wpdb->query (
+			"
+			UNLOCK TABLES  
+			"
+		);			
 		// die on error		
-		if ( $wpdb->last_error > '' ) {
-			WIC_Function_Utilities::wic_error ( sprintf( 'MySQL could not add custom field. Error reported was: %s', $wpdb->last_error ), __FILE__, __LINE__, __METHOD__, true );
+		if ( $wpdb_last_error > '' ) {
+			WIC_Function_Utilities::wic_error ( sprintf( 'MySQL could not add custom field. Error reported was: %s', $wpdb_last_error ), __FILE__, __LINE__, __METHOD__, true );
 		// other wise proceed to do set up save to data dictionary		
 		} else {		
 			// add to set clause with placeholders

@@ -195,7 +195,7 @@ abstract class WIC_Form_Parent  {
 	/*
 	*
 	*	output show-hide-button ( field group headers are set up as buttons that show/hide field groups)
-	*  calls togglePostFormSection in wic-utilities.js
+	*  	calls togglePostFormSection in wic-utilities.js
 	*
 	*/
 	protected function output_show_hide_toggle_button( $args ) {
@@ -215,7 +215,6 @@ abstract class WIC_Form_Parent  {
 		' class = "' . $class . '" ' .
 		' id = "' . $name_base . esc_attr( $name_variable ) . '-toggle-button" ' .
 		' type = "button" ' .
-		' onclick="togglePostFormSection(\'' . $name_base . esc_attr( $name_variable ) . '\')" ' .
 		' >' . esc_html ( $label ) . '<span class="show-hide-legend" id="' . $name_base . esc_attr( $name_variable ) .
 		'-show-hide-legend">' . $show_legend . '</span>' . '</button>';
 

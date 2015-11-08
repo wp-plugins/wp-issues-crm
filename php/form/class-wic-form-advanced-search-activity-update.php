@@ -27,8 +27,6 @@ class WIC_Form_Advanced_Search_Activity_Update extends WIC_Form_Multivalue_Updat
 			$correct_field_id = 'advanced_search_activity[' . $this->entity_instance . '][activity_value]';
 			// replace the individual field ids (also for attributes in labels)
 			$override_control_html = str_replace( $default_field_id, $correct_field_id, $override_control_html );		
-			// replace <div> opener
-			// echo '<br/><br/> position: '; var_dump ( substr( $override_control_html, 1, 30 ) );
 			$override_control_html = str_replace( 
 				'<div class = "wic_multi_select"', 
 				'<div id="' . $correct_field_id . '" class="wic_multi_select activity-value issue" name="' . $correct_field_id . '"', 				

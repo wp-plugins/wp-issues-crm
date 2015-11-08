@@ -127,13 +127,16 @@ class WIC_List_Activity extends WIC_List_Parent {
 	public function format_message( &$wic_query, $header='' ) {
 	
 		$financial_total = $wic_query->financial_activities_in_results ? sprintf ( __( ' Total amount for found activities is %1$s.', 'wp-issues-crm'), $wic_query->amount_total ) : '';	
-	
+		
 		if ( $wic_query->found_count <= $wic_query->retrieve_limit ) {
-			$header_message = $header . sprintf ( __( 'Found %1$s activities.', 'wp-issues-crm'), $wic_query->showing_count ) . $financial_total;		
+			$found_string = intval( $wic_query->found_count ) > 1 ? sprintf ( __( 'Found %1$s activities.', 'wp-issues-crm'), $wic_query->showing_count ) : 
+				__( 'Found one activity.', 'wp-issues-crm' );
+			$header_message = $header . $found_string. $financial_total;		
 		} else {
 			$header_message = $header . sprintf ( __( 'Found total of %1$s activities, showing search maximum -- %2$s.', 'wp-issues-crm'),
 				 $wic_query->found_count, $wic_query->showing_count ) . $financial_total; 		
 		}
+		$header_message = WIC_Entity_Advanced_Search::add_blank_rows_message ( $wic_query, $header_message );
 		return $header_message;
 	}
 

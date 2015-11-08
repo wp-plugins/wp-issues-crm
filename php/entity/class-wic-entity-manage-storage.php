@@ -83,7 +83,7 @@ class WIC_Entity_Manage_Storage extends WIC_Entity_Parent {
 		
 		// truncate history table
 		$upload_table = $wpdb->prefix . 'wic_upload';
-		$sql =  "TRUNCATE $upload_table";
+		$sql =  "update $upload_table set purged = 1 where purged = 0 ";
 		$wpdb->query ( $sql );
 		
 	}	

@@ -25,6 +25,16 @@ class WIC_Control_Range extends WIC_Control_Parent {
 		$control .= $this->create_control( $final_control_args ) ;
 		return ( $control );
 	}
+
+	// used in unpacking metaarray in parent when have range controls
+	public static function 	unpack_comparison_values( $compare, $value ) {
+		if ( '>=' == $compare ) {
+			$value = array( $value, '' );
+		} else if ( '<=' == $compare ) {
+			$value = array( '', $value );
+		} 
+		return ( $value );
+	} 
 		
 	public function set_value( $value ) { 
 		if ( is_array ( $value ) ) {

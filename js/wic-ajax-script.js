@@ -35,6 +35,7 @@ var wpIssuesCRMAjaxPost = function( entity, action, idRequested, data, callback 
 		} catch( err ) {
 			if ( 'JSON' == err.message.substring( 0, 4 ) ) {
 				console.log ( 'Apparent server side error message (JSON could not parse): ' + response );
+				alert ( 'A server side error occurred.  Retry with console log open for details.' );
 			} 
 			console.log ( 'AJAX post error message at wic-axaj-script.js, line 39 = ' + err.message );
 		}

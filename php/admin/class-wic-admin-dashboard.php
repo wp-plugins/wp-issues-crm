@@ -239,27 +239,7 @@ class WIC_Admin_Dashboard {
 	private function search_history( $user_ID ) {
 	
 		$wic_query = WIC_DB_Access_Factory::make_a_db_access_object( 'search_log' );
-
-		$search_parameters= array(
-			'sort_order' => true,
-			'compute_total' 	=> false,
-			'retrieve_limit' 	=> 50,
-			'show_deleted' 	=> true,
-			'select_mode'		=> 'id',
-			'log_search'		=> false,
-		);
-
-		$search_array = array (
-			array (
-				 'table'	=> 'search_log',
-				 'key'	=> 'user_id',
-				 'value'	=> $user_ID,
-				 'compare'	=> '=', 
-				 'wp_query_parameter' => '',
-			),				
-		);
-
-		$wic_query->search ( $search_array, $search_parameters ); // get a list of id's meeting search criteria
+		$wic_query->retrieve_search_log_latest();
 		$sql = $wic_query->sql;
 		if ( 0 == $wic_query->found_count ) {
 			echo '<h3>' . __( 'Search logs purged since last search.', 'wp-issues-crm' ) . '</h3>';		

@@ -36,7 +36,7 @@ class WIC_Admin_Navigation {
 		// need to run add setting  before add page -- too late to register if try not to do the work until on the page 		
 		$wic_admin_settings = new WIC_Admin_Settings; 
 		add_submenu_page( 'wp-issues-crm-main', 'WIC Settings', 'Settings', 'activate_plugins', 'wp-issues-crm-settings', array ( $wic_admin_settings, 'wp_issues_crm_settings' ) ); 
-		add_submenu_page( 'wp-issues-crm-main', 'WIC Storage', 'Manage Storage', $main_security_setting, 'wp-issues-crm-storage', array ( $this, 'do_storage' ) );	
+		add_submenu_page( 'wp-issues-crm-main', 'WIC Storage', 'Manage Storage', 'activate_plugins', 'wp-issues-crm-storage', array ( $this, 'do_storage' ) );	
 	}
 
 
