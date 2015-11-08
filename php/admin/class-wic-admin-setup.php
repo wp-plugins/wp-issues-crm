@@ -219,7 +219,6 @@ class WIC_Admin_Setup {
 		   		// capacities to add
 				'manage_wic_constituents' 	=> true, // grants access to plugin and all constituent functions
 		        'read_private_posts' 		=> true, // necessary for viewing (and so editing) individual private issues through wic interface
-		        'upload_files'				=> true,
 		        'read'						=> true, // allows access to dashboard
 		        // capacities explicitly (and perhaps unnecessarily) denied
 	            'edit_posts'  					=> false, // limits wp backend access -- can still edit private issues through the wic interface
@@ -231,6 +230,7 @@ class WIC_Admin_Setup {
 		        'read_private_pages' 			=> false,
 		        'edit_private_posts' 			=> false,
 		        'edit_private_pages' 			=> false, 
+		        'upload_files'					=> false,
 		    )
 		);
 		

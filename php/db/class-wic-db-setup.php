@@ -150,7 +150,7 @@ class WIC_DB_Setup {
 		$outcomex = $wpdb->query ( $sql );
 
 		// force a run of role set up attached to activation hook (to reflect role definition change)
-		if (  $installed_version < '2.4.1' ) {
+		if (  $installed_version < '2.4.2' ) {
 			WIC_Admin_Setup::wic_set_up_roles_and_capabilities();			
 		}
 
