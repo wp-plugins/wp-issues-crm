@@ -125,6 +125,11 @@ class WIC_DB_Setup {
 		if ( false === $installed_version || $installed_version < '2.3' ) {
 			$outcome7 = self::execute_file_sql ( 'wic_option_groups_and_options_upgrade_003' );					
 		}
+		
+		// add ons in version 2.3.4
+		if ( false === $installed_version || $installed_version < '2.3.4' ) {
+			$outcome7 = self::execute_file_sql ( 'wic_option_groups_and_options_upgrade_004' );					
+		}
 
 	
 		/*
@@ -143,6 +148,11 @@ class WIC_DB_Setup {
 		$sql = "UPDATE $option_value v INNER JOIN $option_group g ON v.parent_option_group_slug = g.option_group_slug 
 			SET v.option_group_id = g.ID where option_group_id = '' ";
 		$outcomex = $wpdb->query ( $sql );
+
+		// force a run of role set up attached to activation hook (to reflect role definition change)
+		if (  $installed_version < '2.4.1' ) {
+			WIC_Admin_Setup::wic_set_up_roles_and_capabilities();			
+		}
 
 		// always finish by marking version change
 		if ( false !== $installed_version ) {

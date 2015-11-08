@@ -4,7 +4,7 @@ Donate link:
 Tags: contact, crm, constituent, customer, issues, list
 Requires at least: 4.0
 Tested up to: 4.3.1
-Stable tag: 2.3.3
+Stable tag: 2.4.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -97,6 +97,35 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 
 == Changelog ==
+= 2.4.1 =
+* Fix permissions for users with role defined as constituent manager (could not access dashboard)
+= 2.4 =
+* Allow searches to be named and published across users -- update names of searches with right click from search log;
+cross-user security; automatic favoriting of named searches.
+* Add setting to freeze activities to prevent changes after a financial reconciliation or just to reduce errors; can
+use a fixed freeze date or freeze activities based on recency (rolling freeze date). 
+= 2.3.5 =
+* Complete isolation of all javascript functions and variables in namespaces to avoid plug-in conflicts
+* Bullet proof upload process -- add capacity to backout activities uploaded; allow activities
+to repeat on same day in upload; fix displayed accounting in restart conditions; protect against user
+repetition of backout/restart sequence; mark upload time/file records as purged when purge staging files;
+prevent alteration of planned issue count when revisiting upload default tab after upload complete;
+disable input during issue title search on default settings tab.
+* Fix inconsistency between search logging for advanced searches and upgrade methodology to preserve
+search history of advanced searches across upgrades.
+* Bullet proof field add process -- lock constituent table to prevent conflicts resulting from quick
+successive field adds if user does not wait for field add to complete.
+* Allow selection of activities by upload file origin in advanced search
+* Eliminate error exposure when user mixes browser and plug-in back/forward buttons
+* Alter search log access -- on found single item, return to item, not search form
+* Alter export of "home information" -- include selected records regardless if have home info (show blanks if not)
+= 2.3.4 =
+* Refactor advanced search ui script for code tranparency
+* Fix bug in datepicker initialization in advanced search having clauses
+* Fix computation of number of advanced search rows bypassed
+* Hide values in advanced search when comparison does not call for a value
+* Fix handling of checked fields in advanced search
+* Fix grammar of message for single record found for activity and constituent lists
 = 2.3.3 =
 * Refactor and compress code in advanced search SQL generator; fix certain special cases
 * Improve user interface for advanced search 'having' clause generation

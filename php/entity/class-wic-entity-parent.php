@@ -96,7 +96,8 @@ abstract class WIC_Entity_Parent {
 		} 
 	}	
 
-	protected function populate_data_object_array_with_search_parameters ( $search ) { 
+
+	protected function populate_data_object_array_with_search_parameters ( $search ) {
 	
 		$this->initialize_data_object_array();
 		// reformat $search_parameters array
@@ -104,14 +105,7 @@ abstract class WIC_Entity_Parent {
 		foreach ( $search['unserialized_search_array'] as $search_array ) { 
 			if ( $search_array['table'] == $this->entity ) {
 				// need to convert range controls that were carried as single values (because only one end entered) back into arrays
-				if ( '>=' == $search_array['compare'] ) {
-					$key_value_array[$search_array['key']] = array ( $search_array['value'], '' );
-				} else if ( '<=' == $search_array['compare'] ) {
-					$key_value_array[$search_array['key']] = array ( '', $search_array['value'] );
-				// otherwise, just assign values
-				} else { 
-					$key_value_array[$search_array['key']] = $search_array['value'];
-				}
+				$key_value_array[$search_array['key']] = WIC_Control_Range::unpack_comparison_values( $search_array['compare'], $search_array['value'] );
 				// the transient search parameter category_search_mode is pulled directly into the search array as a compare value
 				// by WIC_Control_Parent::create_search_clause, so it is not in the search parameter array and has to be put back for the doa
 				if ( 'post_category' == $search_array['key'] ) { 
@@ -124,7 +118,8 @@ abstract class WIC_Entity_Parent {
 					$key_value_array[$search_array['table']] = array();
 					$key_value_array[$search_array['table']][0] = array();				
 				}
-				$key_value_array[$search_array['table']][0][$search_array['key']] = $search_array['value'];		
+				$key_value_array[$search_array['table']][0][$search_array['key']] = 
+					WIC_Control_Range::unpack_comparison_values( $search_array['compare'], $search_array['value'] );		
 			}
 		}
 
@@ -294,9 +289,9 @@ abstract class WIC_Entity_Parent {
 		$new_search->layout_form( $this->data_object_array, $guidance, 'guidance' );
 	}	
 	
-	// used to recreate form when changing search parameters
-	protected function search_form_from_search_array ( $form, $guidance, $serialized_search_array ) {
-		$this->populate_data_object_array_with_search_parameters ( $serialized_search_array ); 
+	// used to recreate form when changing search parameters ( $search is array from get_search_from_search_log )
+	protected function search_form_from_search_array ( $form, $guidance, $search ) {
+		$this->populate_data_object_array_with_search_parameters ( $search ); 
 		$new_search = new $form;
 		$new_search->layout_form( $this->data_object_array, $guidance, 'guidance' );
 	}

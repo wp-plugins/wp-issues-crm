@@ -39,7 +39,7 @@ class WIC_List_Activity_Export extends WIC_List_Constituent_Export {
 			);
 			
 			// do the search, saving retrieved id list in temp table if constituent, setting up next step if issue	
-			$wic_query->search ( $search['meta_query_array'], $search_parameters );
+			$wic_query->search ( $search['unserialized_search_array'], $search_parameters );
 			
 			$sql = self::assemble_activity_export_sql( $download_type ); // runs off temp table
 

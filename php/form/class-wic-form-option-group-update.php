@@ -35,11 +35,6 @@ class WIC_Form_Option_Group_Update extends WIC_Form_Parent  {
 		
 	}
 	
-	// set up the javascript validator as a form submission condition	
-	protected function supplemental_attributes() {
-		echo 'onsubmit = "return testForDupOptionValues();"';	
-	}
-	
 	// define the form message (return a message)
 	protected function format_message ( &$data_array, $message ) {
 		return ( __('Update Option Group. ', 'wp-issues-crm') . $message );
@@ -121,6 +116,7 @@ class WIC_Form_Option_Group_Update extends WIC_Form_Parent  {
 
 
 	// hooks not implemented
+	protected function supplemental_attributes() {}
 	protected function get_the_legends( $sql = '' ) {}	
 	protected function pre_button_messaging ( &$data_array ){}
 	protected function post_form_hook ( &$data_array ) {} 

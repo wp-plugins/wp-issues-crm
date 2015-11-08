@@ -143,12 +143,18 @@ class WIC_Entity_Advanced_Search extends WIC_Entity_Parent {
 			);		
 		} else {
 			$field = $wic_db_dictionary->get_field_rules_by_id( $new_control_field_id  );
-		}	
-		$control = WIC_Control_Factory::make_a_control ( $field['field_type'] );
-		// need to initialize with values from field being searched for, not field in advanced_search form
-		$control->initialize_default_values(  $field['entity_slug'], $field['field_slug'], 'wic_blank_control_template' );
+		}
+		// want to use a binary select control in cases of checked fields to allow negative selection on field
+		if ( 'checked' == $field['field_type'] ) {
+			$control = WIC_Control_Factory::make_a_control ( 'select' );
+			$control->initialize_default_values(  'advanced_search', 'advanced_search_checked_substitute', 'wic_blank_control_template' );
+		} else {	
+			$control = WIC_Control_Factory::make_a_control ( $field['field_type'] );
+			// need to initialize with values from field being searched for, not field in advanced_search form
+			$control->initialize_default_values(  $field['entity_slug'], $field['field_slug'], 'wic_blank_control_template' );
+		}
 		// all controls should be updateable and want in update format (no search ranges, for example)
-		$control->override_readonly();
+		$control->override_readonly( false );
 		$control = $control->update_control();
 		$control_no_label = substr( $control, strpos( $control, 'label>' ) + 6 );
 		echo json_encode( $control_no_label );

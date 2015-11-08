@@ -10,8 +10,8 @@ class WIC_Control_Checked extends WIC_Control_Parent {
 		$input_class = 'wic-input-checked';
 
 		extract ( $control_args, EXTR_SKIP ); 
-	
-		$readonly = $readonly ? 'readonly' : '';
+
+		$readonly = $readonly ? ' disabled="disabled" ' : '';
 				 
 		$control = ( $field_label > '' ) ?  '<label class="' . $label_class .  ' ' . esc_attr( $field_slug_css ) . '" for="' . 
 				esc_attr( $field_slug ) . '">' . esc_html( $field_label ) . ' ' . '</label>' : '';

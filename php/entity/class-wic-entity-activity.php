@@ -37,8 +37,20 @@ class WIC_Entity_Activity extends WIC_Entity_Multivalue {
 *  Support for particular object properties
 *
 ***************************************************/
-
-
+	
+	// get and parse freeze date setting
+	public static function get_freeze_date() {
+		$wic_option_array = get_option('wp_issues_crm_plugin_options_array'); 
+		if ( isset ( $wic_option_array['freeze_older_activities'] ) ) {
+			$date_value = $wic_option_array['freeze_older_activities'] > '' ? 
+				WIC_Control_Date::sanitize_date( $wic_option_array['freeze_older_activities'] ) :
+				'';
+		} else {
+			$date_value = '';		
+		}
+		return ( $date_value );
+	}
+	
 	public static function get_issue_options( $value ) {
 
 		// top element in options array is always a placeholder -- should decide
@@ -109,6 +121,33 @@ class WIC_Entity_Activity extends WIC_Entity_Multivalue {
 	}
 
 
+	// generate upload id options
+	public static function upload_id( $value ) {
+		
+		// base value is a non-uploaded activity
+		$uploads_array = array( 
+			array ( 'value' => 0 , 'label' => __( 'Not Uploaded', 'wp-issues-crm' ) ),
+		);			
+		// get upload list
+		$uploads = WIC_DB_Access_Upload::list_uploads();
+		// assume value not found
+		$value_found = false;
+		// if got a list of uploads, populate the option list
+		if ( is_array ( $uploads ) ) {
+			foreach ( $uploads as $upload ) {
+				$uploads_array[] = array ( 'value' => $upload->ID , 'label' => $upload->upload_file . ' (' . $upload->upload_time . ') ' );		
+				if ( $upload->ID == $value ) {
+					$value_found = true;
+				}
+			}
+		}
+		if ( false === $value_found && $value > 0 ) {
+			$uploads_array[] = array ( 'value' => $value , 'label' => __( 'Upload history purged.', 'wp-issues-crm' ) );	
+		
+		}
+	    return ( $uploads_array );
+	}
+
 	// handle special variable display properties in activity rows -- 
 	// better here than in js (avoid visual bounce)
 	protected function show_hide_activity_elements ( $not_a_search = true ) {
@@ -127,6 +166,17 @@ class WIC_Entity_Activity extends WIC_Entity_Multivalue {
 				$this->data_object_array['activity_amount']->set_input_class_to_hide_element();
 			}			
 		}
+
+		/*
+		* if activity_date is before frozen date, make all controls read only
+		*  -- require activity_date non-blank -- don't freeze the template row
+		*/
+		if ( '' < $this->data_object_array['activity_date']->get_value() &&
+				$this->data_object_array['activity_date']->get_value() < self::get_freeze_date()  ) {
+			foreach ( $this->data_object_array as $control ) {
+				$control->override_readonly( true );
+			}
+		}
 		 
 		/*
 		* if not using autocomplete mode for activity (i.e., disallowed or user opted out) hide the autocomplete control (it will not be referenced)
@@ -138,12 +188,10 @@ class WIC_Entity_Activity extends WIC_Entity_Multivalue {
 		} else {  
 			$this->data_object_array['issue']->set_input_class_to_hide_element();
 			// also, populate the displayed value in issue_autocomplete if exist			
-			if ( $not_a_search ) {
-				$issue = $this->data_object_array['issue']->get_value();
-				if ( $issue > '' ) {
-					$this->data_object_array['issue_autocomplete']->set_value( get_the_title( $issue ) );
-				} // $issue > ''
-			} // $not a search
+			$issue = $this->data_object_array['issue']->get_value();
+			if ( $issue > '' ) {
+				$this->data_object_array['issue_autocomplete']->set_value( get_the_title( $issue ) );
+			} // $issue > ''
 		}  // using autocomplete		
 	}  // function show hide activity elements
 } // class

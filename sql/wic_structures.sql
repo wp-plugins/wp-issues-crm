@@ -11,12 +11,14 @@ CREATE TABLE wp_wic_activity (
   activity_note text NOT NULL,
   last_updated_time datetime NOT NULL,
   last_updated_by bigint(20) NOT NULL,
+  upload_id bigint(20) NOT NULL,
   PRIMARY KEY (ID),
   KEY constituent_id (constituent_id),
   KEY activity_type (activity_type),
   KEY activity_date (activity_date),
   KEY last_updated_time (last_updated_time),
-  KEY last_updated_by (last_updated_by)
+  KEY last_updated_by (last_updated_by),
+  KEY upload_id (upload_id)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 CREATE TABLE wp_wic_address (
@@ -191,6 +193,8 @@ CREATE TABLE wp_wic_search_log (
   favorite tinyint(1) NOT NULL,
   user_id bigint(20) NOT NULL,
   search_time varchar(20) NOT NULL,
+  share_name varchar(20) NOT NULL,
+  is_named tinyint(1) NOT NULL,
   entity varchar(30) NOT NULL,
   serialized_search_array text NOT NULL,
   download_time varchar(20) NOT NULL,
@@ -199,7 +203,8 @@ CREATE TABLE wp_wic_search_log (
   PRIMARY KEY (ID),
   KEY user_entity_time (user_id,entity,search_time),
   KEY user_time (user_id,search_time),
-  KEY user_favorite_time (user_id,favorite,search_time)
+  KEY user_favorite_time (user_id,favorite,search_time),
+  KEY named_user_favorite_time (is_named,share_name,user_id,favorite,search_time)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;
 
 CREATE TABLE wp_wic_upload (
@@ -216,6 +221,7 @@ CREATE TABLE wp_wic_upload (
   serialized_final_results blob NOT NULL,
   last_updated_time datetime NOT NULL,
   last_updated_by bigint(20) NOT NULL,
+  purged tinyint(1) NOT NULL,
   PRIMARY KEY (ID),
   KEY upload_time_upload_by (upload_time,upload_by)
 ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;

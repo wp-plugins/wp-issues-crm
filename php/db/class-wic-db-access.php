@@ -83,7 +83,11 @@ abstract class WIC_DB_Access {
 	*	Additional specialized searches include:
 	*		In dup checking (Entity_Parent, Never Logged)
 	*		From specialized search arrays constructed as in Dashboard (Never Logged)
-	*		For specialized searches in multivalue controls, options and field listings (Never Logged)	
+	*		For specialized searches in multivalue controls, options and field listings (Never Logged)
+	*
+	*	Advanced searches are logged like regular searches, but with invariant notation used for the search 
+	*	In the form, it is driven off of data_dictionary ID, but ID may change with successive upgrades
+	*		
 	*	
 	***********************************************************************************************/
 	public function search_log ( $meta_query_array, $search_parameters ) {
@@ -96,6 +100,11 @@ abstract class WIC_DB_Access {
 				global $wpdb;
 				$search_log_table = $wpdb->prefix . 'wic_search_log';
 				$user_id = get_current_user_id();
+
+				// needed to make search log data invariant across dictionary replacements in upgrades
+				if ( 'advanced_search' == $entity ) {
+					$meta_query_array = $this->replace_field_id_with_entity_and_field_slugs ( $meta_query_array );
+				}
 	
 				$search = serialize( $meta_query_array );
 				$parameters = serialize ( $search_parameters );
@@ -132,11 +141,77 @@ abstract class WIC_DB_Access {
 		}
 	}
 	
+	private function replace_field_id_with_entity_and_field_slugs ( $meta_query_array ) { 
+		global $wic_db_dictionary;
+		$invariant_meta_query_array = array();
+		foreach ( $meta_query_array as $search_term ){
+			if ( isset ( $search_term[0] ) ) {
+				if ( 'row' == $search_term[0] ) { 
+					$invariant_row = array();
+					foreach ( $search_term[1] as $query_clause ) { 
+						if (isset ( $query_clause['key'] ) ) { 
+							if ( '_field' == substr ( $query_clause['key'], -6 ) ) { 
+								$field_rules = $wic_db_dictionary->get_field_rules_by_id( $query_clause['value'] ); 
+								$invariant_field_id = array ( 
+									'entity_slug' 	=> $field_rules['entity_slug'],
+									'field_slug' 	=> $field_rules['field_slug'],
+								);
+								$query_clause['value'] = $invariant_field_id;
+							}
+						}
+						$invariant_row[] = $query_clause; 
+					}
+					$search_term[1] = $invariant_row;
+				}
+			}
+			$invariant_meta_query_array[] = $search_term;
+		};
+		return $invariant_meta_query_array;
+	}
+	
+	public static function update_search_name ( $id, $name ) {
+		global $wpdb;
+		$search_log_table = $wpdb->prefix . 'wic_search_log';
+		$user_id = get_current_user_id();
+		$user_id_phrase = current_user_can ( 'activate_plugins' ) ? '' : "and user_id = $user_id";
+		$sanitized_name = sanitize_text_field ( $name );
+		// favorite named searches, but don't unfavorite unnamed searches
+		if ( $sanitized_name  > '' ) {
+			$is_named = 1;			
+			$favorite_phrase = ", favorite = 1 ";
+		} else {
+			$is_named = 0;
+			$favorite_phrase = '';
+		}
+
+		$sql = $wpdb->prepare( 
+			"UPDATE $search_log_table SET share_name = %s, is_named = $is_named $favorite_phrase where ID = %s $user_id_phrase ",
+			array ( $sanitized_name, $id ) 
+		);
+		$result = $wpdb->query ( $sql );
+		return ( $result );
+	}	
+	
+	// used in search log history retrieval -- spoofs a return from a search -- too complex to run through standard option 
+	public function retrieve_search_log_latest () {
+		global $wpdb;
+		$search_log_table = $wpdb->prefix . 'wic_search_log';
+		$user_id = get_current_user_id();
+		$sql = "SELECT ID from $search_log_table where user_id = $user_id or is_named = 1
+				ORDER BY is_named DESC, share_name, favorite desc, search_time DESC
+				LIMIT 0, 100";
+		$this->sql = $sql; 
+		$this->result = $wpdb->get_results ( $sql );
+		$this->found_count = count ( $this->result );
+	}		
 	/*
 	*
 	* retrieve the latest search for an individual instance of this entity from the search log 
-	* return false if non-found
+	* return false if non-found.  
 	*
+	* will not support entity = advanced_search . . . not necessary; used only for entity = issue;
+	* 	also will not recognize single issue found through advanced search -- this is a limitation
+	* 
 	*/
 	public function search_log_last ( $user_id ) {
 		
@@ -242,20 +317,52 @@ abstract class WIC_DB_Access {
 	*
 	*/
 	 
-	public static function get_search_from_search_log ( $id ) {
+	public static function get_search_from_search_log ( $id ) { 
 		
 		global $wpdb;
 		$search_log_table = $wpdb->prefix . 'wic_search_log';
 		
 		$search_object = $wpdb->get_row ( "SELECT * from $search_log_table where id = $id " );
 		
+		$unserialized_search_array = unserialize ( $search_object->serialized_search_array );
+		if ( 'advanced_search' == $search_object->entity ) {
+			$unserialized_search_array = self::replace_entity_and_field_slugs_with_id ( $unserialized_search_array );  	
+		} 
+		
 		$return = array (
+			'search_id' => $id,
 			'user_id' => $search_object->user_id,
 			'entity' =>  $search_object->entity, 
-			'meta_query_array' =>  unserialize ( $search_object->serialized_search_array )
-		);
+			'unserialized_search_array' =>  $unserialized_search_array,
+			'unserialized_search_parameters' => unserialize( $search_object->serialized_search_parameters ),
+			'result_count' =>$search_object->result_count
+			);
 
 		return ( $return );		
+	}
+	
+	private static function replace_entity_and_field_slugs_with_id ( $invariant_meta_query_array ) {
+		global $wic_db_dictionary;
+		$meta_query_array = array();
+		foreach ( $invariant_meta_query_array as $search_term ){
+			if ( isset ( $search_term[0] ) ) {
+				if ( 'row' == $search_term[0] ) { 
+					$standard_row = array();
+					foreach ( $search_term[1] as $query_clause ) {  
+						if (isset ( $query_clause['key'] ) ) { 
+							if ( '_field' == substr ( $query_clause['key'], -6 ) ) { 
+								$field_rules = $wic_db_dictionary->get_field_rules( $query_clause['value']['entity_slug'], $query_clause['value']['field_slug'] );
+								$query_clause['value'] = $field_rules->ID;
+							}
+						}
+						$standard_row[] = $query_clause;
+					}
+					$search_term[1] = $standard_row;
+				}
+			}
+			$meta_query_array[] = $search_term;
+		};
+		return $meta_query_array;
 	}
 
 	/*
@@ -288,7 +395,9 @@ abstract class WIC_DB_Access {
 	public static function set_search_favorite ( $id, $favorite ) {
 		global $wpdb;
 		$search_log_table = $wpdb->prefix . 'wic_search_log';
-		$sql = "UPDATE $search_log_table SET favorite = $favorite WHERE ID = $id";
+		$is_named_phrase = ( 1 == $favorite ) ? '' : ' and is_named = 0 ';
+		// don't unfavorite a named search -- named searches are always favorited
+		$sql = "UPDATE $search_log_table SET favorite = $favorite WHERE ID = $id $is_named_phrase";
 		$result = $wpdb->query( $sql );			
 		return ( $result);
 	} 

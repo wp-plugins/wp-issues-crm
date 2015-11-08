@@ -34,18 +34,18 @@ class WIC_Form_Upload_Complete extends WIC_Form_Upload_Validate  {
 					$button_label = __( 'Complete Upload', 'wp-issues-crm' );
 				} elseif ( 'reversed' == $upload_status )  {
 					$message = sprintf( __( 'Upload of %s already attempted and reversed.', 'wp-issues-crm' ), $data_array['upload_file']->get_value() ) ;
+					$button_label = __( 'Backed Out' , 'wp-issues-crm' );
 					$message_level = 'error';
-					$button_label = __( 'Upload Backed Out' , 'wp-issues-crm' );
 				} elseif ( 'started' == $upload_status ) {
 					$message =  sprintf ( __( 'Upload interrupted for %s. You can safely attempt restart.' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() );
-					$button_label = __( 'Restart Upload', 'wp-issues-crm' );
+					$button_label = __( 'Restart', 'wp-issues-crm' );
 				} elseif ( 'completed' == $upload_status ) {
 					$message =  sprintf ( __( 'Upload already completed for %s.' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() );
-					$button_label = __( 'Upload completed', 'wp-issues-crm' );
+					$button_label = __( 'Completed', 'wp-issues-crm' );
 				}
 				?><div id="post-form-message-box" class = "<?php echo $this->message_level_to_css_convert[$message_level]; ?>" ><?php echo esc_html( $message ); ?></div><?php
 
-				$disabled = ( 'completed' == $upload_status ); 
+				$disabled = ( 'completed' == $upload_status || 'reversed' == $upload_status ); 
 				$button_args_main = array(
 					'entity_requested'			=> 'upload',
 					'action_requested'			=> 'form_update',

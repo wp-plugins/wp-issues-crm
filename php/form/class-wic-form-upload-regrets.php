@@ -31,11 +31,11 @@ class WIC_Form_Upload_Regrets extends WIC_Form_Upload_Validate  {
 				$final_results 				= json_decode ( $data_array['serialized_final_results']->get_value() );
 				$new_constituents_saved 	= $final_results->new_constituents_saved;
 				if ( $new_constituents_saved > 0 ) {
-					$message = sprintf ( __( 'Reverse upload of %1$s NEW input records from %2$s.' , 'wp-issues-crm' ), $new_constituents_saved, $upload_file );
+					$message = sprintf ( __( 'Reverse upload of %1$s NEW input records from %2$s.  Also reverse all activities added for any constituent.' , 'wp-issues-crm' ), $new_constituents_saved, $upload_file );
 					$backout_button_legend = sprintf ( __( 'Reversal includes all activities, emails, phones and addresses for constituents.
 						 ', 'wp-issues-crm' ), $new_constituents_saved );
 				} else {
-					$message = sprintf ( __( 'No NEW constituent records created from %s. Matched updates cannot be reversed.' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() );				
+					$message = sprintf ( __( 'No NEW constituent records created from %s. Backout will only affect activities added (if any).' , 'wp-issues-crm' ), $data_array['upload_file']->get_value() );				
 				}					
 			} elseif ( 'reversed' == $upload_status ) {
 				$message_level = 'error';
@@ -58,7 +58,7 @@ class WIC_Form_Upload_Regrets extends WIC_Form_Upload_Validate  {
 				'id'								=> 'wic-backout-button',
 				'name'							=> 'wic-backout-button',
 				// enable button consistently with message above button
-				'disabled'						=> ( 'completed' != $upload_status && 'started' != $upload_status) || 0 == $new_constituents_saved,
+				'disabled'						=> ( 'completed' != $upload_status && 'started' != $upload_status),
 			);	
 			$button = $this->create_wic_form_button ( $button_args_main );
 			echo $button;
@@ -74,16 +74,12 @@ class WIC_Form_Upload_Regrets extends WIC_Form_Upload_Validate  {
 					'<h3>' . __( 'Backing out updates:', 'wp-issues-crm' ) . '</h3>' .
 					'<ul class = "upload-status-summary" >' .
 					'<li>' .
-						__( 'This backout function only reverses newly added constituents. ', 'wp-issues-crm' ) .
+						__( 'This backout function deletes newly added activities and newly added constituents. ', 'wp-issues-crm' ) .
 					'</li>' .
 					'<li>' .
-						__( 'Updates to existing constituents generally cannot be reversed except by restoration from a Wordpress database backup.', 'wp-issues-crm' ) .
+						__( 'Updates to address, phone or email of existing constituents generally cannot be reversed except by restoration from a Wordpress database backup.', 'wp-issues-crm' ) .
 					'</li>' .
-					'<li>' .
-						 __( 'In the absence of a good backup, you may be able to surgically remove erroneously added activity records using phpmyadmin or direct SQL.
-						 		The database structure of WP Issues CRM is transparent and intuitive if you have SQL experience.
-						 		However, there is no good way to undo erroneous updates to core constituent data without a good backup.', 'wp-issues-crm' ).
-					'</li><ul>' .
+					'<ul>' .
 				'</div>';			
 			
 			echo $data_array['ID']->update_control();	

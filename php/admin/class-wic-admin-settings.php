@@ -165,6 +165,23 @@ class WIC_Admin_Settings {
             'wp_issues_crm_settings_page', // page 
             'enable_financial_activities' // settings section within page
        ); 
+ 
+ 		// financial transactions settings 
+      add_settings_section(
+            'freeze_older_activities', // setting ID
+            'Freeze Older Activities', // Title
+            array( $this, 'freeze_older_activities_legend_callback' ), // Callback
+            'wp_issues_crm_settings_page' // page ID ( a group of settings sections)
+        ); 
+
+      add_settings_field(
+            'freeze_older_activities', // field id
+            'Activity Freeze Cutoff', // field label
+            array( $this, 'freeze_older_activities_callback' ), // field call back 
+            'wp_issues_crm_settings_page', // page 
+            'freeze_older_activities' // settings section within page
+       ); 
+    
     
 		// Uninstall Settings (legend only)
       add_settings_section(
@@ -364,7 +381,45 @@ class WIC_Admin_Settings {
 				value ="%s" />', $value );
 	}
 
-
+	/*
+	*
+	* Freeze Older Activities Callback
+	*
+	*/
+	// section legend call back
+	public function freeze_older_activities_legend_callback() {
+		
+		// get and parse date value if available
+		$wic_option_array = get_option('wp_issues_crm_plugin_options_array'); 
+		if ( isset ( $wic_option_array['freeze_older_activities'] ) ) {
+			$date_value = $wic_option_array['freeze_older_activities'] > '' ? 
+				WIC_Control_Date::sanitize_date( $wic_option_array['freeze_older_activities'] ) :
+				'';
+		} else {
+			$date_value = '';		
+		}
+		// if date_value is unset, blank or unparseable, so report
+		$show_date  = ( '' < $date_value ) ? $date_value : __( 'Blank -- not set or not parseable', 'wp-issues-crm' );
+		
+		echo 
+		'<p>' . __( 'WP Issues CRM allows you to freeze older activities, leaving them viewable, but not updateable, online. You might
+					especially wish to do this if you have closed a financial records period, but also just to limit the possibility
+					of data entry errors.' , 'wp-issues-crm' ) . '</p>' . 
+		'<p>' . __( 'Activities dated earlier than the cutoff date below cannot be updated.   Also, you will not be able to set dates
+					 earlier than the cutoff date when adding new activities.  Note that you can still mark a constituent as deleted
+					 even if they have activities dated before the cutoff.  Also, you can always change the cutoff date, or eliminate it, 
+					 if for some reason you need to go back to update older activities.', 'wp-issues-crm' ) . '</p>' .
+		'<p>' . __( 'You can enter the cutoff date in almost any English language format, including variable formats like <code>3 days ago</code>.
+					 This example would freeze activities more than 3 days old on a rolling basis. Enter a phrase and save it to test it.' , 'wp-issues-crm' ) .  '</p>' .
+		'<p><strong><em>' . __( 'As of today, the last saved cutoff value evaluates to: ' , 'wp-issues-crm' ) . '</em></strong><code>' . $show_date . '.</code></p>' ;
+	}
+	
+	// setting field call back
+	public function freeze_older_activities_callback() { 
+		$value = isset ( $this->plugin_options['freeze_older_activities'] ) ? $this->plugin_options['freeze_older_activities'] : '';
+		printf( '<input type="text" id="freeze_older_activities" name="wp_issues_crm_plugin_options_array[freeze_older_activities]"
+				value ="%s" />', $value );
+	}
 
 	/*
 	*
@@ -435,7 +490,14 @@ class WIC_Admin_Settings {
 					}     	   
       	   } 
       	   $new_input['financial_activity_types'] = implode (',', $clean_type_array );
+      } 
+      
+      if( isset( $input['freeze_older_activities'] ) ) {
+      		// accept only values that can be processed to a date by php, but store the value, not the date
+      		$date_value = WIC_Control_Date::sanitize_date( $input['freeze_older_activities'] );
+            $new_input['freeze_older_activities'] = $date_value > '' ? sanitize_text_field( $input['freeze_older_activities'] ) : '';
       }  
+       
       return ( $new_input );      
 	}
 

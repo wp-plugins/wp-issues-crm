@@ -39,7 +39,7 @@ class WIC_List_Search_Log extends WIC_List_Parent {
 				foreach ( $fields as $field ) {
 					// showing fields other than ID with positive listing order ( in left to right listing order )
 					if ( 'ID' != $field->field_slug && $field->listing_order > 0 ) {
-						$row .= '<li class = "wic-post-list-field pl-' . $wic_query->entity . '-' . $field->field_slug . ' "> ';
+						$row .= '<li class = "wic-post-list-field pl-' . $wic_query->entity . '-' . $field->field_slug . ' ">';
 							$row .=  $this->format_item ( $wic_query->entity, $field->list_formatter, $row_array->{$field->field_slug} ) ;
 						$row .= '</li>';			
 					}	
@@ -74,7 +74,7 @@ class WIC_List_Search_Log extends WIC_List_Parent {
 	protected function format_message( &$wic_query, $header='' ) {
 	
 		$header_message = $header . sprintf ( __( 'Showing most recent %1$s searches and saves.    
-				Select to return to results.', 'wp-issues-crm'), $wic_query->found_count );		
+				Click to return to results.  Right click to name and share.', 'wp-issues-crm'), $wic_query->found_count );		
 		return $header_message;
 	}
 

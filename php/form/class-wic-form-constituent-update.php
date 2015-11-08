@@ -58,9 +58,18 @@ class WIC_Form_Constituent_Update extends WIC_Form_Constituent  {
 		if ( '' < $legend ) {
 			$legend = '<p class = "wic-form-legend">' . $legend . '</p>';		
 		}
+
+		$frozen_date = WIC_Entity_Activity::get_freeze_date();
+		// echoing this here will place it right after the nonce field and before the actual output of the legend
+		echo '<div id="wic-activity-frozen-date">' . $frozen_date . '</div>';
+		if ( '' < $frozen_date ) {
+			$legend .= '<p class = "wic-form-legend">' . sprintf( __( 'Activity dates before %s cannot be entered, nor can activities with dates before that date be updated. 
+				You can change the Freeze Older Activities cutoff in Settings.', 'wp-issues-crm' ), $frozen_date ); 
+		}
+
 		
 		if ( '' < $sql ) {
-			$legend .= 	'<p class = "wic-form-legend">' . __('Search SQL was:', 'wp-issues-crm' )	 .  $sql . '</p>';	
+			$legend .= 	'<p class = "wic-form-legend">' . __('Search SQL was:', 'wp-issues-crm' ) . $sql . '</p>';	
 		}
 		return  $legend;
 	}

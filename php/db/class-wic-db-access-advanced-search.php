@@ -126,11 +126,6 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 				}															
 			}
 			
-			// set flag for top entity messaging
-			if ( '' == $value ) {
-				$this->blank_rows_ignored++;
-			}
-			
 			// accumulate subsidiary tables		
 			if( ! in_array( $table, $table_array ) ) {
 				$table_array[] = $table;			
@@ -216,6 +211,9 @@ class WIC_DB_Access_Advanced_Search Extends WIC_DB_Access {
 				$having_count++;
 				// add a select term so that aggregation result can be included in download
 				$additional_select_terms .= ", $aggregator" . "(if($if_condition  1=1, activity.$field_name, NULL )) as " . $aggregator . '_' . $having_count;
+			} else {
+			// set flag for top entity messaging
+				$this->blank_rows_ignored++;
 			}	 
 		}
 		

@@ -172,5 +172,5 @@ class WIC_Function_Utilities { // functions that serve multiple entities
 		
 		return ( $option_group_array );
 	}
-	
+
 }

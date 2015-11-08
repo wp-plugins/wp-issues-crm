@@ -36,7 +36,7 @@ class WIC_List_Constituent_Export {
 			);
 			
 			// do the search, saving retrieved id list in temp table if constituent, setting up next step if issue	
-			$wic_query->search ( $search['meta_query_array'], $search_parameters );
+			$wic_query->search ( $search['unserialized_search_array'], $search_parameters );
 	
 			// additional step if getting constituents from issue list
 			// select_mode download has no effect on issues query, need to get constituents by issue id
@@ -84,7 +84,7 @@ class WIC_List_Constituent_Export {
 			// get the parameters of the current trend search
 			$search =  WIC_DB_Access::get_search_from_search_log( $search_id );
 			// initiate a query with those activity search parameters and issue category as an additional criterion
-			$wic_query->search_activities_with_category_slice( $search['meta_query_array'], $category_contributors );
+			$wic_query->search_activities_with_category_slice( $search['unserialized_search_array'], $category_contributors );
 			// query leaves results in a temp table picked up $sql 
 			$sql = self::assemble_constituent_export_sql( 'type0' ); 
 			// send the file
@@ -205,21 +205,23 @@ class WIC_List_Constituent_Export {
 					"; 		
 				break;		
 			case 'type0':
+				// note: assumes user has only one home address -- could mix elements from two if present
+				// will show blank address/email/phone rather than dropping constituent if no home information
 				$download_sql = " 		
 					SELECT  first_name, last_name,  
-						city, 
-						email_address, 
-						phone_number,
-						address_line as wic_address_line_1,
-						concat ( city, ', ', state, ' ',  zip ) as wic_address_line_2,
-						state, zip $custom_fields_string , i.*
+						max( if ( address_type = '0', city, null )) as city, 
+						max( if ( email_type = '0', email_address, null ) ) as email, 
+						max( if ( phone_type = '0', phone_number, null ) ) as phone,
+						max( if ( address_type = '0', address_line, null ) ) as wic_address_line_1,
+						max( if ( address_type = '0', concat ( city, ', ', state, ' ',  zip ), null ) )as wic_address_line_2,
+						max( if ( address_type = '0', state, null ) ) as state,
+						max( if ( address_type = '0', zip, null ) ) as zip
+						$custom_fields_string , i.*
 					FROM $temp_table i INNER JOIN $constituent c on c.ID = i.ID
 					left join $email e on e.constituent_id = c.ID
 					left join $phone p on p.constituent_id = c.ID
 					left join $address a on a.constituent_id = c.ID	
-					WHERE ( address_type = '0' or address_type is null ) &&
-					( email_type = '0' or email_type is null ) && 
-					( phone_type = '0' or phone_type is null )  
+					group by c.ID
 					";	
 				break;
 			case 'dump':

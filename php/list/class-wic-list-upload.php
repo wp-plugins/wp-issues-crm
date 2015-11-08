@@ -65,20 +65,21 @@ class WIC_List_Upload extends WIC_List_Parent {
 			$row .= '<ul class = "wic-post-list-line">';			
 				foreach ( $fields as $field ) {
 					// showing fields other than ID with positive listing order ( in left to right listing order )
-					if ( 'ID' != $field->field_slug && $field->listing_order > 0 ) {
+					if ( 'ID' != $field->field_slug && 'purged' != $field->field_slug && $field->listing_order > 0 ) {
 						$row .= '<li class = "wic-post-list-field pl-' . $wic_query->entity . '-' . $field->field_slug . ' "> ';
 							$row .=  $this->format_item ( $wic_query->entity, $field->list_formatter, $row_array->{$field->field_slug} ) ;
 						$row .= '</li>';			
 					}	
 				}
 			$row .='</ul>';				
-			
+
 			$list_button_args = array(
 					'entity_requested'	=> $wic_query->entity,
 					'action_requested'	=> 'id_search',
 					'button_class' 		=> 'wic-post-list-button ' . $row_class,
 					'id_requested'			=> $row_array->ID,
-					'button_label' 		=> $row,				
+					'button_label' 		=> $row,
+					'disabled'			=> ( 1 == $row_array->purged )				
 			);			
 			$output .= '<li>' . WIC_Form_Parent::create_wic_form_button( $list_button_args ) . '</li>';	
 			}

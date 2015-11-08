@@ -86,6 +86,11 @@ class WIC_DB_Search_History {
 		$increment = $forward ? 1 : -1; 
 		$history_array = self::search_history_init();
 		$history_array['pointer'] = $history_array['pointer'] + $increment;
+		// undo pointer move if out of range range -- if user mixes plugin nav with browser nav, could mispoint
+		if ( $history_array['pointer'] < 0 || 
+			$history_array['pointer'] > count ( $history_array ['history'] ) - 1 )  {
+			$history_array['pointer'] = $history_array['pointer'] - $increment;
+		}
 		self::search_history_save ( $history_array );
 		$search_id = $history_array['history'][$history_array['pointer']];
 		return ( $search_id );

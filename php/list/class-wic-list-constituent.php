@@ -85,7 +85,9 @@ class WIC_List_Constituent extends WIC_List_Parent {
 	protected function format_message( &$wic_query, $header='' ) {
 	
 		if ( $wic_query->found_count < $wic_query->retrieve_limit ) {
-			$header_message = $header . sprintf ( __( 'Found %1$s constituents.', 'wp-issues-crm'), $wic_query->found_count );		
+			$found_string = $wic_query->found_count > 1 ? sprintf ( __( 'Found %1$s constituents.', 'wp-issues-crm'), $wic_query->found_count ) :
+				__( 'Found one constituent.', 'wp-issues-crm' );	
+			$header_message = $header . $found_string;		
 		} elseif ( $wic_query->found_count_real ) {
 			$header_message = $header . sprintf ( __( 'Found total of %1$s constituents, showing selected search maximum -- %2$s.', 'wp-issues-crm'),
 				 $wic_query->found_count, $wic_query->showing_count ); 		
