@@ -29,7 +29,7 @@ class WIC_Form_Option_Group_Update extends WIC_Form_Parent  {
 		);	
 		$buttons .= $this->create_wic_form_button ( $button_args_main );
 		
-		$buttons .= '<a href="/wp-admin/admin.php?page=wp-issues-crm-options">' . __( 'Back to Options List', 'wp-issues-crm' ) . '</a>';
+		$buttons .= '<a href="' . site_url() . '/wp-admin/admin.php?page=wp-issues-crm-options">' . __( 'Back to Options List', 'wp-issues-crm' ) . '</a>';
 
 		return $buttons;
 		

@@ -47,10 +47,10 @@ class WIC_Entity_Address extends WIC_Entity_Multivalue {
 					$this->data_object_array['zip']->set_value( (string) $xml->Address[0]->Zip5 ); 		 		 
 				}
 			} else {
-				echo '<h4>' . __( 'Empty return from USPS ZipCode Validator. Unknown error. You can disable validator at: ', 'wp-issues-crm' )  . '<a href="/wp-admin/admin.php?page=wp-issues-crm-settings#usps"> WP Issues CRM settings.</a>' . '</h4>';
+				echo '<h4>' . __( 'Empty return from USPS ZipCode Validator. Unknown error. You can disable validator at: ', 'wp-issues-crm' )  . '<a href="' . site_url() . '/wp-admin/admin.php?page=wp-issues-crm-settings#usps"> WP Issues CRM settings.</a>' . '</h4>';
 			}
 			if ( strpos ( $result, '80040B' ) ) {
-				echo '<h4>' . __( 'USPS ZipCode Validator error -- check User Name setting in: ', 'wp-issues-crm') . '<a href="/wp-admin/admin.php?page=wp-issues-crm-settings#usps"> WP Issues CRM settings.</a>' . '</h4>';
+				echo '<h4>' . __( 'USPS ZipCode Validator error -- check User Name setting in: ', 'wp-issues-crm') . '<a href="' . site_url() . '/wp-admin/admin.php?page=wp-issues-crm-settings#usps"> WP Issues CRM settings.</a>' . '</h4>';
 			}
 		}
 	}

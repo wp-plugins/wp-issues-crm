@@ -132,7 +132,7 @@ class WIC_Entity_Upload extends WIC_Entity_Parent {
 					$raquo_pointer =  ( 'complete' == $tab_link || 'download' == $tab_link || 'regrets' == $tab_link ) ? '' : '&raquo;';
 		    		$nav_tab_active = ( $active_tab == $tab_link ) ? 'nav-tab-active' : 'nav-tab-inactive';
 					$output .= '<li class="' . $nav_tab_active . '">
-							<a href="/wp-admin/admin.php?page=wp-issues-crm-uploads&action=' . $tab_link . '&upload_id=' . $upload_id . '"> '. $raquo_pointer_left .
+							<a href="' . site_url() . '/wp-admin/admin.php?page=wp-issues-crm-uploads&action=' . $tab_link . '&upload_id=' . $upload_id . '"> '. $raquo_pointer_left .
 						esc_html( trim( __( $tab_title, 'wp-issues-crm' ) ) )  . ' ' . $raquo_pointer . '</a></li>';
    			
 				}  

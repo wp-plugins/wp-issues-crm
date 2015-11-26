@@ -148,11 +148,11 @@ abstract class WIC_Form_Parent  {
 					'<p class = "wic-form-field-group-legend">' . esc_html ( $group->group_legend )  . '</p>';
 					
 					// here is the main content -- either   . . .
-					if ( $this->group_special ( $group->group_slug ) ) { 				// if implemented returns true -- run special function to output a group
+					if ( $this->group_special ( $group->group_slug ) ) { 			// if implemented returns true -- run special function to output a group
 						$special_function = 'group_special_' . $group->group_slug; 	// must define the special function too 
 						$group_output .= $this->$special_function( $data_array );
 					} else {	// standard main form logic 	
-						$group_fields =  $wic_db_dictionary->get_fields_for_group ( $this->get_the_entity(), $group->group_slug );
+						$group_fields =  $wic_db_dictionary->get_fields_for_group ( $this->get_the_entity(), $group->group_slug ); 
 						$group_output .= $this->the_controls ( $group_fields, $data_array );
 					}
 						
@@ -161,11 +161,11 @@ abstract class WIC_Form_Parent  {
 			} 
 			
 			// put group output into either side or main buffer
-  				if ( $group->sidebar_location ) {
+			if ( $group->sidebar_location ) {
 				$sidebar_groups .= $group_output;  				
-  				} else {
-  					$main_groups .= $group_output;
-  				}
+			} else {
+				$main_groups .= $group_output;
+			}
 	   } // close foreach group
 	
 		return ( array( 

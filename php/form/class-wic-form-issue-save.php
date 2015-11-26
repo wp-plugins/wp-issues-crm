@@ -16,7 +16,7 @@ class WIC_Form_Issue_Save extends WIC_Form_Issue_Update  {
 		);	
 		$buttons = $this->create_wic_form_button ( $button_args_main );
 		
-		$buttons .= '<a href="/wp-admin/post-new.php">' .
+		$buttons .= '<a href="' . site_url() . '/wp-admin/post-new.php">' .
 								__( 'New Post in Wordpress editor.', 'wp-issues-crm' ) .
 							'</a>';		
 

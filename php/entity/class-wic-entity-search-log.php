@@ -119,7 +119,7 @@ class WIC_Entity_Search_Log extends WIC_Entity_Parent {
 							$new_clause['table']		=  $clause_component['value']['entity_slug'];
 						} else {
 						// if don't have array then old format, can't display or retrieve search
-						return ( __( 'Advanced search from before Version 3.3.5 cannot be retrieved after 
+						return ( __( 'Advanced search from before Version 2.3.5 cannot be retrieved after 
 							upgrade. No data has been lost.  Just redo search.', 'wp-issues-crm' ) );			
 						}
 					} elseif ( $row_type . '_comparison' == $clause_component['key']  ) {

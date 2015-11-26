@@ -1256,7 +1256,10 @@ class WIC_DB_Access_Upload Extends WIC_DB_Access_WIC {
 						} 					
 					}
 				} else { // so not constituent and not issue, in other words is any of the multivalue entities
-					if ( 3 > count ( $data_object_array ) ) { // multivals always have ID and constituent ID, if that's all, nothing to update
+					if 	( 
+							3 > count ( $data_object_array )  // multivals always have ID and constituent ID, if that's all, nothing to update
+							|| ( 4 > count ( $data_object_array ) && 'activity' == $entity ) // activity also has the upload ID control in every case 
+						) { 
 						continue; // continue to next entity				
 					} 	
 					// set current constituent id for the entity

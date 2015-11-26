@@ -3,7 +3,7 @@ Contributors: Will Brownsberger
 Donate link: 
 Tags: contact, crm, constituent, customer, issues, list
 Requires at least: 4.0
-Tested up to: 4.3.1
+Tested up to: 4.4
 Stable tag: 2.4.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -97,6 +97,13 @@ this product ourselves on a daily basis and we are committed to continuous long-
 
 
 == Changelog ==
+= 2.4.3 =
+* Bug fix: add site_url() in links within plugin to support installations in subdirectories.
+* Bug fix: prevent addition of blank activity record where no activities being added (bug created in version 2.3.5).
+* Bug fix: correct dictionary entry conflict for serialized update parameters. 
+* Bug fix: add hidden as argument for post metabox select control.
+* Correct version number in search log message about 2.3.5 changes.
+* Eliminate stack dump in error handling unless WP_DEBUG is true.
 = 2.4.2 =
 * Eliminate constituent manager access to media files
 = 2.4.1 =

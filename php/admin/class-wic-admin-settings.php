@@ -369,7 +369,7 @@ class WIC_Admin_Settings {
 	public function enable_financial_activities_legend_callback() {
 		echo 
 		'<p>' . __( 'WP Issues CRM can be used to track financial transactions. Simply enter below the Activity Type codes <em>separated by commas</em> for which amounts should be recorded.' , 'wp-issues-crm' ) . '</p>' . 
-		'<p>' . __( 'For example, if you defined <a href="/wp-admin/admin.php?page=wp-issues-crm-options">Activity Type Options</a> <code>Check Contribution</code> coded as <code>CH</code> and <code>Online Contribution</code> coded as <code>OC</code>, you would enter them below like so:' , 'wp-issues-crm' ) . ' <code>CH,OC</code>' . '</p>' . 
+		'<p>' . __( 'For example, if you defined <a href="' . site_url() . '/wp-admin/admin.php?page=wp-issues-crm-options">Activity Type Options</a> <code>Check Contribution</code> coded as <code>CH</code> and <code>Online Contribution</code> coded as <code>OC</code>, you would enter them below like so:' , 'wp-issues-crm' ) . ' <code>CH,OC</code>' . '</p>' . 
 		'<p>' . __( 'Activities of these types will then be stored and displayed with an amount field formatted with two decimal points.' , 'wp-issues-crm' ) .  '</p>' .
 		'<p>' . __( 'Tip: The matching of activity type codes is case sensitive -- "CH" as an Activity Type code will <em>not</em> match "ch" as a financial activity setting.' , 'wp-issues-crm' ) .  '</p>' ;
 	}
@@ -430,8 +430,8 @@ class WIC_Admin_Settings {
 	public function uninstall_legend() {
 		echo '<div id="uninstall">' .
 			'<p>' . __( 'If you simply wish to refresh original options settings, you can safely deactivate and delete WP Issues CRM and then reinstall it on
-			the <a href="/wp-admin/plugins.php">plugins menu</a>.  WP Issues CRM will come back up	with all of your data.', 'wp-issues-crm' ) . '</p>' 
-			. '<p>' . __( 'WP Issues CRM does a partial uninstall of its own data if you "delete" it through the <a href="/wp-admin/plugins.php">plugins menu</a>.  It removes its entries
+			the <a href="' . site_url() . '/wp-admin/plugins.php">plugins menu</a>.  WP Issues CRM will come back up	with all of your data.', 'wp-issues-crm' ) . '</p>' 
+			. '<p>' . __( 'WP Issues CRM does a partial uninstall of its own data if you "delete" it through the <a href="' . site_url() . '/wp-admin/plugins.php">plugins menu</a>.  It removes its entries
 			in the Wordpress options table -- which include the plugin options, database version and cached search histories. 
 			It also removes entries in the Wordpress user meta table for individual preference settings for the plugin.
 			Finally, it removes its control and audit trail tables, with the exception of the dictionary (which may include user configured fields).', 'wp-issues-crm') . '</p><p>' .  

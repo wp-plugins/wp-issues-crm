@@ -28,7 +28,7 @@ class WIC_Form_Upload_Update extends WIC_Form_Parent  {
 		
 		$buttons = $this->create_wic_form_button ( $button_args_main );
 
-		$buttons .= '<a href="/wp-admin/admin.php?page=wp-issues-crm-uploads">' . __( 'Back to Uploads List', 'wp-issues-crm' ) . '</a>';
+		$buttons .= '<a href="' . site_url() . '/wp-admin/admin.php?page=wp-issues-crm-uploads">' . __( 'Back to Uploads List', 'wp-issues-crm' ) . '</a>';
 
 		return ( $buttons  ) ;
 	}
@@ -55,7 +55,7 @@ class WIC_Form_Upload_Update extends WIC_Form_Parent  {
 		  ) ;	
 	}
 	
-	// special group handling for the comment group
+	// special group handling for the upload parameters group
 	protected function group_special ( $group ) {
 			return ( 'upload_parameters' == $group );
 	}

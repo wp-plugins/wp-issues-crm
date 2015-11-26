@@ -50,6 +50,7 @@ Class WIC_Entity_Issue_Open_Metabox {
 			'field_label_suffix'	=> '',
 			'option_array' => $wic_live_issue_options, 
 			'onchange' => '',
+			'hidden' => 0,
 		);	  
 
 		echo '<p>' . WIC_Control_Select::create_control ( $args) . '</p>';
@@ -62,7 +63,7 @@ Class WIC_Entity_Issue_Open_Metabox {
 					'button_class' 		=> 'button ' ,
 					'id_requested'			=> $post->ID,
 					'button_label' 		=> __( 'View in WP Issues CRM', 'wp-issues-crm' ),
-					'formaction'			=> '/wp-admin/admin.php?page=wp-issues-crm-main',				
+					'formaction'			=> site_url() . '/wp-admin/admin.php?page=wp-issues-crm-main',				
 			);	
 		
 			echo WIC_Form_Parent::create_wic_form_button( $list_button_args );

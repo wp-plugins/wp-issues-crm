@@ -18,7 +18,9 @@ class WIC_Function_Utilities { // functions that serve multiple entities
 			'<p>' . sprintf ( __( '  File Reporting: %s on line number %s -- method %s.', 'wp-issues-crm' ), $file, $line, $method ) . '</p>' . 
 		'</div>';
 		echo '<h3>' . __( 'Stack Trace Results for reference ', 'wp-issues-crm' ) . '</h3>';		
-		wic_generate_call_trace();
+		if ( WP_DEBUG ) {
+			wic_generate_call_trace();
+		}
 		if ( $fatal ) {
 			die;		
 		}	

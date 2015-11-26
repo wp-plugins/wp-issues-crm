@@ -23,7 +23,7 @@ class WIC_Form_Upload_Save extends WIC_Form_Upload_Update  {
 		
 		$buttons = $this->create_wic_form_button ( $button_args_main );
 		
-		$buttons .= '<a href="/wp-admin/admin.php?page=wp-issues-crm-uploads">' . __( 'Back to Uploads List', 'wp-issues-crm' ) . '</a>';
+		$buttons .= '<a href="' . site_url() . '/wp-admin/admin.php?page=wp-issues-crm-uploads">' . __( 'Back to Uploads List', 'wp-issues-crm' ) . '</a>';
 
 		$buttons .= '&nbsp;&nbsp;<a href="http://wp-issues-crm.com/?page_id=2" target = "_blank">' . __( 'Upload Tips', 'wp-issues-crm' )  . '</a>.';
 		

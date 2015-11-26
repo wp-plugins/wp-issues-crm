@@ -20,7 +20,7 @@ class WIC_Form_Data_Dictionary_Save extends WIC_Form_Data_Dictionary_Update {
 		);	
 		$buttons .= $this->create_wic_form_button ( $button_args_main );
 		
-		$buttons .= '<a href="/wp-admin/admin.php?page=wp-issues-crm-fields">' . __( 'Back to Fields List', 'wp-issues-crm' ) . '</a>';
+		$buttons .= '<a href="' . site_url() . '/wp-admin/admin.php?page=wp-issues-crm-fields">' . __( 'Back to Fields List', 'wp-issues-crm' ) . '</a>';
 
 		return $buttons;
 		
